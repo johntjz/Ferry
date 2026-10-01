@@ -49,7 +49,7 @@
         <div>
           <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Departure Pier / Station</label>
           <select id="pierSelect" class="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none text-sm font-medium">
-            <!-- Populated dynamically based on 2-stop or 4-stop inter-island piers -->
+            <!-- Populated dynamically based on 2-stop or multi-stop inter-island piers -->
           </select>
         </div>
       </div>
@@ -121,29 +121,26 @@
       { keys: ["dbtpl", "discovery bay"], name: "Discovery Bay Transportation" }
     ];
 
-    // Separates operator name from route title for clean dropdown display
+    // Strips company/operator prefix to leave only clean route names for dropdown labels
     function parseRouteDetails(rawTitle) {
       let company = "Ferry Operator";
-      let cleanTitle = rawTitle;
-
       const lower = rawTitle.toLowerCase();
+
       for (const op of KNOWN_OPERATORS) {
         if (op.keys.some(k => lower.includes(k))) {
           company = op.name;
-          op.keys.forEach(k => {
-            const reg = new RegExp(k, "gi");
-            cleanTitle = cleanTitle.replace(reg, "");
-          });
           break;
         }
       }
 
-      // Strip redundant keywords and trim dashes/spaces
-      cleanTitle = cleanTitle
-        .replace(/\s*Ferry Route\s*/gi, "")
-        .replace(/\s*Route\s*/gi, "")
-        .replace(/\s*Ferry\s*/gi, "")
-        .replace(/^[\s\-]+|[\s\-]+$/g, "")
+      // Remove operator names, "Ferry Route", "Route", "Ferry", "Service", etc.
+      let cleanTitle = rawTitle
+        .replace(/Sun Ferry|First Ferry|Star Ferry|HKKF|Hong Kong & Kowloon Ferry|Hong Kong Ferry|Tsui Wah Ferry|Tsui Wah|Fortune Ferry|Coral Sea Ferry|Coral Sea|Chuen Kee Ferry|Chuen Kee|Park Island Transport|PITCL|Discovery Bay Transportation|DBTPL/gi, '')
+        .replace(/Ferry Route/gi, '')
+        .replace(/Route/gi, '')
+        .replace(/Ferry/gi, '')
+        .replace(/Service/gi, '')
+        .replace(/^[\s\-\:\–]+|[\s\-\:\–]+$/g, '')
         .trim();
 
       if (!cleanTitle) cleanTitle = rawTitle;
@@ -155,7 +152,6 @@
       };
     }
 
-    // Normalizes title strings to strip duplicate variations in cache keys
     function cleanRouteKey(title) {
       return title
         .toLowerCase()
@@ -164,10 +160,12 @@
         .replace(/[^a-z0-9]/g, '');
     }
 
-    // Helper: Parses HH:MM string from cell
-    function parseTime(str) {
-      if (!str) return null;
-      const match = str.match(/([0-2]?[0-9]:[0-5][0-9])/);
+    // Helper: Parses HH:MM string from cell; strictly returns null if '/' or empty
+    function parseCellTime(cellStr) {
+      if (!cellStr) return null;
+      const clean = cellStr.trim();
+      if (clean === '/' || clean === '-' || clean === '—') return null;
+      const match = clean.match(/([0-2]?[0-9]:[0-5][0-9])/);
       return match ? match[1].padStart(5, '0') : null;
     }
 
@@ -187,11 +185,11 @@
       const [h1, m1] = startTimeStr.split(':').map(Number);
       const [h2, m2] = endTimeStr.split(':').map(Number);
       let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
-      if (diff < 0) diff += 24 * 60; // 24-hour wrap
+      if (diff < 0) diff += 24 * 60;
       return diff;
     }
 
-    // Lookup table for standard 2-stop ferry journey durations in Hong Kong
+    // Standard journey duration fallback lookup
     function getStandardRouteDuration(routeTitle, pier1, pier2) {
       const combined = `${routeTitle || ''} ${pier1 || ''} ${pier2 || ''}`.toLowerCase();
 
@@ -206,9 +204,8 @@
       if (combined.includes('hung hom')) return 12;
       if (combined.includes('kwun tong') || combined.includes('kai tak') || combined.includes('sai wan ho')) return 15;
       if (combined.includes('aberdeen')) return 30;
-      if (combined.includes('tai o') || combined.includes('tuen mun')) return 30;
 
-      return 30; // standard fallback
+      return 30;
     }
 
     // 1. FETCH & DEDUPLICATE ROUTE PAGES
@@ -240,8 +237,8 @@
         routes.forEach(r => {
           const parsed = parseRouteDetails(r.title);
           const opt = document.createElement('option');
-          opt.value = r.title; // Keep full raw title as value for API queries
-          opt.textContent = parsed.cleanTitle; // Clean title without company name for display
+          opt.value = r.title; // Keep full raw title as value for API query
+          opt.textContent = parsed.cleanTitle; // Clean title ONLY (no operator name)
           opt.setAttribute('data-company', parsed.company);
           select.appendChild(opt);
         });
@@ -261,7 +258,7 @@
       }
     }
 
-    // 2. SCRAPE & PARSE HTML TABLES (Multi-stop & 2-stop calculation)
+    // 2. SCRAPE & PARSE HTML TABLES
     async function parseWikiTimetable(pageTitle) {
       const url = `https://hongkongferry.fandom.com/api.php?action=parse&page=${encodeURIComponent(pageTitle)}&prop=text&format=json&origin=*`;
       
@@ -273,7 +270,6 @@
         const html = data.parse.text["*"];
         const doc = new DOMParser().parseFromString(html, 'text/html');
 
-        // Extract Fare info if available
         let fare = "Consult Live API";
         const ths = Array.from(doc.querySelectorAll('th'));
         const fareTh = ths.find(th => th.textContent.includes('Full fare') || th.textContent.includes('Fare'));
@@ -284,7 +280,7 @@
         const tables = doc.querySelectorAll('table.wikitable, table');
         const parsedSailings = [];
 
-        // Special Parser for 4-stop Inter-Islands Route
+        // Special Parser for Multi-stop Inter-Islands Route
         if (pageTitle.toLowerCase().includes("inter-island")) {
           tables.forEach(table => {
             const rows = Array.from(table.querySelectorAll('tr'));
@@ -296,131 +292,163 @@
               const cols = matrix[i];
               if (cols.length < 2) continue;
 
-              // Forward Direction: Peng Chau [0] -> Mui Wo [1] -> Chi Ma Wan [2] -> Cheung Chau [3]
-              const pc = parseTime(cols[0]);
-              const mw_fwd = parseTime(cols[1]);
-              const cmw_fwd = parseTime(cols[2]);
-              const cc_fwd = parseTime(cols[3]);
+              // Extract column times strictly ignoring '/' or skipped stops
+              const pc_dep = parseCellTime(cols[0]); // Col 0: Peng Chau
+              const isTerminus = cols[1] && cols[1].toLowerCase().includes('terminus');
+              const mw_fwd = parseCellTime(cols[1]); // Col 1: Mui Wo (Forward)
+              const cmw_fwd = parseCellTime(cols[2]); // Col 2: Chi Ma Wan (Forward)
+              const cc_fwd = parseCellTime(cols[3]); // Col 3: Cheung Chau (Forward arrival / Reverse departure)
 
-              if (pc) {
-                const mw_time = mw_fwd || addMinutesToTime(pc, 20);
-                const cmw_time = (cmw_fwd && cols[2] !== '/') ? cmw_fwd : null;
-                const cc_time = cc_fwd || addMinutesToTime(cmw_time || mw_time, cmw_time ? 20 : 35);
+              // --- FORWARD DIRECTION (Peng Chau -> Mui Wo -> [Chi Ma Wan] -> Cheung Chau) ---
+              
+              // 1. Departure from Peng Chau
+              if (pc_dep) {
+                if (isTerminus) {
+                  // Special trip ending at Mui Wo (Terminus), e.g., 23:45 from Peng Chau
+                  const mw_arr = addMinutesToTime(pc_dep, 20);
+                  parsedSailings.push({
+                    pier: "Peng Chau",
+                    time: pc_dep,
+                    next: `Mui Wo (${mw_arr})`,
+                    final: "Mui Wo",
+                    etaTime: mw_arr,
+                    stops: [
+                      { pier: "Peng Chau", time: pc_dep },
+                      { pier: "Mui Wo", time: mw_arr }
+                    ]
+                  });
+                } else {
+                  const mw_arr = mw_fwd || addMinutesToTime(pc_dep, 20);
+                  const cc_arr = cc_fwd || (cmw_fwd ? addMinutesToTime(cmw_fwd, 20) : addMinutesToTime(mw_arr, 30));
 
-                // Departure from Peng Chau
-                const pcStops = [{ pier: "Peng Chau", time: pc }];
-                if (mw_time) pcStops.push({ pier: "Mui Wo", time: mw_time });
-                if (cmw_time) pcStops.push({ pier: "Chi Ma Wan", time: cmw_time });
-                pcStops.push({ pier: "Cheung Chau", time: cc_time });
+                  const pcStops = [{ pier: "Peng Chau", time: pc_dep }];
+                  if (mw_arr) pcStops.push({ pier: "Mui Wo", time: mw_arr });
+                  if (cmw_fwd) pcStops.push({ pier: "Chi Ma Wan", time: cmw_fwd });
+                  pcStops.push({ pier: "Cheung Chau", time: cc_arr });
+
+                  const nextStopStr = mw_arr ? `Mui Wo (${mw_arr})` : (cmw_fwd ? `Chi Ma Wan (${cmw_fwd})` : `Cheung Chau (${cc_arr})`);
+
+                  parsedSailings.push({
+                    pier: "Peng Chau",
+                    time: pc_dep,
+                    next: nextStopStr,
+                    final: "Cheung Chau",
+                    etaTime: cc_arr,
+                    stops: pcStops
+                  });
+                }
+              }
+
+              // 2. Intermediate Departure from Mui Wo (Forward)
+              if (mw_fwd && !isTerminus) {
+                const cc_arr = cc_fwd || (cmw_fwd ? addMinutesToTime(cmw_fwd, 20) : addMinutesToTime(mw_fwd, 30));
+
+                const mwStops = [{ pier: "Mui Wo", time: mw_fwd }];
+                if (cmw_fwd) mwStops.push({ pier: "Chi Ma Wan", time: cmw_fwd });
+                mwStops.push({ pier: "Cheung Chau", time: cc_arr });
+
+                const nextStopStr = cmw_fwd ? `Chi Ma Wan (${cmw_fwd})` : `Cheung Chau (${cc_arr})`;
 
                 parsedSailings.push({
-                  pier: "Peng Chau",
-                  time: pc,
-                  next: `Mui Wo (${mw_time})`,
+                  pier: "Mui Wo",
+                  time: mw_fwd,
+                  next: nextStopStr,
                   final: "Cheung Chau",
-                  etaTime: cc_time,
-                  stops: pcStops
+                  etaTime: cc_arr,
+                  stops: mwStops
                 });
-
-                // Intermediate Departure from Mui Wo (Forward)
-                if (mw_time) {
-                  const mwStops = [{ pier: "Mui Wo", time: mw_time }];
-                  if (cmw_time) mwStops.push({ pier: "Chi Ma Wan", time: cmw_time });
-                  mwStops.push({ pier: "Cheung Chau", time: cc_time });
-
-                  parsedSailings.push({
-                    pier: "Mui Wo",
-                    time: mw_time,
-                    next: cmw_time ? `Chi Ma Wan (${cmw_time})` : `Cheung Chau (${cc_time})`,
-                    final: "Cheung Chau",
-                    etaTime: cc_time,
-                    stops: mwStops
-                  });
-                }
-
-                // Intermediate Departure from Chi Ma Wan (Forward)
-                if (cmw_time) {
-                  const cmwStops = [
-                    { pier: "Chi Ma Wan", time: cmw_time },
-                    { pier: "Cheung Chau", time: cc_time }
-                  ];
-
-                  parsedSailings.push({
-                    pier: "Chi Ma Wan",
-                    time: cmw_time,
-                    next: `Cheung Chau (${cc_time})`,
-                    final: "Cheung Chau",
-                    etaTime: cc_time,
-                    stops: cmwStops
-                  });
-                }
               }
 
-              // Reverse Direction: Cheung Chau [3] -> Chi Ma Wan [4] -> Mui Wo [5] -> Peng Chau [row+1 Col 0]
-              const cc_rev = parseTime(cols[3]);
-              const cmw_rev = parseTime(cols[4]);
-              const mw_rev = parseTime(cols[5]);
+              // 3. Intermediate Departure from Chi Ma Wan (Forward - only if not '/')
+              if (cmw_fwd) {
+                const cc_arr = cc_fwd || addMinutesToTime(cmw_fwd, 20);
 
-              if (cc_rev || mw_rev) {
-                let pc_arr = null;
-                if (i + 1 < matrix.length) {
-                  pc_arr = parseTime(matrix[i + 1][0]);
-                }
+                const cmwStops = [
+                  { pier: "Chi Ma Wan", time: cmw_fwd },
+                  { pier: "Cheung Chau", time: cc_arr }
+                ];
 
-                const cmw_rev_time = (cmw_rev && cols[4] !== '/') ? cmw_rev : null;
-                const mw_rev_time = mw_rev || (cmw_rev_time ? addMinutesToTime(cmw_rev_time, 20) : addMinutesToTime(cc_rev, 35));
-                const final_pc_arr = pc_arr || addMinutesToTime(mw_rev_time, 20);
-
-                // Departure from Cheung Chau
-                if (cc_rev) {
-                  const ccRevStops = [{ pier: "Cheung Chau", time: cc_rev }];
-                  if (cmw_rev_time) ccRevStops.push({ pier: "Chi Ma Wan", time: cmw_rev_time });
-                  if (mw_rev_time) ccRevStops.push({ pier: "Mui Wo", time: mw_rev_time });
-                  ccRevStops.push({ pier: "Peng Chau", time: final_pc_arr });
-
-                  parsedSailings.push({
-                    pier: "Cheung Chau",
-                    time: cc_rev,
-                    next: cmw_rev_time ? `Chi Ma Wan (${cmw_rev_time})` : (mw_rev_time ? `Mui Wo (${mw_rev_time})` : `Peng Chau (${final_pc_arr})`),
-                    final: "Peng Chau",
-                    etaTime: final_pc_arr,
-                    stops: ccRevStops
-                  });
-                }
-
-                // Intermediate Departure from Chi Ma Wan (Reverse)
-                if (cmw_rev_time) {
-                  const cmwRevStops = [{ pier: "Chi Ma Wan", time: cmw_rev_time }];
-                  if (mw_rev_time) cmwRevStops.push({ pier: "Mui Wo", time: mw_rev_time });
-                  cmwRevStops.push({ pier: "Peng Chau", time: final_pc_arr });
-
-                  parsedSailings.push({
-                    pier: "Chi Ma Wan",
-                    time: cmw_rev_time,
-                    next: mw_rev_time ? `Mui Wo (${mw_rev_time})` : `Peng Chau (${final_pc_arr})`,
-                    final: "Peng Chau",
-                    etaTime: final_pc_arr,
-                    stops: cmwRevStops
-                  });
-                }
-
-                // Intermediate Departure from Mui Wo (Reverse, e.g. 23:25 -> 23:45 Peng Chau)
-                if (mw_rev_time) {
-                  const mwRevStops = [
-                    { pier: "Mui Wo", time: mw_rev_time },
-                    { pier: "Peng Chau", time: final_pc_arr }
-                  ];
-
-                  parsedSailings.push({
-                    pier: "Mui Wo",
-                    time: mw_rev_time,
-                    next: `Peng Chau (${final_pc_arr})`,
-                    final: "Peng Chau",
-                    etaTime: final_pc_arr,
-                    stops: mwRevStops
-                  });
-                }
+                parsedSailings.push({
+                  pier: "Chi Ma Wan",
+                  time: cmw_fwd,
+                  next: `Cheung Chau (${cc_arr})`,
+                  final: "Cheung Chau",
+                  etaTime: cc_arr,
+                  stops: cmwStops
+                });
               }
+
+              // --- REVERSE DIRECTION (Cheung Chau -> [Chi Ma Wan] -> Mui Wo -> Peng Chau) ---
+
+              const cc_rev = parseCellTime(cols[3]); // Col 3: Cheung Chau departure
+              const cmw_rev = parseCellTime(cols[4]); // Col 4: Chi Ma Wan departure (Reverse)
+              const mw_rev = parseCellTime(cols[5]); // Col 5: Mui Wo departure (Reverse)
+
+              // Mui Wo to Peng Chau arrival takes 20 minutes
+              const pc_rev_arr = mw_rev ? addMinutesToTime(mw_rev, 20) : null;
+
+              // 1. Departure from Cheung Chau (Reverse)
+              if (cc_rev) {
+                const mw_time = mw_rev || (cmw_rev ? addMinutesToTime(cmw_rev, 20) : addMinutesToTime(cc_rev, 30));
+                const pc_arr = pc_rev_arr || addMinutesToTime(mw_time, 20);
+
+                const ccRevStops = [{ pier: "Cheung Chau", time: cc_rev }];
+                if (cmw_rev) ccRevStops.push({ pier: "Chi Ma Wan", time: cmw_rev });
+                if (mw_time) ccRevStops.push({ pier: "Mui Wo", time: mw_time });
+                ccRevStops.push({ pier: "Peng Chau", time: pc_arr });
+
+                const nextStopStr = cmw_rev ? `Chi Ma Wan (${cmw_rev})` : (mw_time ? `Mui Wo (${mw_time})` : `Peng Chau (${pc_arr})`);
+
+                parsedSailings.push({
+                  pier: "Cheung Chau",
+                  time: cc_rev,
+                  next: nextStopStr,
+                  final: "Peng Chau",
+                  etaTime: pc_arr,
+                  stops: ccRevStops
+                });
+              }
+
+              // 2. Intermediate Departure from Chi Ma Wan (Reverse - only if not '/')
+              if (cmw_rev) {
+                const mw_time = mw_rev || addMinutesToTime(cmw_rev, 20);
+                const pc_arr = pc_rev_arr || addMinutesToTime(mw_time, 20);
+
+                const cmwRevStops = [{ pier: "Chi Ma Wan", time: cmw_rev }];
+                if (mw_time) cmwRevStops.push({ pier: "Mui Wo", time: mw_time });
+                cmwRevStops.push({ pier: "Peng Chau", time: pc_arr });
+
+                const nextStopStr = mw_time ? `Mui Wo (${mw_time})` : `Peng Chau (${pc_arr})`;
+
+                parsedSailings.push({
+                  pier: "Chi Ma Wan",
+                  time: cmw_rev,
+                  next: nextStopStr,
+                  final: "Peng Chau",
+                  etaTime: pc_arr,
+                  stops: cmwRevStops
+                });
+              }
+
+              // 3. Intermediate Departure from Mui Wo (Reverse)
+              if (mw_rev) {
+                const pc_arr = pc_rev_arr || addMinutesToTime(mw_rev, 20);
+
+                const mwRevStops = [
+                  { pier: "Mui Wo", time: mw_rev },
+                  { pier: "Peng Chau", time: pc_arr }
+                ];
+
+                parsedSailings.push({
+                  pier: "Mui Wo",
+                  time: mw_rev,
+                  next: `Peng Chau (${pc_arr})`,
+                  final: "Peng Chau",
+                  etaTime: pc_arr,
+                  stops: mwRevStops
+                });
+              }
+
             }
           });
         } else {
@@ -429,8 +457,8 @@
           const times = [...new Set(text.match(/\b([0-2]?[0-9]:[0-5][0-9])\b/g) || [])];
           
           const match = pageTitle.match(/(.*?) - (.*?) Route/);
-          const p1 = match ? match[1].replace(/^(Sun Ferry|Star Ferry|HKKF|Tsui Wah|Fortune Ferry|Coral Sea)\s+/i, '') : "Origin";
-          const p2 = match ? match[2] : "Destination";
+          const p1 = match ? match[1].replace(/^(Sun Ferry|Star Ferry|HKKF|Tsui Wah|Fortune Ferry|Coral Sea)\s+/i, '').trim() : "Origin";
+          const p2 = match ? match[2].trim() : "Destination";
 
           const durationMins = getStandardRouteDuration(pageTitle, p1, p2);
 
@@ -466,7 +494,7 @@
           });
         }
 
-        // Deduplicate parsed sailings
+        // Deduplicate sailings
         const uniqueSailings = [];
         const seenSailings = new Set();
         for (const s of parsedSailings) {
@@ -520,7 +548,7 @@
       const selectedOption = routeSelect.options[routeSelect.selectedIndex];
       const companyName = selectedOption ? (selectedOption.getAttribute('data-company') || parseRouteDetails(routeTitle).company) : "Ferry Operator";
 
-      // Update Header Operator Badge
+      // Update Header Discrete Operator Badge
       const opBadgeHeader = document.getElementById('operatorBadgeHeader');
       const opHeaderName = document.getElementById('operatorHeaderName');
       if (companyName) {
@@ -552,7 +580,7 @@
         return;
       }
 
-      // Calculate time remaining & sort
+      // Calculate time remaining & sort chronologically
       const processed = matchingSailings.map(s => {
         const [h, m] = s.time.split(':').map(Number);
         let target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
@@ -586,7 +614,6 @@
           countdownStr = "Departing";
         }
 
-        // Calculate accurate ETA time string & total duration
         let finalEtaTime = sailing.etaTime;
         if (!finalEtaTime && sailing.stops && sailing.stops.length > 0) {
           finalEtaTime = sailing.stops[sailing.stops.length - 1].time;
@@ -609,7 +636,7 @@
           fetchAndRender();
         };
 
-        // Build visually clean itinerary stop pills with actual arrival times
+        // Render itinerary pills excluding skipped '/' stops
         let stopsHtml = "";
         if (sailing.stops && sailing.stops.length > 0) {
           stopsHtml = sailing.stops
@@ -644,7 +671,7 @@
           ${isOpen ? `
             <div class="mt-3 pt-3 border-t border-slate-700/60 text-xs sm:text-sm bg-slate-900/50 p-3 rounded-lg text-cyan-200 space-y-2.5">
               
-              <!-- ETA & Duration Card Header -->
+              <!-- ETA & Duration Info Box -->
               <div class="flex items-center justify-between bg-cyan-950/60 border border-cyan-800/60 p-2.5 rounded-lg">
                 <div>
                   <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400">Estimated Arrival (ETA)</div>
