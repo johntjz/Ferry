@@ -39,15 +39,16 @@
 </head>
 <body class="min-h-screen flex flex-col items-center p-4 sm:p-6 lg:p-8">
 
-    <main class="w-full max-w-5xl space-y-6">
+    <main class="w-full max-w-4xl space-y-6">
         
+        <!-- App Header & Live Clock -->
         <header class="text-center space-y-3 pt-4 pb-2">
             <h1 class="text-3xl md:text-5xl font-bold tracking-tight text-white flex items-center justify-center gap-3">
                 <i class="ph-fill ph-boat text-cyan-500"></i>
                 HK Ferry Timetable & Crowd Analytics
             </h1>
             <p class="text-slate-400 max-w-2xl mx-auto text-sm md:text-base">
-                Official schedule tracking and predictive load factor approximations for Hong Kong outlying island ferries, Kaitos, and cross-boundary lines.
+                Official schedule tracking and predictive load factor approximations departing from your selected pier.
             </p>
             <div class="inline-flex items-center gap-2 bg-slate-800/90 border border-slate-700/80 px-4 py-1.5 rounded-full text-xs font-mono text-cyan-400 shadow-md">
                 <i class="ph ph-clock text-sm animate-pulse"></i>
@@ -56,9 +57,11 @@
             </div>
         </header>
 
+        <!-- Control Panel -->
         <section class="glass-panel rounded-2xl p-4 md:p-6 shadow-2xl space-y-5">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
+                <!-- Route Selector -->
                 <div class="space-y-1.5">
                     <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Ferry Route / Operator</label>
                     <div class="relative">
@@ -69,6 +72,7 @@
                     </div>
                 </div>
 
+                <!-- Pier Selector -->
                 <div class="space-y-1.5">
                     <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Current Pier</label>
                     <div class="relative">
@@ -79,6 +83,7 @@
                     </div>
                 </div>
 
+                <!-- GPS Button -->
                 <div class="flex items-end h-full">
                     <button id="gpsBtn" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-3 px-4 rounded-xl transition-all shadow-lg shadow-cyan-900/50 flex items-center justify-center gap-2 h-[46px]">
                         <i class="ph ph-navigation-arrow text-lg"></i>
@@ -87,40 +92,25 @@
                 </div>
             </div>
 
+            <!-- Status Bar -->
             <div id="statusAlert" class="flex items-center p-3 rounded-lg text-xs md:text-sm bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
                 <i class="ph ph-info text-lg mr-2"></i>
-                <span id="statusText">Operating on Reliable Timetable Mode with Real-Time Countdown & Crowd Analytics</span>
+                <span id="statusText">Showing next scheduled departures departing directly from your selected pier</span>
             </div>
         </section>
 
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            <div class="glass-panel rounded-2xl p-5 border-t-4 border-t-blue-500 flex flex-col min-h-[380px]">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold flex items-center gap-2 text-white">
-                        <i class="ph ph-arrow-circle-right text-blue-400 text-xl"></i>
-                        Next Stops / Outbound
-                    </h2>
-                    <span class="text-xs font-medium bg-blue-500/20 text-blue-300 py-1 px-2.5 rounded-md" id="upDestLabel">--</span>
-                </div>
-                <div id="upTrains" class="space-y-3 flex-1 overflow-y-auto max-h-[420px] pr-1">
-                    <!-- Departures -->
-                </div>
+        <!-- Departures Board -->
+        <section class="glass-panel rounded-2xl p-5 border-t-4 border-t-cyan-500 flex flex-col min-h-[420px]">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700/60">
+                <h2 class="text-lg font-semibold flex items-center gap-2 text-white">
+                    <i class="ph ph-paper-plane-tilt text-cyan-400 text-xl">></i>
+                    Departures From <span id="currentPierTitle" class="text-cyan-400">--</span>
+                </h2>
+                <span class="text-xs font-medium bg-cyan-500/20 text-cyan-300 py-1 px-2.5 rounded-md" id="deptCountLabel">0 sailings today</span>
             </div>
-
-            <div class="glass-panel rounded-2xl p-5 border-t-4 border-t-purple-500 flex flex-col min-h-[380px]">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold flex items-center gap-2 text-white">
-                        <i class="ph ph-arrow-circle-left text-purple-400 text-xl"></i>
-                        Reverse Direction / Inbound
-                    </h2>
-                    <span class="text-xs font-medium bg-purple-500/20 text-purple-300 py-1 px-2.5 rounded-md" id="downDestLabel">--</span>
-                </div>
-                <div id="downTrains" class="space-y-3 flex-1 overflow-y-auto max-h-[420px] pr-1">
-                     <!-- Departures -->
-                </div>
+            <div id="departuresList" class="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-1">
+                <!-- Departure items populated dynamically -->
             </div>
-
         </section>
 
         <footer class="text-center py-4">
@@ -325,10 +315,9 @@
         const elStationSelect = document.getElementById('stationSelect');
         const elGpsBtn = document.getElementById('gpsBtn');
         const elLiveClock = document.getElementById('liveClock');
-        const elUpDestLabel = document.getElementById('upDestLabel');
-        const elDownDestLabel = document.getElementById('downDestLabel');
-        const elUpTrains = document.getElementById('upTrains');
-        const elDownTrains = document.getElementById('downTrains');
+        const elCurrentPierTitle = document.getElementById('currentPierTitle');
+        const elDeptCountLabel = document.getElementById('deptCountLabel');
+        const elDeparturesList = document.getElementById('departuresList');
 
         function initApp() {
             FERRY_ROUTES.forEach(route => {
@@ -342,16 +331,16 @@
 
             elLineSelect.addEventListener('change', (e) => {
                 updateStationDropdown(e.target.value);
-                renderSchedules();
+                renderDepartures();
             });
-            elStationSelect.addEventListener('change', renderSchedules);
+            elStationSelect.addEventListener('change', renderDepartures);
             elGpsBtn.addEventListener('click', findNearestPier);
 
             updateLiveClock();
             setInterval(updateLiveClock, 1000);
             
-            renderSchedules();
-            setInterval(renderSchedules, 30000); 
+            renderDepartures();
+            setInterval(renderDepartures, 30000); 
         }
 
         function updateLiveClock() {
@@ -369,7 +358,7 @@
             });
         }
 
-        function parseTimes(timeStrings, pierOffsetMinutes) {
+        function parseTimes(timeStrings, pierOffsetMinutes, destinationName) {
             const now = new Date();
             return timeStrings.map(tStr => {
                 const [hh, mm] = tStr.split(':').map(Number);
@@ -379,40 +368,93 @@
                 if (d - now < -7200000) {
                     d.setDate(d.getDate() + 1);
                 }
-                return { timestamp: d };
-            }).sort((a, b) => a.timestamp - b.timestamp);
+                return { timestamp: d, destination: destinationName };
+            });
         }
 
-        function renderSchedules() {
+        function renderDepartures() {
             const routeId = elLineSelect.value;
             const route = FERRY_ROUTES.find(r => r.id === routeId);
             const pierCode = elStationSelect.value;
             const pierIndex = route.piers.findIndex(p => p.c === pierCode);
             const activeIndex = pierIndex >= 0 ? pierIndex : 0;
+            const currentPierObj = route.piers[activeIndex];
+
+            elCurrentPierTitle.textContent = currentPierObj.n;
 
             const now = new Date();
-            const offsetMultiplier = activeIndex * 22; 
-
-            let outboundList = [];
-            let inboundList = [];
+            let departures = [];
 
             if (route.isMultiStop) {
-                outboundList = parseTimes(route.schedulesUp, offsetMultiplier);
-                inboundList = parseTimes(route.schedulesDown, (route.piers.length - 1 - activeIndex) * 22);
-                
-                elUpDestLabel.textContent = activeIndex < route.piers.length - 1 ? `Towards ${route.piers[activeIndex + 1].n}` : 'Terminal Reached';
-                elDownDestLabel.textContent = activeIndex > 0 ? `Towards ${route.piers[activeIndex - 1].n}` : 'Terminal Reached';
+                // For multi-stop routes, check forward (Up) and backward (Down) destinations available from this pier index
+                const offsetMultiplier = activeIndex * 22;
+                if (activeIndex < route.piers.length - 1) {
+                    const nextDest = route.piers[activeIndex + 1].n;
+                    const upTimes = parseTimes(route.schedulesUp, offsetMultiplier, nextDest);
+                    departures.push(...upTimes);
+                }
+                if (activeIndex > 0) {
+                    const prevDest = route.piers[activeIndex - 1].n;
+                    const downTimes = parseTimes(route.schedulesDown, (route.piers.length - 1 - activeIndex) * 22, prevDest);
+                    departures.push(...downTimes);
+                }
             } else {
+                // Standard 2-pier route
                 const isPierA = activeIndex === 0;
-                outboundList = parseTimes(route.schedulesUp, 0);
-                inboundList = parseTimes(route.schedulesDown, 15);
-
-                elUpDestLabel.textContent = `To ${route.piers[isPierA ? 1 : 0].n}`;
-                elDownDestLabel.textContent = `To ${route.piers[isPierA ? 0 : 1].n}`;
+                const destName = route.piers[isPierA ? 1 : 0].n;
+                // Pier A uses schedulesUp, Pier B uses schedulesDown
+                const scheduleList = isPierA ? route.schedulesUp : route.schedulesDown;
+                departures = parseTimes(scheduleList, isPierA ? 0 : 15, destName);
             }
 
-            renderBoard(elUpTrains, outboundList, now, route.isIsland);
-            renderBoard(elDownTrains, inboundList, now, route.isIsland);
+            // Sort chronologically and filter out past sailings (> 10 mins ago)
+            departures.sort((a, b) => a.timestamp - b.timestamp);
+            const activeDepartures = departures.filter(dep => (dep.timestamp - now) > -600000);
+
+            elDeptCountLabel.textContent = `${activeDepartures.length} sailings upcoming`;
+
+            if (!activeDepartures || activeDepartures.length === 0) {
+                elDeparturesList.innerHTML = `<div class="p-8 text-center text-slate-400 text-sm">No further sailings scheduled from this pier today.</div>`;
+                return;
+            }
+
+            elDeparturesList.innerHTML = activeDepartures.map((dep) => {
+                const clockStr = dep.timestamp.toLocaleTimeString('en-HK', { hour: '2-digit', minute: '2-digit', hour12: false });
+                const countdown = formatCountdown(dep.timestamp, now);
+                const load = computeLoadFactor(dep.timestamp, route.isIsland);
+
+                return `
+                    <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 space-y-3 shadow-sm hover:border-slate-600 transition flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-slate-700/50 p-3 rounded-xl text-cyan-400 font-mono text-lg font-bold">
+                                ${clockStr}
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Heading Towards</div>
+                                <div class="text-white font-bold text-base flex items-center gap-1.5">
+                                    <i class="ph ph-map-pin text-cyan-400"></i> ${dep.destination}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between sm:justify-end gap-6 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-700/40">
+                            <div class="text-left sm:text-right space-y-1">
+                                <div class="${load.color} text-xs font-medium flex items-center sm:justify-end gap-1">
+                                    <i class="ph ph-users"></i> ${load.label}
+                                </div>
+                                <div class="w-28 bg-slate-700/60 h-2 rounded-full overflow-hidden">
+                                    <div class="${load.barBg} h-full rounded-full transition-all duration-500" style="width: ${load.pct}%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="inline-block px-3.5 py-1.5 rounded-lg text-sm tracking-wide ${countdown.css}">
+                                    ${countdown.badge}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function findNearestPier() {
@@ -447,7 +489,7 @@
                 elStationSelect.value = bestPierCode;
                 
                 elGpsBtn.innerHTML = '<i class="ph ph-navigation-arrow text-lg"></i><span>Find Nearest Pier</span>';
-                renderSchedules();
+                renderDepartures();
             }, () => {
                 alert('Unable to retrieve your location');
                 elGpsBtn.innerHTML = '<i class="ph ph-navigation-arrow text-lg"></i><span>Find Nearest Pier</span>';
@@ -498,45 +540,6 @@
             } else {
                 return { label: 'Seats Available', color: 'text-emerald-400', barBg: 'bg-emerald-500', pct: score };
             }
-        }
-
-        function renderBoard(container, departures, now, isIslandRoute) {
-            const activeDepartures = departures.filter(dep => (dep.timestamp - now) > -600000);
-
-            if (!activeDepartures || activeDepartures.length === 0) {
-                container.innerHTML = `<div class="p-4 text-center text-slate-400 text-sm">No further sailings scheduled for today.</div>`;
-                return;
-            }
-
-            container.innerHTML = activeDepartures.slice(0, 6).map((dep) => {
-                const clockStr = dep.timestamp.toLocaleTimeString('en-HK', { hour: '2-digit', minute: '2-digit', hour12: false });
-                const countdown = formatCountdown(dep.timestamp, now);
-                const load = computeLoadFactor(dep.timestamp, isIslandRoute);
-
-                return `
-                    <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3.5 space-y-2.5 shadow-sm hover:border-slate-600 transition">
-                        <div class="flex justify-between items-center">
-                            <div class="space-y-0.5">
-                                <span class="text-sm font-bold text-slate-200 font-mono tracking-wide">${clockStr}</span>
-                                <div class="text-[11px] text-slate-400">Scheduled Sailing</div>
-                            </div>
-                            <div class="text-right">
-                                <span class="inline-block px-3 py-1.5 rounded-lg text-sm tracking-wide ${countdown.css}">
-                                    ${countdown.badge}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="pt-2 border-t border-slate-700/40 flex items-center justify-between text-xs">
-                            <span class="${load.color} font-medium flex items-center gap-1">
-                                <i class="ph ph-users"></i> ${load.label}
-                            </span>
-                            <div class="w-24 bg-slate-700/60 h-2 rounded-full overflow-hidden">
-                                <div class="${load.barBg} h-full rounded-full transition-all duration-500" style="width: ${load.pct}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
         }
 
         window.onload = initApp;
