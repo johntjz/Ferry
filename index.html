@@ -235,7 +235,18 @@
           });
         }
 
-        return { fare, sailings: parsedSailings };
+        // Deduplicate parsed sailings to prevent UI overflow from nested tables
+        const uniqueSailings = [];
+        const seenSailings = new Set();
+        for (const s of parsedSailings) {
+          const key = `${s.pier}-${s.time}-${s.final}`;
+          if (!seenSailings.has(key)) {
+            seenSailings.add(key);
+            uniqueSailings.push(s);
+          }
+        }
+
+        return { fare, sailings: uniqueSailings };
 
       } catch (err) {
         console.error("Scraping error:", err);
@@ -281,6 +292,8 @@
 
       const data = liveTimetableCache[routeTitle];
       const now = new Date();
+      // Zero out the seconds of the current time to ensure stable integer minute countdowns
+      const currentMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), 0).getTime();
 
       // Update Fare header
       const fareTag = isHolidayOrSunday(now) ? "<span class='text-amber-400'>(Holiday Rates May Apply)</span>" : "";
@@ -304,11 +317,11 @@
         let target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
 
         // Handle overnight sailings
-        if (target.getTime() < now.getTime() - 2 * 60000) {
+        if (target.getTime() < currentMs - 2 * 60000) {
           target.setDate(target.getDate() + 1);
         }
 
-        const diffMs = target.getTime() - now.getTime();
+        const diffMs = target.getTime() - currentMs;
         const mins = Math.floor(diffMs / 60000);
 
         return {
@@ -324,7 +337,7 @@
         .sort((a, b) => a.targetDate.getTime() - b.targetDate.getTime())
         .slice(0, 15);
 
-      upcoming.forEach((sailing, idx) => {
+      upcoming.forEach((sailing) => {
         let countdownStr = "";
         if (sailing.minutesUntil > 0) {
           const hrs = Math.floor(sailing.minutesUntil / 60);
@@ -334,7 +347,8 @@
           countdownStr = "Departing";
         }
 
-        const cardId = `card-${idx}`;
+        // Use a unique static ID instead of array index to prevent correct card from closing when array order changes
+        const cardId = `card-${sailing.time}-${sailing.final.replace(/\s+/g, '')}`;
         const isOpen = openCardId === cardId;
 
         const card = document.createElement('div');
