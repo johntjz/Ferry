@@ -48,7 +48,7 @@
                 HK Ferry Live Tracker & Crowd Analytics
             </h1>
             <p class="text-slate-400 max-w-2xl mx-auto text-sm md:text-base">
-                Real-time schedules and predictive load factor approximations across all Hong Kong licensed ferry operators.
+                Real-time schedules and predictive load factor approximations across Hong Kong licensed ferry operators.
             </p>
             <div class="inline-flex items-center gap-2 bg-slate-800/90 border border-slate-700/80 px-4 py-1.5 rounded-full text-xs font-mono text-cyan-400 shadow-md">
                 <i class="ph ph-clock text-sm animate-pulse"></i>
@@ -141,13 +141,13 @@
     </main>
 
     <script>
-        // --- Complete Hong Kong Ferry Database ---
+        // --- Complete Hong Kong Ferry Database (Updated for Official Sun Ferry Spec) ---
         const FERRY_ROUTES = [
             { id: 'SF_CC', name: 'Sun Ferry: Central - Cheung Chau', type: 'sunferry', upCode: 'CECC', downCode: 'CCCE', operator: 'Sun Ferry', isIsland: true },
             { id: 'SF_MW', name: 'Sun Ferry: Central - Mui Wo', type: 'sunferry', upCode: 'CEMW', downCode: 'MWCE', operator: 'Sun Ferry', isIsland: true },
             { id: 'SF_NP_HH', name: 'Sun Ferry: North Point - Hung Hom', type: 'sunferry', upCode: 'NPHH', downCode: 'HHNP', operator: 'Sun Ferry', isIsland: false },
             { id: 'SF_NP_KC', name: 'Sun Ferry: North Point - Kowloon City', type: 'sunferry', upCode: 'NPKC', downCode: 'KCNP', operator: 'Sun Ferry', isIsland: false },
-            { id: 'SF_II', name: 'Sun Ferry: Inter-Islands (Peng Chau - Mui Wo - Cheung Chau)', type: 'sunferry', upCode: 'IIPECMUW', downCode: 'IIMUWPEC', operator: 'Sun Ferry', isIsland: true },
+            { id: 'SF_II', name: 'Sun Ferry: Inter-Islands (Peng Chau - Mui Wo)', type: 'sunferry', upCode: 'IIPECMUW', downCode: 'IIMUWPEC', operator: 'Sun Ferry', isIsland: true },
 
             { id: 'HKKF_YSW', name: 'HKKF: Central - Lamma (Yung Shue Wan)', type: 'hkkf', upCode: 'YSW', operator: 'HKKF', isIsland: true },
             { id: 'HKKF_SKW', name: 'HKKF: Central - Lamma (Sok Kwu Wan)', type: 'hkkf', upCode: 'SKW', operator: 'HKKF', isIsland: true },
@@ -161,8 +161,7 @@
             { id: 'DB_FERRY', name: 'Discovery Bay Ferry: Central - Discovery Bay', type: 'static', operator: 'DB Transportation', isIsland: false },
             { id: 'PI_FERRY', name: 'Park Island Transport: Central - Ma Wan / Tuen Mun', type: 'static', operator: 'Park Island', isIsland: false },
             { id: 'TSUI_WAH', name: 'Tsui Wah Ferry: Aberdeen - Lamma / Tung Chung', type: 'static', operator: 'Tsui Wah Ferry', isIsland: true },
-            { id: 'CORAL_SEA', name: 'Coral Sea Ferry: Sai Wan Ho - Kwun Tong / Sam Ka Tsuen', type: 'static', operator: 'Coral Sea', isIsland: false },
-            { id: 'CB_MAC', name: 'Cross Boundary: HK - Macao / Shenzhen (TurboJET / Cotai Water Jet)', type: 'static', operator: 'Marine Dept / Operators', isIsland: false }
+            { id: 'CORAL_SEA', name: 'Coral Sea Ferry: Sai Wan Ho - Kwun Tong / Sam Ka Tsuen', type: 'static', operator: 'Coral Sea', isIsland: false }
         ];
 
         const FERRY_PIERS = {
@@ -181,12 +180,11 @@
             'DB_FERRY': [ { c: 'CEN3', n: 'Central Pier No. 3', lat: 22.2862, lng: 114.1595 }, { c: 'DBP', n: 'Discovery Bay Pier', lat: 22.3042, lng: 114.0185 } ],
             'PI_FERRY': [ { c: 'CEN', n: 'Central Pier', lat: 22.2860, lng: 114.1590 }, { c: 'PIP', n: 'Park Island Pier', lat: 22.3552, lng: 114.0621 } ],
             'TSUI_WAH': [ { c: 'ABD', n: 'Aberdeen Pier', lat: 22.2472, lng: 114.1550 }, { c: 'YSS', n: 'Yung Shue Wan', lat: 22.2235, lng: 114.1190 } ],
-            'CORAL_SEA': [ { c: 'SWH', n: 'Sai Wan Ho Pier', lat: 22.2842, lng: 114.2215 }, { c: 'KT', n: 'Kwun Tong Public Pier', lat: 22.3075, lng: 114.2218 } ],
-            'CB_MAC': [ { c: 'MAC', n: 'HK-Macao Ferry Terminal', lat: 22.2889, lng: 114.1534 }, { c: 'CFT', n: 'China Ferry Terminal', lat: 22.3005, lng: 114.1683 } ]
+            'CORAL_SEA': [ { c: 'SWH', n: 'Sai Wan Ho Pier', lat: 22.2842, lng: 114.2215 }, { c: 'KT', n: 'Kwun Tong Public Pier', lat: 22.3075, lng: 114.2218 } ]
         };
 
-        const STATIC_OFFSETS_UP = [8, 25, 50, 85, 125, 180];
-        const STATIC_OFFSETS_DOWN = [12, 35, 68, 100, 145, 210];
+        const STATIC_OFFSETS_UP = [10, 30, 60, 95, 135];
+        const STATIC_OFFSETS_DOWN = [15, 40, 75, 110, 150];
 
         // DOM Elements
         const elLineSelect = document.getElementById('lineSelect');
@@ -202,7 +200,6 @@
         const elDownTrains = document.getElementById('downTrains');
 
         let isFetching = false;
-        let autoRefreshTimer = null;
 
         function initApp() {
             FERRY_ROUTES.forEach(route => {
@@ -225,8 +222,7 @@
             setInterval(updateLiveClock, 1000);
             
             triggerDataRefresh();
-            
-            autoRefreshTimer = setInterval(() => {
+            setInterval(() => {
                 if (!isFetching) triggerDataRefresh();
             }, 30000);
         }
@@ -246,11 +242,12 @@
             });
         }
 
-        // --- Multi-tier API fetcher with robust CORS Proxies ---
+        // --- Sun Ferry & Operator API Fetcher ---
         async function fetchLiveAPI(route, isReverse) {
             let apiCode = isReverse && route.downCode ? route.downCode : route.upCode;
+            if (!apiCode) return null;
+
             let targetUrl = '';
-            
             if (route.type === 'sunferry') {
                 targetUrl = `https://www.sunferry.com.hk/eta/?route=${apiCode}`;
             } else if (route.type === 'hkkf') {
@@ -261,9 +258,8 @@
                 return null;
             }
 
-            // Attempt direct fetch first, fallback to public proxy if browser blocks CORS
+            // CORS proxies to bypass browser origin blocking
             const proxyUrls = [
-                targetUrl,
                 `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
                 `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
             ];
@@ -273,14 +269,40 @@
                     const response = await fetch(url, { method: 'GET' });
                     if (!response.ok) continue;
                     const json = await response.json();
-                    
+                    const now = new Date();
+
+                    // Parse official Sun Ferry Specification response structure ({ data: [...] })
+                    if (route.type === 'sunferry' && json && Array.isArray(json.data)) {
+                        return json.data.map(item => {
+                            let depTime = new Date();
+                            if (item.depart_time) {
+                                const parts = item.depart_time.split(':');
+                                depTime.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+                                if (depTime - now < -1800000) {
+                                    depTime.setDate(depTime.getDate() + 1);
+                                }
+                            } else if (item.eta) {
+                                depTime = new Date(item.eta);
+                            }
+                            return {
+                                timestamp: depTime,
+                                vessel: item.vesselcode || 'Sun Ferry Vessel',
+                                isLive: true
+                            };
+                        }).filter(item => !isNaN(item.timestamp.getTime()));
+                    }
+
+                    // Fallback parser for generic JSON arrays
                     let list = json.data || json.eta || json.entries || (Array.isArray(json) ? json : null);
                     if (list && Array.isArray(list)) {
-                        return list.map(item => ({
-                            timestamp: new Date(item.eta || item.departure_time || item.time),
-                            vessel: item.vesselcode || item.vessel_name || 'Live Vessel',
-                            isLive: true
-                        })).filter(item => !isNaN(item.timestamp.getTime()));
+                        return list.map(item => {
+                            let dt = new Date(item.eta || item.departure_time || item.time || item.depart_time);
+                            return {
+                                timestamp: dt,
+                                vessel: item.vesselcode || item.vessel_name || 'Live Vessel',
+                                isLive: true
+                            };
+                        }).filter(item => !isNaN(item.timestamp.getTime()));
                     }
                 } catch (e) {
                     continue;
@@ -299,36 +321,32 @@
             }));
         }
 
-        // --- Crowd Density & Load Factor Approximation Engine ---
+        // --- Passenger Load Factor Approximation Engine ---
         function computeLoadFactor(targetTime, isIslandRoute) {
-            const day = targetTime.getDay(); // 0 = Sun, 6 = Sat
+            const day = targetTime.getDay();
             const hour = targetTime.getHours();
-            const minute = targetTime.getMinutes();
             const isWeekend = (day === 0 || day === 6);
 
-            let score = 35; // base percentage
+            let score = 35;
 
             if (isWeekend) {
-                // Weekend leisure surge towards outlying islands around morning hours (9 AM - 1pm)
                 if (hour >= 9 && hour <= 13 && isIslandRoute) {
-                    score = 88; // Crowded / Heavy Queue
+                    score = 88;
                 } else if (hour >= 16 && hour <= 20) {
-                    score = 82; // Return trip surge
+                    score = 82;
                 } else {
                     score = 55;
                 }
             } else {
-                // Weekday commuter rushes
                 if ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19)) {
-                    score = 92; // Near capacity
+                    score = 92;
                 } else if (hour >= 11 && hour <= 15) {
-                    score = 30; // Quiet midday
+                    score = 30;
                 } else {
                     score = 48;
                 }
             }
 
-            // Dynamic adjustment: departures happening very soon (under 8 minutes) experience last-minute queue buildup
             const now = new Date();
             const diffMins = Math.floor((targetTime - now) / 60000);
             if (diffMins >= 0 && diffMins <= 8) {
@@ -364,22 +382,22 @@
             elDownDestLabel.textContent = `To ${originPier.n}`;
 
             const now = new Date();
-            let upDepartures = [];
-            let downDepartures = [];
+            let upDepartures = null;
+            let downDepartures = null;
             let isLiveConnected = false;
 
             if (route.type !== 'static') {
-                const liveDataUp = await fetchLiveAPI(route, false);
-                const liveDataDown = await fetchLiveAPI(route, true);
-                if (liveDataUp || liveDataDown) {
+                upDepartures = await fetchLiveAPI(route, false);
+                downDepartures = await fetchLiveAPI(route, true);
+                if (upDepartures || downDepartures) {
                     isLiveConnected = true;
-                    upDepartures = liveDataUp || generateStaticSchedule(now, 'up', activePierIndex);
-                    downDepartures = liveDataDown || generateStaticSchedule(now, 'down', activePierIndex);
                 }
             }
 
-            if (!isLiveConnected) {
+            if (!upDepartures || upDepartures.length === 0) {
                 upDepartures = generateStaticSchedule(now, 'up', activePierIndex);
+            }
+            if (!downDepartures || downDepartures.length === 0) {
                 downDepartures = generateStaticSchedule(now, 'down', (activePierIndex + 1) % piers.length);
             }
 
@@ -389,13 +407,12 @@
             if (isLiveConnected) {
                 showStatus(`Connected to Live API Stream (${originPier.n})`, 'success');
             } else {
-                showStatus(`Using Timetable Mode with Crowd Density Analytics (${originPier.n})`, 'warning');
+                showStatus(`Using Timetable Mode with Dynamic Crowd Analytics (${originPier.n})`, 'warning');
             }
 
             isFetching = false;
         }
 
-        // --- GPS Geolocation Logic ---
         function findNearestPier() {
             if (!navigator.geolocation) {
                 alert('Geolocation is not supported by your browser');
@@ -437,19 +454,20 @@
             });
         }
 
-        // --- Render Helpers ---
         function formatCountdown(targetTime, now) {
             const diffMs = targetTime - now;
             const diffMins = Math.floor(diffMs / 60000);
 
-            if (diffMins <= 1) {
-                return { badge: 'Due', css: 'bg-emerald-500 text-slate-950 font-black animate-pulse shadow-lg shadow-emerald-500/30' };
-            } else if (diffMins < 60) {
+            if (diffMins <= 1 && diffMins >= -5) {
+                return { badge: 'Boarding / Due', css: 'bg-emerald-500 text-slate-950 font-black animate-pulse shadow-lg shadow-emerald-500/30' };
+            } else if (diffMins < 60 && diffMins > 1) {
                 return { badge: `${diffMins} min`, css: 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold' };
-            } else {
+            } else if (diffMins >= 60) {
                 const hrs = Math.floor(diffMins / 60);
                 const mins = diffMins % 60;
                 return { badge: `${hrs} hr${mins} min`, css: 'bg-slate-700/80 text-slate-300 font-medium' };
+            } else {
+                return { badge: 'Departed', css: 'bg-slate-800 text-slate-500 font-medium' };
             }
         }
 
@@ -484,7 +502,6 @@
                                 </span>
                             </div>
                         </div>
-                        <!-- Crowd Density Indicator Bar -->
                         <div class="pt-2 border-t border-slate-700/40 flex items-center justify-between text-xs">
                             <span class="${load.color} font-medium flex items-center gap-1">
                                 <i class="ph ph-users"></i> ${load.label}
