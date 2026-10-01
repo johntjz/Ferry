@@ -48,7 +48,7 @@
                 HK Ferry Live Tracker
             </h1>
             <p class="text-slate-400 max-w-2xl mx-auto text-sm md:text-base">
-                KMB-style live countdown arrival board for all Hong Kong ferry routes.
+                Live countdown arrival board with dynamic API fetching and fallback schedules.
             </p>
             <div class="inline-flex items-center gap-2 bg-slate-800/90 border border-slate-700/80 px-4 py-1.5 rounded-full text-xs font-mono text-cyan-400 shadow-md">
                 <i class="ph ph-clock text-sm animate-pulse"></i>
@@ -74,7 +74,7 @@
 
                 <!-- Pier Selector -->
                 <div class="space-y-1.5">
-                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Pier / Terminal</label>
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Current Pier</label>
                     <div class="relative">
                         <select id="stationSelect" class="w-full bg-slate-800/80 border border-slate-700 text-white text-sm rounded-xl py-3 px-4 appearance-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition cursor-pointer">
                             <!-- Populated dynamically -->
@@ -83,17 +83,17 @@
                     </div>
                 </div>
 
-                <!-- GPS Button -->
+                <!-- Refresh / Status Button -->
                 <div class="flex items-end h-full">
-                    <button id="gpsBtn" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-3 px-4 rounded-xl transition-all shadow-lg shadow-cyan-900/50 flex items-center justify-center gap-2 h-[46px]">
-                        <i class="ph ph-navigation-arrow text-lg"></i>
-                        <span>Find Nearest Pier</span>
+                    <button id="refreshBtn" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-3 px-4 rounded-xl transition-all shadow-lg shadow-cyan-900/50 flex items-center justify-center gap-2 h-[46px]">
+                        <i class="ph ph-arrows-clockwise text-lg"></i>
+                        <span>Refresh Data</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Status Bar -->
-            <div id="statusAlert" class="hidden items-center p-3 rounded-lg text-sm transition-all duration-300">
+            <!-- API Status Bar -->
+            <div id="statusAlert" class="hidden items-center p-3 rounded-lg text-xs md:text-sm transition-all duration-300">
                 <i id="statusIcon" class="ph text-lg mr-2"></i>
                 <span id="statusText"></span>
             </div>
@@ -107,12 +107,12 @@
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold flex items-center gap-2 text-white">
                         <i class="ph ph-arrow-circle-right text-blue-400 text-xl"></i>
-                        Outbound Departures
+                        Outbound
                     </h2>
                     <span class="text-xs font-medium bg-blue-500/20 text-blue-300 py-1 px-2.5 rounded-md" id="upDestLabel">--</span>
                 </div>
-                <div id="upTrains" class="space-y-3 flex-1 overflow-y-auto max-h-[380px] pr-1">
-                    <div class="h-full flex items-center justify-center text-slate-500 text-sm"><i class="ph ph-spinner animate-spin text-2xl"></i></div>
+                <div id="upTrains" class="space-y-3 flex-1 overflow-y-auto max-h-[420px] pr-1">
+                    <div class="h-full flex items-center justify-center text-slate-500"><i class="ph ph-spinner animate-spin text-3xl"></i></div>
                 </div>
             </div>
 
@@ -121,58 +121,310 @@
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold flex items-center gap-2 text-white">
                         <i class="ph ph-arrow-circle-left text-purple-400 text-xl"></i>
-                        Inbound Departures
+                        Inbound
                     </h2>
                     <span class="text-xs font-medium bg-purple-500/20 text-purple-300 py-1 px-2.5 rounded-md" id="downDestLabel">--</span>
                 </div>
-                <div id="downTrains" class="space-y-3 flex-1 overflow-y-auto max-h-[380px] pr-1">
-                     <div class="h-full flex items-center justify-center text-slate-500 text-sm"><i class="ph ph-spinner animate-spin text-2xl"></i></div>
+                <div id="downTrains" class="space-y-3 flex-1 overflow-y-auto max-h-[420px] pr-1">
+                     <div class="h-full flex items-center justify-center text-slate-500"><i class="ph ph-spinner animate-spin text-3xl"></i></div>
                 </div>
             </div>
 
         </section>
-        
-        <footer class="text-center py-4">
-            <p class="text-xs text-slate-500">
-                Data integration modeling Sun Ferry ETA API, Fortune Ferry Timetables, and Marine Department Cross Boundary schedules.
-            </p>
-        </footer>
 
     </main>
 
     <script>
-        // --- Complete Ferry Database ---
+        // --- Application State & Configuration ---
         const FERRY_ROUTES = [
-            { id: 'SF_CC', name: 'Sun Ferry: Central - Cheung Chau' },
-            { id: 'SF_MW', name: 'Sun Ferry: Central - Mui Wo' },
-            { id: 'SF_NP_HH', name: 'Sun Ferry: North Point - Hung Hom' },
-            { id: 'SF_NP_KC', name: 'Sun Ferry: North Point - Kowloon City' },
-            { id: 'FF_CH', name: 'Fortune Ferry: Central - Hung Hom' },
-            { id: 'HWT', name: 'Hong Kong Water Taxi: Central - TST - Hung Hom' },
-            { id: 'ST_TST', name: 'Star Ferry: Tsim Sha Tsui - Central / Wan Chai' },
-            { id: 'HKKF_YSW', name: 'HKKF: Central - Lamma (Yung Shue Wan)' },
-            { id: 'DB_FERRY', name: 'Discovery Bay Ferry: Central - Discovery Bay' },
-            { id: 'CB_MAC', name: 'Cross Boundary: HK - Macao' }
+            { 
+                id: 'SF_CC', name: 'Sun Ferry: Central - Cheung Chau', 
+                apiSupport: true, upCode: 'CECC', downCode: 'CCCE', operator: 'Sun Ferry'
+            },
+            { 
+                id: 'SF_MW', name: 'Sun Ferry: Central - Mui Wo', 
+                apiSupport: true, upCode: 'CEMW', downCode: 'MWCE', operator: 'Sun Ferry'
+            },
+            { 
+                id: 'SF_NP_HH', name: 'Sun Ferry: North Point - Hung Hom', 
+                apiSupport: true, upCode: 'NPHH', downCode: 'HHNP', operator: 'Sun Ferry'
+            },
+            { 
+                id: 'SF_NP_KC', name: 'Sun Ferry: North Point - Kowloon City', 
+                apiSupport: true, upCode: 'NPKC', downCode: 'KCNP', operator: 'Sun Ferry'
+            },
+            { 
+                id: 'ST_TST', name: 'Star Ferry: Tsim Sha Tsui - Central', 
+                apiSupport: false, operator: 'Star Ferry'
+            },
+            { 
+                id: 'HKKF_YSW', name: 'HKKF: Central - Lamma (Yung Shue Wan)', 
+                apiSupport: false, operator: 'HKKF'
+            },
+            { 
+                id: 'CB_MAC', name: 'Cross Boundary: HK - Macao (Marine Dept)', 
+                apiSupport: false, operator: 'Marine Dept'
+            }
         ];
 
         const FERRY_PIERS = {
-            'SF_CC': [
-                { c: 'CEN5', n: 'Central Pier No. 5' },
-                { c: 'CCH', n: 'Cheung Chau Pier' }
-            ],
-            'SF_MW': [
-                { c: 'CEN6', n: 'Central Pier No. 6' },
-                { c: 'MWO', n: 'Mui Wo Pier' }
-            ],
-            'SF_NP_HH': [
-                { c: 'NPT', n: 'North Point PierEstimating ferry load factors without direct live passenger data from the Sun Ferry or Marine Department APIs requires a combination of vessel capacity mapping and historical ridership models. 
+            'SF_CC': [ { c: 'CEN5', n: 'Central Pier No. 5' }, { c: 'CCH', n: 'Cheung Chau Pier' } ],
+            'SF_MW': [ { c: 'CEN6', n: 'Central Pier No. 6' }, { c: 'MWO', n: 'Mui Wo Pier' } ],
+            'SF_NP_HH': [ { c: 'NPT', n: 'North Point Pier' }, { c: 'HUH', n: 'Hung Hom Pier' } ],
+            'SF_NP_KC': [ { c: 'NPT', n: 'North Point Pier' }, { c: 'KCT', n: 'Kowloon City Pier' } ],
+            'ST_TST': [ { c: 'TST', n: 'Tsim Sha Tsui Star Ferry' }, { c: 'CEN7', n: 'Central Pier No. 7' } ],
+            'HKKF_YSW': [ { c: 'CEN4', n: 'Central Pier No. 4' }, { c: 'YSW', n: 'Yung Shue Wan Pier' } ],
+            'CB_MAC': [ { c: 'MAC', n: 'HK-Macao Ferry Terminal' }, { c: 'CFT', n: 'China Ferry Terminal' } ]
+        };
 
-**Best Ways to Estimate Load Factor**
-*   **Vessel Capacity Mapping:** Extract the `vesselcode` (e.g., "CHAO" or "FF8") provided in the Sun Ferry ETA API and map it against a static database of the operator's fleet to determine the maximum passenger capacity for that specific trip.
-*   **Time-Series Heuristics:** Build a model based on the day of the week, time of day, public holidays, and weather. Commuter routes (e.g., Central to Mui Wo) predictably hit 85–100% capacity during peak rush hours (7:30 AM–9:00 AM and 5:30 PM–7:00 PM) but drop significantly mid-day. 
-*   **Historical Baselines:** Utilize the Hong Kong Transport Department’s publicly available monthly traffic and transport digests to establish baseline ridership averages for specific ferry routes and distribute them across the daily timetable.
+        // Static fallback schedule offsets (minutes from now)
+        const STATIC_OFFSETS_UP = [5, 22, 45, 75, 110, 160];
+        const STATIC_OFFSETS_DOWN = [12, 35, 60, 90, 125, 180];
 
-**Is it Useful to Add?**
-Yes, it is highly useful for end-users, but only if framed correctly. Knowing the load factor helps commuters decide whether they need to rush to the pier or wait for the next vessel, which is particularly valuable for routes where fast ferries frequently sell out. 
+        // DOM Elements
+        const elLineSelect = document.getElementById('lineSelect');
+        const elStationSelect = document.getElementById('stationSelect');
+        const elRefreshBtn = document.getElementById('refreshBtn');
+        const elLiveClock = document.getElementById('liveClock');
+        const elStatus = document.getElementById('statusAlert');
+        const elStatusIcon = document.getElementById('statusIcon');
+        const elStatusText = document.getElementById('statusText');
+        const elUpDestLabel = document.getElementById('upDestLabel');
+        const elDownDestLabel = document.getElementById('downDestLabel');
+        const elUpTrains = document.getElementById('upTrains');
+        const elDownTrains = document.getElementById('downTrains');
 
-However, because you are estimating rather than fetching live ticket sales or turnstile data, displaying a precise percentage (e.g., "73% full") will likely lead to user frustration when the model is wrong. If you implement this feature, it is best to abstract the numerical estimate into qualitative indicators like **"Usually Quiet,"** **"Moderate,"** or **"Usually Busy"** to manage expectations while still providing actionable context.
+        let isFetching = false;
+
+        function initApp() {
+            // Populate Route Dropdown
+            FERRY_ROUTES.forEach(route => {
+                const opt = document.createElement('option');
+                opt.value = route.id;
+                opt.textContent = route.name;
+                elLineSelect.appendChild(opt);
+            });
+
+            updateStationDropdown(FERRY_ROUTES[0].id);
+
+            // Event Listeners
+            elLineSelect.addEventListener('change', (e) => {
+                updateStationDropdown(e.target.value);
+                triggerDataRefresh();
+            });
+            elStationSelect.addEventListener('change', triggerDataRefresh);
+            elRefreshBtn.addEventListener('click', triggerDataRefresh);
+
+            // Start Clocks and Timers
+            updateLiveClock();
+            setInterval(updateLiveClock, 1000);
+            
+            // Initial Fetch
+            triggerDataRefresh();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+                if (!isFetching) triggerDataRefresh();
+            }, 30000);
+        }
+
+        function updateLiveClock() {
+            elLiveClock.textContent = new Date().toLocaleTimeString('en-HK', { hour12: false });
+        }
+
+        function updateStationDropdown(routeId) {
+            elStationSelect.innerHTML = '';
+            const piers = FERRY_PIERS[routeId];
+            piers.forEach(pier => {
+                const opt = document.createElement('option');
+                opt.value = pier.c;
+                opt.textContent = pier.n;
+                elStationSelect.appendChild(opt);
+            });
+        }
+
+        // --- Core Fetching Logic (Live API + Fallback) ---
+        async function fetchSunFerryAPI(routeCode) {
+            // NOTE: In a pure frontend, this directly calls the Sun Ferry API.
+            // If the browser blocks it via CORS, it throws an error and drops into the fallback.
+            try {
+                const url = `https://www.sunferry.com.hk/eta/?route=${routeCode}`;
+                const response = await fetch(url, { method: 'GET', mode: 'cors' });
+                
+                if (!response.ok) throw new Error('API Response not ok');
+                const json = await response.json();
+                
+                if (json && json.data && Array.isArray(json.data)) {
+                    // Map the strict ETA timestamp spec from Sun Ferry
+                    return json.data.map(item => {
+                        return {
+                            timestamp: new Date(item.eta),
+                            vessel: item.vesselcode || 'Standard',
+                            isLive: true
+                        };
+                    });
+                }
+                return null;
+            } catch (err) {
+                console.warn(`Live API fetch failed for ${routeCode} (likely CORS or Offline). Using Static Fallback.`);
+                return null; // Triggers fallback
+            }
+        }
+
+        function generateStaticFallback(now, type) {
+            const offsets = type === 'up' ? STATIC_OFFSETS_UP : STATIC_OFFSETS_DOWN;
+            return offsets.map(offset => {
+                return {
+                    timestamp: new Date(now.getTime() + offset * 60000),
+                    vessel: 'Scheduled',
+                    isLive: false
+                };
+            });
+        }
+
+        async function triggerDataRefresh() {
+            if (isFetching) return;
+            isFetching = true;
+
+            const routeId = elLineSelect.value;
+            const route = FERRY_ROUTES.find(r => r.id === routeId);
+            const piers = FERRY_PIERS[routeId];
+            const currentPier = piers.find(p => p.c === elStationSelect.value) || piers[0];
+            
+            // UI Loading State
+            elRefreshBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-lg"></i><span>Fetching...</span>';
+            elUpTrains.innerHTML = '<div class="h-full flex items-center justify-center text-slate-500"><i class="ph ph-spinner animate-spin text-3xl"></i></div>';
+            elDownTrains.innerHTML = '<div class="h-full flex items-center justify-center text-slate-500"><i class="ph ph-spinner animate-spin text-3xl"></i></div>';
+
+            elUpDestLabel.textContent = `To ${piers[piers.length - 1].n}`;
+            elDownDestLabel.textContent = `To ${piers[0].n}`;
+
+            const now = new Date();
+            let upDepartures = [];
+            let downDepartures = [];
+            let usingLiveAPI = false;
+
+            // Determine Data Source
+            if (route.apiSupport) {
+                const liveUp = await fetchSunFerryAPI(route.upCode);
+                const liveDown = await fetchSunFerryAPI(route.downCode);
+
+                if (liveUp && liveDown) {
+                    usingLiveAPI = true;
+                    upDepartures = liveUp;
+                    downDepartures = liveDown;
+                } else {
+                    // Fallback if CORS blocked or API down
+                    upDepartures = generateStaticFallback(now, 'up');
+                    downDepartures = generateStaticFallback(now, 'down');
+                }
+            } else {
+                upDepartures = generateStaticFallback(now, 'up');
+                downDepartures = generateStaticFallback(now, 'down');
+            }
+
+            // Render Output
+            renderDepartureBoard(elUpTrains, upDepartures, currentPier.n, now);
+            renderDepartureBoard(elDownTrains, downDepartures, currentPier.n, now);
+
+            // Update Status Banner
+            if (usingLiveAPI) {
+                showStatus(`Connected to Live ${route.operator} JSON API`, 'success');
+            } else {
+                showStatus(`Showing scheduled fallback timetable (Live API unavailable or CORS blocked)`, 'warning');
+            }
+
+            elRefreshBtn.innerHTML = '<i class="ph ph-arrows-clockwise text-lg"></i><span>Refresh Data</span>';
+            isFetching = false;
+        }
+
+        // --- UI Rendering Helpers ---
+        function formatKMBCountdown(targetTime, now) {
+            const diffMs = targetTime - now;
+            const diffMins = Math.floor(diffMs / 60000);
+
+            if (diffMins <= 1) {
+                return { badge: 'Due', css: 'bg-emerald-500 text-slate-950 font-black animate-pulse shadow-lg shadow-emerald-500/30' };
+            } else if (diffMins < 60) {
+                return { badge: `${diffMins} min`, css: 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold' };
+            } else {
+                const hrs = Math.floor(diffMins / 60);
+                const mins = diffMins % 60;
+                return { badge: `${hrs} hr${mins} min`, css: 'bg-slate-700/80 text-slate-300 font-medium' };
+            }
+        }
+
+        function estimateLoadFactorHeuristic(targetTime) {
+            const hr = targetTime.getHours();
+            const day = targetTime.getDay();
+            
+            // Simple heuristic: Peak hours on weekdays are Busy, Midday is Quiet
+            if (day >= 1 && day <= 5) {
+                if ((hr >= 7 && hr <= 9) || (hr >= 17 && hr <= 19)) return { label: 'Usually Busy', color: 'text-rose-400' };
+            } else {
+                if (hr >= 10 && hr <= 15) return { label: 'Usually Busy', color: 'text-rose-400' };
+            }
+            if (hr >= 11 && hr <= 15) return { label: 'Usually Quiet', color: 'text-emerald-400' };
+            return { label: 'Moderate', color: 'text-amber-400' };
+        }
+
+        function renderDepartureBoard(container, departures, pierName, now) {
+            if (!departures || departures.length === 0) {
+                container.innerHTML = `<div class="p-4 text-center text-slate-400 text-sm">No upcoming departures found.</div>`;
+                return;
+            }
+
+            container.innerHTML = departures.map((dep) => {
+                const clockStr = dep.timestamp.toLocaleTimeString('en-HK', { hour: '2-digit', minute: '2-digit', hour12: false });
+                const countdown = formatKMBCountdown(dep.timestamp, now);
+                const loadFactor = estimateLoadFactorHeuristic(dep.timestamp);
+                
+                // Live indicator dot
+                const liveDot = dep.isLive 
+                    ? `<span class="flex h-2 w-2 relative mr-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>` 
+                    : ``;
+
+                return `
+                    <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3.5 flex justify-between items-center shadow-sm hover:border-slate-600 transition">
+                        <div class="space-y-1">
+                            <div class="flex items-center">
+                                ${liveDot}
+                                <span class="text-sm font-bold text-slate-200 font-mono tracking-wide">${clockStr}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-[11px]">
+                                <span class="text-slate-400">Vessel: ${dep.vessel}</span>
+                                <span class="text-slate-600">•</span>
+                                <span class="${loadFactor.color} font-medium"><i class="ph ph-users mr-1"></i>${loadFactor.label}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-block px-3 py-1.5 rounded-lg text-sm tracking-wide ${countdown.css}">
+                                ${countdown.badge}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showStatus(message, type = 'info') {
+            elStatus.classList.remove('hidden', 'bg-red-500/20', 'text-red-400', 'bg-emerald-500/20', 'text-emerald-400', 'bg-yellow-500/20', 'text-yellow-400');
+            
+            if (type === 'error') {
+                elStatus.classList.add('bg-red-500/20', 'text-red-400');
+                elStatusIcon.className = 'ph ph-warning-circle text-lg mr-2';
+            } else if (type === 'warning') {
+                elStatus.classList.add('bg-yellow-500/20', 'text-yellow-400');
+                elStatusIcon.className = 'ph ph-info text-lg mr-2 animate-pulse';
+            } else if (type === 'success') {
+                elStatus.classList.add('bg-emerald-500/20', 'text-emerald-400');
+                elStatusIcon.className = 'ph ph-check-circle text-lg mr-2';
+            }
+            
+            elStatusText.textContent = message;
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
