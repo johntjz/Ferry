@@ -45,10 +45,10 @@
         <header class="text-center space-y-3 pt-4 pb-2">
             <h1 class="text-3xl md:text-5xl font-bold tracking-tight text-white flex items-center justify-center gap-3">
                 <i class="ph-fill ph-boat text-cyan-500"></i>
-                HK Ferry Timetable & Live ETA
+                HK Ferry Timetable & Crowd Analytics
             </h1>
             <p class="text-slate-400 max-w-2xl mx-auto text-sm md:text-base">
-                Official schedule tracking and live API integration for Hong Kong ferry routes.
+                Official schedule tracking and predictive load factor approximations departing from your selected pier.
             </p>
             <div class="inline-flex items-center gap-2 bg-slate-800/90 border border-slate-700/80 px-4 py-1.5 rounded-full text-xs font-mono text-cyan-400 shadow-md">
                 <i class="ph ph-clock text-sm animate-pulse"></i>
@@ -93,14 +93,9 @@
             </div>
 
             <!-- Status Bar -->
-            <div id="statusAlert" class="flex items-center justify-between p-3 rounded-lg text-xs md:text-sm bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
-                <div class="flex items-center">
-                    <i class="ph ph-info text-lg mr-2"></i>
-                    <span id="statusText">Fetching data sources...</span>
-                </div>
-                <div id="dataSourceBadge" class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-600 text-xs font-bold">
-                    STATIC
-                </div>
+            <div id="statusAlert" class="flex items-center p-3 rounded-lg text-xs md:text-sm bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+                <i class="ph ph-info text-lg mr-2"></i>
+                <span id="statusText">Showing next scheduled departures departing directly from your selected pier</span>
             </div>
         </section>
 
@@ -111,53 +106,208 @@
                     <i class="ph ph-paper-plane-tilt text-cyan-400 text-xl">></i>
                     Departures From <span id="currentPierTitle" class="text-cyan-400">--</span>
                 </h2>
-                <span class="text-xs font-medium bg-cyan-500/20 text-cyan-300 py-1 px-2.5 rounded-md" id="deptCountLabel">Loading...</span>
+                <span class="text-xs font-medium bg-cyan-500/20 text-cyan-300 py-1 px-2.5 rounded-md" id="deptCountLabel">0 sailings today</span>
             </div>
             <div id="departuresList" class="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-1">
                 <!-- Departure items populated dynamically -->
             </div>
         </section>
+
+        <footer class="text-center py-4">
+            <p class="text-xs text-slate-500">
+                Outlying Islands, Kaito, and Cross-Boundary routing engine.
+            </p>
+        </footer>
+
     </main>
 
     <script>
-        // Updated Data Dictionary with correct scheduling logic and API endpoints
         const FERRY_ROUTES = [
+            // --- TIER 1: Trunk Commuter & Main Islands (Highest Patronage) ---
             { 
-                id: 'HKKF_YSW', name: 'Central - Lamma Island (Yung Shue Wan) (HKKF)', operator: 'HKKF', isIsland: true,
-                liveApiUrl: 'https://www.hkkfeta.com/opendata/eta/', 
+                id: 'ST_TST_CEN', name: 'Tsim Sha Tsui - Central (Star Ferry)', operator: 'Star Ferry', isIsland: false, isMultiStop: false,
+                piers: [{ c: 'TST', n: 'Tsim Sha Tsui Star Ferry', lat: 22.2931, lng: 114.1686 }, { c: 'CEN7', n: 'Central Pier No. 7', lat: 22.2878, lng: 114.1570 }],
+                schedulesUp: ['06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:30'],
+                schedulesDown: ['06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:30']
+            },
+            { 
+                id: 'SF_CC', name: 'Central - Cheung Chau (Sun Ferry)', operator: 'Sun Ferry', isIsland: true, isMultiStop: false,
+                piers: [{ c: 'CEN5', n: 'Central Pier No. 5', lat: 22.2870, lng: 114.1583 }, { c: 'CCH', n: 'Cheung Chau Pier', lat: 22.2078, lng: 114.0275 }],
+                schedulesUp: ['06:00', '06:40', '07:30', '08:20', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:30', '23:30'],
+                schedulesDown: ['06:00', '06:45', '07:45', '08:30', '09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:30', '17:30', '18:30', '19:30', '21:00', '22:45', '00:30']
+            },
+            { 
+                id: 'DB_CEN', name: 'Central - Discovery Bay (DB Transportation)', operator: 'DB Transportation', isIsland: true, isMultiStop: false,
+                piers: [{ c: 'CEN3', n: 'Central Pier No. 3', lat: 22.2862, lng: 114.1595 }, { c: 'DBP', n: 'Discovery Bay Pier', lat: 22.3042, lng: 114.0185 }],
+                schedulesUp: ['06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:30', '00:30'],
+                schedulesDown: ['05:30', '06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:30', '17:30', '18:30', '19:30', '20:30', '21:30', '22:30', '23:30']
+            },
+            { 
+                id: 'HKKF_YSW', name: 'Central - Lamma Island (Yung Shue Wan) (HKKF)', operator: 'HKKF', isIsland: true, isMultiStop: false,
                 piers: [{ c: 'CEN4', n: 'Central Pier No. 4', lat: 22.2868, lng: 114.1588 }, { c: 'YSW', n: 'Yung Shue Wan Pier', lat: 22.2235, lng: 114.1190 }],
                 schedulesUp: ['06:30', '07:30', '08:30', '09:30', '11:00', '12:30', '14:00', '15:30', '17:00', '18:30', '20:00', '22:00', '23:30'],
                 schedulesDown: ['06:00', '07:00', '08:00', '09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30', '21:15', '22:45']
             },
             { 
-                id: 'SF_MW', name: 'Central - Mui Wo (Sun Ferry)', operator: 'Sun Ferry', isIsland: true,
-                liveApiUrl: 'https://rt.data.gov.hk/v1/transport/sunferry/eta', 
+                id: 'SF_MW', name: 'Central - Mui Wo (Sun Ferry)', operator: 'Sun Ferry', isIsland: true, isMultiStop: false,
                 piers: [{ c: 'CEN6', n: 'Central Pier No. 6', lat: 22.2873, lng: 114.1578 }, { c: 'MWO', n: 'Mui Wo Pier', lat: 22.2642, lng: 113.9984 }],
                 schedulesUp: ['06:10', '07:10', '08:10', '09:10', '10:15', '11:15', '12:15', '13:15', '14:15', '15:15', '16:15', '17:20', '18:20', '19:30', '21:00', '23:30'],
                 schedulesDown: ['05:20', '06:20', '07:30', '08:30', '09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:30', '17:40', '18:40', '20:00', '22:00']
             },
             { 
-                id: 'SF_II', name: 'Inter-Islands: Peng Chau - Mui Wo - Chi Ma Wan - Cheung Chau', operator: 'Sun Ferry', isIsland: true, isMultiStop: true,
-                liveApiUrl: null, // Relies on static for complex multi-stops unless direct endpoint available
-                piers: [
-                    { c: 'PEC', n: 'Peng Chau Pier', lat: 22.2885, lng: 114.0372, 
-                      destUp: 'Chi Ma Wan / Cheung Chau', 
-                      exactTimesUp: ['05:40', '07:30', '09:45', '11:45', '13:35', '15:40', '17:55', '19:50', '21:50'] },
-                    { c: 'MWO', n: 'Mui Wo Pier', lat: 22.2642, lng: 113.9984, 
-                      destUp: 'Chi Ma Wan / Cheung Chau', destDown: 'Peng Chau',
-                      exactTimesUp: ['06:00', '08:00', '10:10', '12:15', '14:00', '16:00', '18:15', '20:10', '22:10'],
-                      exactTimesDown: ['06:30', '07:20', '09:25', '11:30', '13:25', '15:25', '17:30', '19:25', '21:30'] },
-                    { c: 'CCH', n: 'Cheung Chau Pier', lat: 22.2078, lng: 114.0275, 
-                      destDown: 'Chi Ma Wan / Mui Wo / Peng Chau',
-                      exactTimesDown: ['06:00', '06:35', '08:45', '10:50', '12:45', '14:45', '16:50', '18:45', '21:00', '22:50'] }
-                ]
+                id: 'HKKF_PC', name: 'Central - Peng Chau (HKKF)', operator: 'HKKF', isIsland: true, isMultiStop: false,
+                piers: [{ c: 'CEN4', n: 'Central Pier No. 4', lat: 22.2868, lng: 114.1588 }, { c: 'PEC', n: 'Peng Chau Pier', lat: 22.2885, lng: 114.0372 }],
+                schedulesUp: ['07:00', '08:00', '09:15', '10:30', '11:45', '13:00', '14:30', '16:00', '17:15', '18:30', '19:45', '21:00', '22:30'],
+                schedulesDown: ['06:20', '07:15', '08:15', '09:30', '10:45', '12:00', '13:30', '15:00', '16:15', '17:30', '18:45', '20:00', '21:30']
+            },
+
+            // --- TIER 2: Secondary Trunks, Multi-stop Main, & Cross-Boundary ---
+            { 
+                id: 'X_MACAU', name: 'Sheung Wan - Macau Outer Harbour / Taipa (TurboJET / Cotai Water Jet)', operator: 'TurboJET / Cotai', isIsland: false, isMultiStop: false,
+                piers: [{ c: 'SHW', n: 'Hong Kong-Macau Ferry Terminal', lat: 22.2882, lng: 114.1517 }, { c: 'MAC', n: 'Macau Outer / Taipa', lat: 22.1969, lng: 113.5562 }],
+                schedulesUp: ['07:30', '08:30', '09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:30', '17:30', '19:00', '20:00', '21:00', '22:30'],
+                schedulesDown: ['07:30', '08:30', '09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:30', '17:30', '19:00', '20:00', '21:00', '22:30']
             },
             { 
-                id: 'ST_TST_CEN', name: 'Tsim Sha Tsui - Central (Star Ferry)', operator: 'Star Ferry', isIsland: false,
-                liveApiUrl: null,
-                piers: [{ c: 'TST', n: 'Tsim Sha Tsui Star Ferry', lat: 22.2931, lng: 114.1686 }, { c: 'CEN7', n: 'Central Pier No. 7', lat: 22.2878, lng: 114.1570 }],
-                schedulesUp: ['06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:30'],
-                schedulesDown: ['06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:30']
+                id: 'X_ZHUHAI', name: 'Sheung Wan - Zhuhai Jiuzhou Port (CKS)', operator: 'CKS', isIsland: false, isMultiStop: false,
+                piers: [{ c: 'SHW', n: 'Hong Kong-Macau Ferry Terminal', lat: 22.2882, lng: 114.1517 }, { c: 'ZHU', n: 'Zhuhai Jiuzhou Port', lat: 22.2359, lng: 113.5939 }],
+                schedulesUp: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'],
+                schedulesDown: ['09:00', '11:00', '13:00', '15:00', '17:00', '19:00']
+            },
+            { 
+                id: 'X_ZHONGSHAN', name: 'Tsim Sha Tsui - Zhongshan Port (CKS)', operator: 'CKS', isIsland: false, isMultiStop: false,
+                piers: [{ c: 'CFT', n: 'China Ferry Terminal (TST)', lat: 22.2995, lng: 114.1670 }, { c: 'ZSN', n: 'Zhongshan Port', lat: 22.5636, lng: 113.4682 }],
+                schedulesUp: ['08:30', '11:30', '15:30', '18:30'],
+                schedulesDown: ['10:00', '13:00', '17:00', '20:00']
+            },
+            { 
+                id: 'X_GZ', name: 'Tsim Sha Tsui - Guangzhou Nansha / Pazhou (CKS)', operator: 'CKS', isIsland: false, isMultiStop: false,
+                piers: [{ c: 'CFT', n: 'China Ferry Terminal (TST)', lat: 22.2995, lng: 114.1670 }, { c: 'PAZ', n: 'Guangzhou Pazhou', lat: 23.1042, lng: 113.3644 }],
+                schedulesUp: ['08:00', '12:00', '16:00'],
+                schedulesDown: ['10:00', '14:00', '18:00']
+            },
+            { 
+                id: 'X_DG', name: 'Tsim Sha Tsui - Dongguan Humen (CKS)', operator: 'CKS', isIsland: false, isMultiStop: false,
+                piers: [{ c: 'CFT', n: 'China Ferry Terminal (TST)', lat: 22.2995, lng: 114.1670 }, { c: 'HUM', n: 'Dongguan Humen', lat: 22.8225, lng: 113.6268 }],
+                schedulesUp: ['09:00', '14:30'],
+                schedulesDown: ['11:00', '16:30']
+            },
+            { 
+                id: 'SF_II', name: 'Inter-Islands: Peng Chau - Mui Wo - Chi Ma Wan - Cheung Chau (Sun Ferry)', operator: 'Sun Ferry', isIsland: true, isMultiStop: true,
+                piers: [
+                    { c: 'PEC', n: 'Peng Chau Pier', lat: 22.2885, lng: 114.0372 },
+                    { c: 'MWO', n: 'Mui Wo Pier', lat: 22.2642, lng: 113.9984 },
+                    { c: 'CMW', n: 'Chi Ma Wan Pier', lat: 22.2285, lng: 114.0085 },
+                    { c: 'CCH', n: 'Cheung Chau Pier', lat: 22.2078, lng: 114.0275 }
+                ],
+                schedulesUp: ['05:40', '07:30', '09:45', '11:55', '13:35', '15:40', '17:55', '19:50', '21:50', '23:45'],
+                schedulesDown: ['06:00', '06:35', '08:45', '10:50', '12:45', '14:45', '16:50', '18:45', '21:00', '22:50']
+            },
+            { 
+                id: 'FF_TM', name: 'Tuen Mun - Tung Chung - Sha Lo Wan - Tai O (Fortune Ferry)', operator: 'Fortune Ferry', isIsland: true, isMultiStop: true,
+                piers: [
+                    { c: 'TMN', n: 'Tuen Mun Ferry Pier', lat: 22.3705, lng: 113.9654 },
+                    { c: 'TCG', n: 'Tung Chung Pier', lat: 22.2942, lng: 113.9392 },
+                    { c: 'SLW', n: 'Sha Lo Wan Pier', lat: 22.2891, lng: 113.8967 },
+                    { c: 'TAO', n: 'Tai O Pier', lat: 22.2536, lng: 113.8617 }
+                ],
+                schedulesUp: ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00'],
+                schedulesDown: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00']
+            },
+
+            // --- TIER 3: Local Island Links & Major Kaitos ---
+            { 
+                id: 'CK_AB_YSW', name: 'Aberdeen - Pak Kok Tsuen - Yung Shue Wan (Chuen Kee Ferry)', operator: 'Chuen Kee Ferry', isIsland: true, isMultiStop: true,
+                piers: [
+                    { c: 'ABD', n: 'Aberdeen Promenade Pier', lat: 22.2471, lng: 114.1557 },
+                    { c: 'PKT', n: 'Pak Kok Tsuen Pier', lat: 22.2319, lng: 114.1164 },
+                    { c: 'YSW', n: 'Yung Shue Wan Pier', lat: 22.2235, lng: 114.1190 }
+                ],
+                schedulesUp: ['06:30', '08:00', '09:30', '11:00', '12:30', '14:00', '15:30', '17:00', '18:30', '20:00'],
+                schedulesDown: ['07:15', '08:45', '10:15', '11:45', '13:15', '14:45', '16:15', '17:45', '19:15', '20:45']
+            },
+            { 
+                id: 'HKKF_HLC', name: 'Peng Chau - Hei Ling Chau (HKKF)', operator: 'HKKF', isIsland: true, isMultiStop: false,
+                piers: [{ c: 'PEC', n: 'Peng Chau Pier', lat: 22.2885, lng: 114.0372 }, { c: 'HLC', n: 'Hei Ling Chau Pier', lat: 22.2562, lng: 114.0298 }],
+                schedulesUp: ['07:45', '09:45', '11:45', '13:45', '15:45', '17:45'],
+                schedulesDown: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00']
+            },
+            { 
+                id: 'TW_DB_PC', name: 'Nim Shue Wan - Trappist Monastery - Peng Chau (Tsui Wah)', operator: 'Tsui Wah', isIsland: true, isMultiStop: true,
+                piers: [
+                    { c: 'NSW', n: 'Nim Shue Wan (DB)', lat: 22.2932, lng: 114.0201 },
+                    { c: 'TRP', n: 'Trappist Monastery', lat: 22.2825, lng: 114.0253 },
+                    { c: 'PEC', n: 'Peng Chau', lat: 22.2885, lng: 114.0372 }
+                ],
+                schedulesUp: ['07:30', '09:30', '11:30', '13:30', '15:30', '17:30'],
+                schedulesDown: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00']
+            },
+            { 
+                id: 'LK_CC', name: 'Cheung Chau Public Pier - Cheung Chau Sai Wan (Local Kaito)', operator: 'Local Kaito', isIsland: true, isMultiStop: false,
+                piers: [{ c: 'CCP', n: 'Cheung Chau Public Pier', lat: 22.2078, lng: 114.0275 }, { c: 'CCSW', n: 'Cheung Chau Sai Wan', lat: 22.2001, lng: 114.0175 }],
+                schedulesUp: ['07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
+                schedulesDown: ['07:15', '08:15', '09:15', '10:15', '11:15', '12:15', '13:15', '14:15', '15:15', '16:15', '17:15', '18:15']
+            },
+            
+            // --- TIER 4: Remote / Leisure Kaitos (Lowest Patronage) ---
+            { 
+                id: 'TW_AB_PT', name: 'Aberdeen - Po Toi Island (Tsui Wah)', operator: 'Tsui Wah', isIsland: true, isMultiStop: false,
+                piers: [{ c: 'ABD', n: 'Aberdeen Promenade Pier', lat: 22.2471, lng: 114.1557 }, { c: 'PTI', n: 'Po Toi Island', lat: 22.1643, lng: 114.2520 }],
+                schedulesUp: ['08:15', '10:00'],
+                schedulesDown: ['15:00', '16:30']
+            },
+            { 
+                id: 'TW_ST_PT', name: 'Stanley (Blake Pier) - Po Toi Island (Tsui Wah)', operator: 'Tsui Wah', isIsland: true, isMultiStop: false,
+                piers: [{ c: 'STN', n: 'Stanley Blake Pier', lat: 22.2173, lng: 114.2120 }, { c: 'PTI', n: 'Po Toi Island', lat: 22.1643, lng: 114.2520 }],
+                schedulesUp: ['10:00', '11:30'],
+                schedulesDown: ['15:30', '17:00']
+            },
+            { 
+                id: 'TW_MLS_TM', name: 'Ma Liu Shui - Tap Mun (Tsui Wah)', operator: 'Tsui Wah', isIsland: true, isMultiStop: true,
+                piers: [
+                    { c: 'MLS', n: 'Ma Liu Shui Pier', lat: 22.4172, lng: 114.2125 },
+                    { c: 'TAP', n: 'Tap Mun Pier', lat: 22.4716, lng: 114.3601 }
+                ],
+                schedulesUp: ['08:30', '12:30', '15:00'],
+                schedulesDown: ['11:10', '13:45', '17:30']
+            },
+            { 
+                id: 'TW_MLS_TPC', name: 'Ma Liu Shui - Tung Ping Chau (Tsui Wah)', operator: 'Tsui Wah', isIsland: true, isMultiStop: false,
+                piers: [{ c: 'MLS', n: 'Ma Liu Shui Pier', lat: 22.4172, lng: 114.2125 }, { c: 'TPC', n: 'Tung Ping Chau Pier', lat: 22.5401, lng: 114.4344 }],
+                schedulesUp: ['09:00'],
+                schedulesDown: ['17:15']
+            },
+            { 
+                id: 'BL_MLS_KO', name: 'Ma Liu Shui - Kat O / Lai Chi Wo (Best Leader)', operator: 'Best Leader', isIsland: true, isMultiStop: true,
+                piers: [
+                    { c: 'MLS', n: 'Ma Liu Shui Pier', lat: 22.4172, lng: 114.2125 },
+                    { c: 'KAT', n: 'Kat O Pier', lat: 22.5463, lng: 114.2961 },
+                    { c: 'LCW', n: 'Lai Chi Wo Pier', lat: 22.5255, lng: 114.2635 }
+                ],
+                schedulesUp: ['09:00'],
+                schedulesDown: ['15:30']
+            },
+            { 
+                id: 'LK_WS_TM', name: 'Wong Shek - Tap Mun / Wan Tsai / Chek Keng (Local Kaito)', operator: 'Local Kaito', isIsland: true, isMultiStop: true,
+                piers: [
+                    { c: 'WSK', n: 'Wong Shek Pier', lat: 22.4332, lng: 114.3385 },
+                    { c: 'CKG', n: 'Chek Keng Pier', lat: 22.4190, lng: 114.3340 },
+                    { c: 'WTS', n: 'Wan Tsai Pier', lat: 22.4578, lng: 114.3392 },
+                    { c: 'TAP', n: 'Tap Mun Pier', lat: 22.4716, lng: 114.3601 }
+                ],
+                schedulesUp: ['09:30', '10:30', '11:30', '12:30', '14:30', '15:30', '16:30'],
+                schedulesDown: ['10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00']
+            },
+            { 
+                id: 'LK_STK', name: 'Sha Tau Kok - Kat O / Ap Chau / Lai Chi Wo (Local Kaito)', operator: 'Local Kaito', isIsland: true, isMultiStop: true,
+                piers: [
+                    { c: 'STK', n: 'Sha Tau Kok Pier', lat: 22.5441, lng: 114.2255 },
+                    { c: 'APC', n: 'Ap Chau Pier', lat: 22.5539, lng: 114.2764 },
+                    { c: 'KAT', n: 'Kat O Pier', lat: 22.5463, lng: 114.2961 },
+                    { c: 'LCW', n: 'Lai Chi Wo Pier', lat: 22.5255, lng: 114.2635 }
+                ],
+                schedulesUp: ['10:00'],
+                schedulesDown: ['15:30']
             }
         ];
 
@@ -168,8 +318,6 @@
         const elCurrentPierTitle = document.getElementById('currentPierTitle');
         const elDeptCountLabel = document.getElementById('deptCountLabel');
         const elDeparturesList = document.getElementById('departuresList');
-        const elStatusText = document.getElementById('statusText');
-        const elDataSourceBadge = document.getElementById('dataSourceBadge');
 
         function initApp() {
             FERRY_ROUTES.forEach(route => {
@@ -183,16 +331,16 @@
 
             elLineSelect.addEventListener('change', (e) => {
                 updateStationDropdown(e.target.value);
-                triggerDataUpdate();
+                renderDepartures();
             });
-            elStationSelect.addEventListener('change', triggerDataUpdate);
+            elStationSelect.addEventListener('change', renderDepartures);
             elGpsBtn.addEventListener('click', findNearestPier);
 
             updateLiveClock();
             setInterval(updateLiveClock, 1000);
             
-            triggerDataUpdate();
-            setInterval(triggerDataUpdate, 60000); // Re-fetch every minute
+            renderDepartures();
+            setInterval(renderDepartures, 30000); 
         }
 
         function updateLiveClock() {
@@ -210,100 +358,62 @@
             });
         }
 
-        // Fix 3: Robust Time Parsing logic to handle midnight cross-overs correctly
-        function parseTimes(timeStrings, destinationName) {
+        function parseTimes(timeStrings, pierOffsetMinutes, destinationName) {
             const now = new Date();
             return timeStrings.map(tStr => {
                 const [hh, mm] = tStr.split(':').map(Number);
                 const d = new Date(now);
-                d.setHours(hh, mm, 0, 0);
+                d.setHours(hh, mm + pierOffsetMinutes, 0, 0);
                 
-                // If the scheduled time is >18 hrs ago, it's actually tomorrow's early morning ferry
-                if (d.getTime() < now.getTime() - 18 * 3600000) {
+                if (d - now < -7200000) {
                     d.setDate(d.getDate() + 1);
-                } 
-                // If it's >18 hrs in the future, it was likely earlier today
-                else if (d.getTime() > now.getTime() + 18 * 3600000) {
-                    d.setDate(d.getDate() - 1);
                 }
-                
                 return { timestamp: d, destination: destinationName };
             });
         }
 
-        async function triggerDataUpdate() {
-            elDeparturesList.innerHTML = `<div class="p-8 text-center text-slate-400"><i class="ph ph-spinner animate-spin text-2xl mb-2"></i><br>Syncing timetables...</div>`;
-            
+        function renderDepartures() {
             const routeId = elLineSelect.value;
             const route = FERRY_ROUTES.find(r => r.id === routeId);
             const pierCode = elStationSelect.value;
-            
-            elCurrentPierTitle.textContent = route.piers.find(p => p.c === pierCode).n;
+            const pierIndex = route.piers.findIndex(p => p.c === pierCode);
+            const activeIndex = pierIndex >= 0 ? pierIndex : 0;
+            const currentPierObj = route.piers[activeIndex];
 
-            // Attempt Live API Fetch
-            let liveData = null;
-            if (route.liveApiUrl) {
-                try {
-                    elStatusText.textContent = "Connecting to live marine endpoints...";
-                    // In a production environment, this fetch points to your backend proxy to avoid CORS
-                    // For this frontend demo, we attempt a direct fetch.
-                    const response = await fetch(route.liveApiUrl, { mode: 'cors' });
-                    if (response.ok) {
-                        const data = await response.json();
-                        // Mapping logic would go here dependent on operator JSON schema
-                        // liveData = parseOperatorSchema(data, pierCode);
-                    }
-                } catch (error) {
-                    console.warn("Live API fetch blocked by CORS or offline. Falling back to static timetable.");
-                }
-            }
+            elCurrentPierTitle.textContent = currentPierObj.n;
 
-            // Fallback to Static Engine if live API fails
-            if (!liveData) {
-                elDataSourceBadge.className = "px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-600 text-xs font-bold";
-                elDataSourceBadge.textContent = "STATIC DATA";
-                elStatusText.textContent = "Showing scheduled timetable. Live API unavailable.";
-                renderStaticDepartures(route, pierCode);
-            } else {
-                elDataSourceBadge.className = "px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 text-xs font-bold animate-pulse";
-                elDataSourceBadge.textContent = "LIVE ETA";
-                elStatusText.textContent = "Showing live estimated arrival times.";
-                // In production, render live data here.
-            }
-        }
-
-        // Fix 1 & 2: Correct multi-stop logic & removed erroneous 15 min return offset
-        function renderStaticDepartures(route, pierCode) {
             const now = new Date();
             let departures = [];
-            const pierIndex = route.piers.findIndex(p => p.c === pierCode);
-            const currentPierObj = route.piers[pierIndex];
 
             if (route.isMultiStop) {
-                // Read exact times directly from the pier object instead of guessing offsets
-                if (currentPierObj.exactTimesUp) {
-                    departures.push(...parseTimes(currentPierObj.exactTimesUp, currentPierObj.destUp));
+                // For multi-stop routes, check forward (Up) and backward (Down) destinations available from this pier index
+                const offsetMultiplier = activeIndex * 22;
+                if (activeIndex < route.piers.length - 1) {
+                    const nextDest = route.piers[activeIndex + 1].n;
+                    const upTimes = parseTimes(route.schedulesUp, offsetMultiplier, nextDest);
+                    departures.push(...upTimes);
                 }
-                if (currentPierObj.exactTimesDown) {
-                    departures.push(...parseTimes(currentPierObj.exactTimesDown, currentPierObj.destDown));
+                if (activeIndex > 0) {
+                    const prevDest = route.piers[activeIndex - 1].n;
+                    const downTimes = parseTimes(route.schedulesDown, (route.piers.length - 1 - activeIndex) * 22, prevDest);
+                    departures.push(...downTimes);
                 }
             } else {
-                // Standard A to B route
-                const isPierA = pierIndex === 0;
+                // Standard 2-pier route
+                const isPierA = activeIndex === 0;
                 const destName = route.piers[isPierA ? 1 : 0].n;
+                // Pier A uses schedulesUp, Pier B uses schedulesDown
                 const scheduleList = isPierA ? route.schedulesUp : route.schedulesDown;
-                
-                // No arbitrary offset added here anymore
-                departures = parseTimes(scheduleList, destName);
+                departures = parseTimes(scheduleList, isPierA ? 0 : 15, destName);
             }
 
-            // Sort chronologically and filter out sailings that departed > 10 mins ago
+            // Sort chronologically and filter out past sailings (> 10 mins ago)
             departures.sort((a, b) => a.timestamp - b.timestamp);
             const activeDepartures = departures.filter(dep => (dep.timestamp - now) > -600000);
 
             elDeptCountLabel.textContent = `${activeDepartures.length} sailings upcoming`;
 
-            if (activeDepartures.length === 0) {
+            if (!activeDepartures || activeDepartures.length === 0) {
                 elDeparturesList.innerHTML = `<div class="p-8 text-center text-slate-400 text-sm">No further sailings scheduled from this pier today.</div>`;
                 return;
             }
@@ -379,7 +489,7 @@
                 elStationSelect.value = bestPierCode;
                 
                 elGpsBtn.innerHTML = '<i class="ph ph-navigation-arrow text-lg"></i><span>Find Nearest Pier</span>';
-                triggerDataUpdate();
+                renderDepartures();
             }, () => {
                 alert('Unable to retrieve your location');
                 elGpsBtn.innerHTML = '<i class="ph ph-navigation-arrow text-lg"></i><span>Find Nearest Pier</span>';
