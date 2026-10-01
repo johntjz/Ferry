@@ -35,7 +35,7 @@
         <div>
           <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Select Ferry Route (Live)</label>
           <select id="routeSelect" class="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none disabled:opacity-50">
-            <option>Loading all routes from Fandom...</option>
+            <option>Loading routes from Fandom...</option>
           </select>
         </div>
 
@@ -100,22 +100,41 @@
       return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} (${days[now.getDay()]}) ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
     }
 
+    // Normalizes strings to eliminate near-duplicate title variations
+    function canonicalKey(title) {
+      return title
+        .toLowerCase()
+        .replace(/service/g, '')
+        .replace(/[^a-z0-9]/g, '');
+    }
+
     // --- 2. DYNAMIC FANDOM API INTEGRATION ---
 
-    // A. Fetch All Route Pages to Populate Dropdown
+    // A. Fetch All Route Pages & Deduplicate
     async function fetchAllRoutesList() {
       const statusDot = document.getElementById('apiStatusDot');
       const statusText = document.getElementById('apiStatusText');
       
       try {
-        // Use MediaWiki Action API to get all pages on the wiki
-        const endpoint = "https://hongkongferry.fandom.com/api.php?action=query&list=allpages&aplimit=500&format=json&origin=*";
+        // Query non-redirect pages from Fandom API (apfilterredir=nonredirects removes alias duplicates)
+        const endpoint = "https://hongkongferry.fandom.com/api.php?action=query&list=allpages&apfilterredir=nonredirects&aplimit=500&format=json&origin=*";
         const response = await fetch(endpoint);
         const data = await response.json();
         
-        // Filter out non-route pages (like Categories or Templates)
-        const routes = data.query.allpages.filter(p => p.title.includes("Route") && !p.title.includes("Template:"));
+        const rawPages = data.query.allpages.filter(p => p.title.includes("Route") && !p.title.includes("Template:"));
         
+        // Deduplicate near-identical route page names
+        const seenKeys = new Set();
+        const routes = [];
+
+        for (const page of rawPages) {
+          const key = canonicalKey(page.title);
+          if (!seenKeys.has(key)) {
+            seenKeys.add(key);
+            routes.push(page);
+          }
+        }
+
         const select = document.getElementById('routeSelect');
         select.innerHTML = '';
         
@@ -127,9 +146,8 @@
         });
 
         statusDot.className = "w-2 h-2 rounded-full bg-emerald-400";
-        statusText.innerText = `Successfully loaded ${routes.length} live routes.`;
+        statusText.innerText = `Loaded ${routes.length} unique live routes.`;
 
-        // Initialize the first route
         if (routes.length > 0) {
           updatePierDropdown();
           await loadAndRender();
@@ -167,7 +185,7 @@
       } catch (err) {
         statusDot.className = "w-2 h-2 rounded-full bg-red-500";
         statusText.innerText = "Failed to load timetable.";
-        return { times: [], fare: "Unknown", duration: 30 };
+        return { times: [], fare: "Consult Live API", duration: 30 };
       }
     }
 
@@ -177,38 +195,32 @@
       const doc = parser.parseFromString(htmlContent, 'text/html');
       
       let extractedFare = "Consult Live API";
-      let extractedDuration = 30; // fallback
+      let extractedDuration = 30; // default duration
 
-      // 1. Scrape InfoBox (th/td pairs) for Duration and Fares
+      // Scrape InfoBox for duration and fare details
       const ths = Array.from(doc.querySelectorAll('th'));
       
-      // Try finding Duration
       const durationTh = ths.find(th => th.textContent.includes('Travelling time') || th.textContent.includes('Journey time'));
       if (durationTh && durationTh.nextElementSibling) {
-         const text = durationTh.nextElementSibling.textContent;
-         const match = text.match(/(\d+)/);
+         const match = durationTh.nextElementSibling.textContent.match(/(\d+)/);
          if (match) extractedDuration = parseInt(match[1]);
       }
 
-      // Try finding Fare
       const fareTh = ths.find(th => th.textContent.includes('Full fare') || th.textContent.includes('Fare'));
       if (fareTh && fareTh.nextElementSibling) {
          extractedFare = fareTh.nextElementSibling.textContent.trim().split('\n')[0].replace(/\[.*?\]/g, ''); 
       }
 
-      // 2. Scrape all times via regex (extracts HH:MM patterns)
+      // Scrape standard timetable HH:MM patterns
       const timesList = [];
       const timeRegex = /\b([0-2]?[0-9]:[0-5][0-9])\b/g;
-      
-      // We look inside the main content area to avoid sidebar garbage
       const contentBody = doc.querySelector('.mw-parser-output') || doc.body;
       const textContent = contentBody.textContent || "";
       const matches = [...new Set(textContent.match(timeRegex) || [])];
 
-      matches.sort();
       matches.forEach(timeStr => {
         const [h, m] = timeStr.split(':');
-        timesList.push({ time: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}` });
+        timesList.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
       });
 
       return {
@@ -218,19 +230,16 @@
       };
     }
 
-    // --- 3. DYNAMIC UI CONTROLLERS ---
+    // --- 3. DYNAMIC UI & SORTING LOGIC ---
     
-    // Guess origin and destination from the Fandom page title
     function updatePierDropdown() {
       const routeTitle = document.getElementById('routeSelect').value;
       const pierSelect = document.getElementById('pierSelect');
       
-      // Standard Wiki Pattern: "Operator Origin - Destination Route"
       const match = routeTitle.match(/(.*?) - (.*?) Route/);
       
       pierSelect.innerHTML = '';
       if (match) {
-        // Attempt to clean the operator out of the origin string for a cleaner display
         const originFull = match[1];
         const dest = match[2];
         
@@ -242,12 +251,10 @@
       }
     }
 
-    function calculateArrival(depTimeStr, durationMinutes) {
-      const [h, m] = depTimeStr.split(':').map(Number);
-      const depDate = new Date();
-      depDate.setHours(h, m + durationMinutes, 0, 0);
-      const arrH = String(depDate.getHours()).padStart(2, '0');
-      const arrM = String(depDate.getMinutes()).padStart(2, '0');
+    function calculateArrivalDate(sailingDate, durationMinutes) {
+      const arr = new Date(sailingDate.getTime() + durationMinutes * 60000);
+      const arrH = String(arr.getHours()).padStart(2, '0');
+      const arrM = String(arr.getMinutes()).padStart(2, '0');
       return `${arrH}:${arrM}`;
     }
 
@@ -255,7 +262,6 @@
       const now = new Date();
       document.getElementById('liveClock').innerText = formatClock(now);
       
-      // If we have cached the data for the current route, display its live scraped fare
       const routeTitle = document.getElementById('routeSelect').value;
       if (liveTimetableCache[routeTitle]) {
         const fare = liveTimetableCache[routeTitle].fare;
@@ -272,7 +278,6 @@
       document.getElementById('currentPierName').innerText = selectedOption.text.replace('Depart from ', '');
       const destinationText = selectedOption.getAttribute('data-dest');
 
-      // Fetch or use cached data
       if (!liveTimetableCache[routeTitle]) {
         liveTimetableCache[routeTitle] = await fetchFandomTimetable(routeTitle);
       }
@@ -280,94 +285,106 @@
       const scheduleData = liveTimetableCache[routeTitle];
       currentRouteDuration = scheduleData.duration;
       const now = new Date();
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      
+
       const container = document.getElementById('departuresContainer');
       container.innerHTML = '';
-      let upcomingCount = 0;
 
-      // Because regex extracts ALL times from the page (both directions), we just display them all.
-      // (Advanced HTML table parsing would be needed to separate directions natively).
-      if (scheduleData.times.length === 0) {
+      if (!scheduleData.times || scheduleData.times.length === 0) {
         container.innerHTML = `<div class="bg-slate-800 border border-slate-700 rounded-xl p-6 text-center text-slate-400">No standard timetable data found on this wiki page.</div>`;
         document.getElementById('sailingCount').innerText = `0 sailings upcoming`;
         return;
       }
 
-      scheduleData.times.forEach((sailing, idx) => {
-        const [h, m] = sailing.time.split(':').map(Number);
-        let sailingMinutes = h * 60 + m;
-        if (h === 0) sailingMinutes += 24 * 60; // Midnight rollover
-
-        const minutesUntil = sailingMinutes - currentMinutes;
-
-        if (minutesUntil >= -5 && upcomingCount < 15) { // Limit to next 15 to avoid long lists
-          upcomingCount++;
-          
-          let durationText = '';
-          if (minutesUntil > 0) {
-            const hrs = Math.floor(minutesUntil / 60);
-            const mins = minutesUntil % 60;
-            durationText = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
-          } else {
-            durationText = "Departing";
-          }
-
-          const cardId = `card-${idx}`;
-          const isOpen = openCardId === cardId;
-          const estArrival = calculateArrival(sailing.time, currentRouteDuration);
-
-          const card = document.createElement('div');
-          card.className = "bg-slate-800 border border-slate-700/80 hover:border-cyan-500 rounded-xl p-4 transition-all cursor-pointer shadow-md hover:bg-slate-750";
-          card.onclick = () => {
-            openCardId = openCardId === cardId ? null : cardId;
-            loadAndRender();
-          };
-
-          card.innerHTML = `
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-4">
-                <div class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                  ${sailing.time}
-                </div>
-                <div>
-                  <div class="text-xs uppercase text-slate-400 font-semibold tracking-wider">Heading Towards</div>
-                  <div class="text-sm font-bold text-cyan-300 flex items-center gap-1 truncate w-40 sm:w-auto">
-                    <svg class="w-4 h-4 text-cyan-400 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
-                    ${destinationText}
-                  </div>
-                </div>
-              </div>
-              <div class="text-right">
-                <div class="text-sm font-bold text-cyan-400">${durationText}</div>
-              </div>
-            </div>
-
-            ${isOpen ? `
-              <div class="mt-3 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs sm:text-sm bg-slate-900/50 p-2.5 rounded-lg text-cyan-200">
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                  <span>Est. Journey Time: <strong>${currentRouteDuration} mins</strong></span>
-                </div>
-                <div>
-                  Est. Arrival: <strong class="text-emerald-400">${estArrival}</strong>
-                </div>
-              </div>
-            ` : `
-              <div class="mt-2 text-[11px] text-slate-500 text-right italic">Click sailing to expand arrival time ▾</div>
-            `}
-          `;
-
-          container.appendChild(card);
+      // Compute actual target Date objects for each sailing time relative to right now
+      const structuredSailings = scheduleData.times.map(timeStr => {
+        const [h, m] = timeStr.split(':').map(Number);
+        
+        let targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+        
+        // If the sailing time today has already passed, treat it as tomorrow's departure
+        if (targetDate.getTime() < now.getTime() - 2 * 60000) {
+          targetDate.setDate(targetDate.getDate() + 1);
         }
+
+        const diffMs = targetDate.getTime() - now.getTime();
+        const minutesUntil = Math.floor(diffMs / 60000);
+
+        return {
+          timeStr,
+          targetDate,
+          minutesUntil
+        };
       });
 
-      if (upcomingCount === 0) {
-        container.innerHTML = `<div class="bg-slate-800 border border-slate-700 rounded-xl p-6 text-center text-slate-400">No more sailings today based on parsed data.</div>`;
+      // Filter upcoming sailings & sort chronologically from soonest to furthest
+      const upcomingSailings = structuredSailings
+        .filter(s => s.minutesUntil >= -2)
+        .sort((a, b) => a.targetDate.getTime() - b.targetDate.getTime())
+        .slice(0, 15); // Show next 15 upcoming departures
+
+      upcomingSailings.forEach((sailing, idx) => {
+        let durationText = '';
+        if (sailing.minutesUntil > 0) {
+          const hrs = Math.floor(sailing.minutesUntil / 60);
+          const mins = sailing.minutesUntil % 60;
+          durationText = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+        } else {
+          durationText = "Departing";
+        }
+
+        const cardId = `card-${idx}`;
+        const isOpen = openCardId === cardId;
+        const estArrival = calculateArrivalDate(sailing.targetDate, currentRouteDuration);
+
+        const card = document.createElement('div');
+        card.className = "bg-slate-800 border border-slate-700/80 hover:border-cyan-500 rounded-xl p-4 transition-all cursor-pointer shadow-md hover:bg-slate-750";
+        card.onclick = () => {
+          openCardId = openCardId === cardId ? null : cardId;
+          loadAndRender();
+        };
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                ${sailing.timeStr}
+              </div>
+              <div>
+                <div class="text-xs uppercase text-slate-400 font-semibold tracking-wider">Heading Towards</div>
+                <div class="text-sm font-bold text-cyan-300 flex items-center gap-1 truncate w-40 sm:w-auto">
+                  <svg class="w-4 h-4 text-cyan-400 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                  ${destinationText}
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-bold text-cyan-400">${durationText}</div>
+            </div>
+          </div>
+
+          ${isOpen ? `
+            <div class="mt-3 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs sm:text-sm bg-slate-900/50 p-2.5 rounded-lg text-cyan-200">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>Est. Journey Time: <strong>${currentRouteDuration} mins</strong></span>
+              </div>
+              <div>
+                Est. Arrival: <strong class="text-emerald-400">${estArrival}</strong>
+              </div>
+            </div>
+          ` : `
+            <div class="mt-2 text-[11px] text-slate-500 text-right italic">Click sailing to expand arrival time ▾</div>
+          `}
+        `;
+
+        container.appendChild(card);
+      });
+
+      if (upcomingSailings.length === 0) {
+        container.innerHTML = `<div class="bg-slate-800 border border-slate-700 rounded-xl p-6 text-center text-slate-400">No upcoming sailings remaining today or tomorrow based on parsed data.</div>`;
       }
-      document.getElementById('sailingCount').innerText = `${upcomingCount} sailings upcoming`;
       
-      // Update the header now that we have the parsed fare data
+      document.getElementById('sailingCount').innerText = `${upcomingSailings.length} sailings upcoming`;
       updateClockAndHeader();
     }
 
@@ -385,15 +402,15 @@
 
     document.getElementById('refreshBtn').addEventListener('click', async () => {
       const routeTitle = document.getElementById('routeSelect').value;
-      delete liveTimetableCache[routeTitle]; // clear cache for this route
+      delete liveTimetableCache[routeTitle];
       await loadAndRender();
     });
 
-    // Tickers
+    // Auto Tickers
     setInterval(updateClockAndHeader, 1000);
-    setInterval(loadAndRender, 30000); // refresh the countdowns
+    setInterval(loadAndRender, 30000);
 
-    // Start App
+    // Initial Start
     document.addEventListener("DOMContentLoaded", () => {
       updateClockAndHeader();
       fetchAllRoutesList();
