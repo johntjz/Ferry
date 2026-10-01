@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HK Ferry Real-Time Tracker & Live Countdown</title>
+    <title>HK Ferry Real-Time Tracker & Crowd Density</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
@@ -45,10 +45,10 @@
         <header class="text-center space-y-3 pt-4 pb-2">
             <h1 class="text-3xl md:text-5xl font-bold tracking-tight text-white flex items-center justify-center gap-3">
                 <i class="ph-fill ph-boat text-cyan-500"></i>
-                HK Ferry Live Tracker
+                HK Ferry Live Tracker & Crowd Analytics
             </h1>
             <p class="text-slate-400 max-w-2xl mx-auto text-sm md:text-base">
-                Real-time API integration & comprehensive timetable schedules for all Hong Kong ferry operators.
+                Real-time schedules and predictive load factor approximations across all Hong Kong licensed ferry operators.
             </p>
             <div class="inline-flex items-center gap-2 bg-slate-800/90 border border-slate-700/80 px-4 py-1.5 rounded-full text-xs font-mono text-cyan-400 shadow-md">
                 <i class="ph ph-clock text-sm animate-pulse"></i>
@@ -134,39 +134,35 @@
 
         <footer class="text-center py-4">
             <p class="text-xs text-slate-500">
-                Auto-syncing every 30 seconds. Integrates live APIs for Sun Ferry, HKKF, and Fortune Ferry with fallback timetable support for all licensed operators.
+                Live API & algorithmic schedule sync with real-time passenger density heuristic modeling.
             </p>
         </footer>
 
     </main>
 
     <script>
-        // --- Complete Hong Kong Ferry Database (Live APIs + Timetables) ---
+        // --- Complete Hong Kong Ferry Database ---
         const FERRY_ROUTES = [
-            // 1. Sun Ferry (Live API Support)
-            { id: 'SF_CC', name: 'Sun Ferry: Central - Cheung Chau', type: 'sunferry', upCode: 'CECC', downCode: 'CCCE', operator: 'Sun Ferry' },
-            { id: 'SF_MW', name: 'Sun Ferry: Central - Mui Wo', type: 'sunferry', upCode: 'CEMW', downCode: 'MWCE', operator: 'Sun Ferry' },
-            { id: 'SF_NP_HH', name: 'Sun Ferry: North Point - Hung Hom', type: 'sunferry', upCode: 'NPHH', downCode: 'HHNP', operator: 'Sun Ferry' },
-            { id: 'SF_NP_KC', name: 'Sun Ferry: North Point - Kowloon City', type: 'sunferry', upCode: 'NPKC', downCode: 'KCNP', operator: 'Sun Ferry' },
-            { id: 'SF_II', name: 'Sun Ferry: Inter-Islands (Peng Chau - Mui Wo - Chi Ma Wan - Cheung Chau)', type: 'sunferry', upCode: 'IIPECMUW', downCode: 'IIMUWPEC', operator: 'Sun Ferry' },
+            { id: 'SF_CC', name: 'Sun Ferry: Central - Cheung Chau', type: 'sunferry', upCode: 'CECC', downCode: 'CCCE', operator: 'Sun Ferry', isIsland: true },
+            { id: 'SF_MW', name: 'Sun Ferry: Central - Mui Wo', type: 'sunferry', upCode: 'CEMW', downCode: 'MWCE', operator: 'Sun Ferry', isIsland: true },
+            { id: 'SF_NP_HH', name: 'Sun Ferry: North Point - Hung Hom', type: 'sunferry', upCode: 'NPHH', downCode: 'HHNP', operator: 'Sun Ferry', isIsland: false },
+            { id: 'SF_NP_KC', name: 'Sun Ferry: North Point - Kowloon City', type: 'sunferry', upCode: 'NPKC', downCode: 'KCNP', operator: 'Sun Ferry', isIsland: false },
+            { id: 'SF_II', name: 'Sun Ferry: Inter-Islands (Peng Chau - Mui Wo - Cheung Chau)', type: 'sunferry', upCode: 'IIPECMUW', downCode: 'IIMUWPEC', operator: 'Sun Ferry', isIsland: true },
 
-            // 2. Hong Kong & Kowloon Ferry - HKKF (Live API Support)
-            { id: 'HKKF_YSW', name: 'HKKF: Central - Lamma (Yung Shue Wan)', type: 'hkkf', upCode: 'YSW', operator: 'HKKF' },
-            { id: 'HKKF_SKW', name: 'HKKF: Central - Lamma (Sok Kwu Wan)', type: 'hkkf', upCode: 'SKW', operator: 'HKKF' },
-            { id: 'HKKF_PC', name: 'HKKF: Central - Peng Chau', type: 'hkkf', upCode: 'PC', operator: 'HKKF' },
+            { id: 'HKKF_YSW', name: 'HKKF: Central - Lamma (Yung Shue Wan)', type: 'hkkf', upCode: 'YSW', operator: 'HKKF', isIsland: true },
+            { id: 'HKKF_SKW', name: 'HKKF: Central - Lamma (Sok Kwu Wan)', type: 'hkkf', upCode: 'SKW', operator: 'HKKF', isIsland: true },
+            { id: 'HKKF_PC', name: 'HKKF: Central - Peng Chau', type: 'hkkf', upCode: 'PC', operator: 'HKKF', isIsland: true },
 
-            // 3. Fortune Ferry & Water Taxi (Live API Support)
-            { id: 'FF_CH', name: 'Fortune Ferry: Central - Hung Hom', type: 'fortune', upCode: 'CEN-HH', operator: 'Fortune Ferry' },
-            { id: 'FF_NKT', name: 'Fortune Ferry: North Point - Kwun Tong - Kai Tak', type: 'fortune', upCode: 'NP-KT-KTK', operator: 'Fortune Ferry' },
-            { id: 'HWT', name: 'Hong Kong Water Taxi: Circular Route', type: 'water_taxi', upCode: 'HWT', operator: 'HK Water Taxi' },
+            { id: 'FF_CH', name: 'Fortune Ferry: Central - Hung Hom', type: 'fortune', upCode: 'CEN-HH', operator: 'Fortune Ferry', isIsland: false },
+            { id: 'FF_NKT', name: 'Fortune Ferry: North Point - Kwun Tong - Kai Tak', type: 'fortune', upCode: 'NP-KT-KTK', operator: 'Fortune Ferry', isIsland: false },
+            { id: 'HWT', name: 'Hong Kong Water Taxi: Circular Route', type: 'water_taxi', upCode: 'HWT', operator: 'HK Water Taxi', isIsland: false },
 
-            // 4. Timetable / Static Operators
-            { id: 'ST_TST', name: 'Star Ferry: Tsim Sha Tsui - Central / Wan Chai', type: 'static', operator: 'Star Ferry' },
-            { id: 'DB_FERRY', name: 'Discovery Bay Ferry: Central - Discovery Bay', type: 'static', operator: 'DB Transportation' },
-            { id: 'PI_FERRY', name: 'Park Island Transport: Central - Ma Wan / Tuen Mun', type: 'static', operator: 'Park Island' },
-            { id: 'TSUI_WAH', name: 'Tsui Wah Ferry: Aberdeen - Lamma / Tung Chung', type: 'static', operator: 'Tsui Wah Ferry' },
-            { id: 'CORAL_SEA', name: 'Coral Sea Ferry: Sai Wan Ho - Kwun Tong / Sam Ka Tsuen', type: 'static', operator: 'Coral Sea' },
-            { id: 'CB_MAC', name: 'Cross Boundary: HK - Macao / Shenzhen (TurboJET / Cotai Water Jet)', type: 'static', operator: 'Marine Dept / Operators' }
+            { id: 'ST_TST', name: 'Star Ferry: Tsim Sha Tsui - Central / Wan Chai', type: 'static', operator: 'Star Ferry', isIsland: false },
+            { id: 'DB_FERRY', name: 'Discovery Bay Ferry: Central - Discovery Bay', type: 'static', operator: 'DB Transportation', isIsland: false },
+            { id: 'PI_FERRY', name: 'Park Island Transport: Central - Ma Wan / Tuen Mun', type: 'static', operator: 'Park Island', isIsland: false },
+            { id: 'TSUI_WAH', name: 'Tsui Wah Ferry: Aberdeen - Lamma / Tung Chung', type: 'static', operator: 'Tsui Wah Ferry', isIsland: true },
+            { id: 'CORAL_SEA', name: 'Coral Sea Ferry: Sai Wan Ho - Kwun Tong / Sam Ka Tsuen', type: 'static', operator: 'Coral Sea', isIsland: false },
+            { id: 'CB_MAC', name: 'Cross Boundary: HK - Macao / Shenzhen (TurboJET / Cotai Water Jet)', type: 'static', operator: 'Marine Dept / Operators', isIsland: false }
         ];
 
         const FERRY_PIERS = {
@@ -189,8 +185,8 @@
             'CB_MAC': [ { c: 'MAC', n: 'HK-Macao Ferry Terminal', lat: 22.2889, lng: 114.1534 }, { c: 'CFT', n: 'China Ferry Terminal', lat: 22.3005, lng: 114.1683 } ]
         };
 
-        const STATIC_OFFSETS_UP = [6, 24, 48, 80, 120, 170];
-        const STATIC_OFFSETS_DOWN = [10, 32, 65, 95, 140, 200];
+        const STATIC_OFFSETS_UP = [8, 25, 50, 85, 125, 180];
+        const STATIC_OFFSETS_DOWN = [12, 35, 68, 100, 145, 210];
 
         // DOM Elements
         const elLineSelect = document.getElementById('lineSelect');
@@ -228,10 +224,8 @@
             updateLiveClock();
             setInterval(updateLiveClock, 1000);
             
-            // Initial Fetch
             triggerDataRefresh();
             
-            // Auto refresh every 30 seconds
             autoRefreshTimer = setInterval(() => {
                 if (!isFetching) triggerDataRefresh();
             }, 30000);
@@ -252,48 +246,103 @@
             });
         }
 
-        // --- Fetching API Data & Fallbacks ---
+        // --- Multi-tier API fetcher with robust CORS Proxies ---
         async function fetchLiveAPI(route, isReverse) {
             let apiCode = isReverse && route.downCode ? route.downCode : route.upCode;
-            let url = '';
+            let targetUrl = '';
+            
             if (route.type === 'sunferry') {
-                url = `https://www.sunferry.com.hk/eta/?route=${apiCode}`;
+                targetUrl = `https://www.sunferry.com.hk/eta/?route=${apiCode}`;
             } else if (route.type === 'hkkf') {
-                url = `https://hkkfeta.com/opendata/${apiCode}.json`;
+                targetUrl = `https://hkkfeta.com/opendata/${apiCode}.json`;
             } else if (route.type === 'fortune' || route.type === 'water_taxi') {
-                url = `https://hongkongwatertaxi.com.hk/eta/?route=${apiCode}`;
+                targetUrl = `https://hongkongwatertaxi.com.hk/eta/?route=${apiCode}`;
             } else {
-                return null; // Timetable only
+                return null;
             }
 
-            try {
-                const response = await fetch(url, { method: 'GET', mode: 'cors' });
-                if (!response.ok) throw new Error('API failed');
-                const json = await response.json();
-                
-                let list = json.data || json.eta || json.entries || (Array.isArray(json) ? json : null);
-                if (list && Array.isArray(list)) {
-                    return list.map(item => ({
-                        timestamp: new Date(item.eta || item.departure_time || item.time),
-                        vessel: item.vesselcode || item.vessel_name || 'Live Vessel',
-                        isLive: true
-                    })).filter(item => !isNaN(item.timestamp.getTime()));
+            // Attempt direct fetch first, fallback to public proxy if browser blocks CORS
+            const proxyUrls = [
+                targetUrl,
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+            ];
+
+            for (const url of proxyUrls) {
+                try {
+                    const response = await fetch(url, { method: 'GET' });
+                    if (!response.ok) continue;
+                    const json = await response.json();
+                    
+                    let list = json.data || json.eta || json.entries || (Array.isArray(json) ? json : null);
+                    if (list && Array.isArray(list)) {
+                        return list.map(item => ({
+                            timestamp: new Date(item.eta || item.departure_time || item.time),
+                            vessel: item.vesselcode || item.vessel_name || 'Live Vessel',
+                            isLive: true
+                        })).filter(item => !isNaN(item.timestamp.getTime()));
+                    }
+                } catch (e) {
+                    continue;
                 }
-                return null;
-            } catch (err) {
-                return null; // Fallback to Timetable
             }
+            return null;
         }
 
         function generateStaticSchedule(now, type, pierIndex) {
-            // Apply different time offsets based on whether it's terminal 0 or terminal 1, plus slight staggered offsets
             const baseOffsets = type === 'up' ? STATIC_OFFSETS_UP : STATIC_OFFSETS_DOWN;
-            const shift = pierIndex * 3; // Shift times slightly if starting from a different terminal pier
+            const shift = pierIndex * 3;
             return baseOffsets.map(offset => ({
                 timestamp: new Date(now.getTime() + (offset + shift) * 60000),
                 vessel: 'Scheduled',
                 isLive: false
             }));
+        }
+
+        // --- Crowd Density & Load Factor Approximation Engine ---
+        function computeLoadFactor(targetTime, isIslandRoute) {
+            const day = targetTime.getDay(); // 0 = Sun, 6 = Sat
+            const hour = targetTime.getHours();
+            const minute = targetTime.getMinutes();
+            const isWeekend = (day === 0 || day === 6);
+
+            let score = 35; // base percentage
+
+            if (isWeekend) {
+                // Weekend leisure surge towards outlying islands around morning hours (9 AM - 1pm)
+                if (hour >= 9 && hour <= 13 && isIslandRoute) {
+                    score = 88; // Crowded / Heavy Queue
+                } else if (hour >= 16 && hour <= 20) {
+                    score = 82; // Return trip surge
+                } else {
+                    score = 55;
+                }
+            } else {
+                // Weekday commuter rushes
+                if ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19)) {
+                    score = 92; // Near capacity
+                } else if (hour >= 11 && hour <= 15) {
+                    score = 30; // Quiet midday
+                } else {
+                    score = 48;
+                }
+            }
+
+            // Dynamic adjustment: departures happening very soon (under 8 minutes) experience last-minute queue buildup
+            const now = new Date();
+            const diffMins = Math.floor((targetTime - now) / 60000);
+            if (diffMins >= 0 && diffMins <= 8) {
+                score += 8;
+            }
+            score = Math.min(Math.max(score, 10), 98);
+
+            if (score >= 80) {
+                return { label: 'High Load (Crowded)', color: 'text-rose-400', barBg: 'bg-rose-500', pct: score };
+            } else if (score >= 50) {
+                return { label: 'Moderate Load', color: 'text-amber-400', barBg: 'bg-amber-500', pct: score };
+            } else {
+                return { label: 'Seats Available', color: 'text-emerald-400', barBg: 'bg-emerald-500', pct: score };
+            }
         }
 
         async function triggerDataRefresh() {
@@ -308,7 +357,6 @@
             const selectedPierIndex = piers.findIndex(p => p.c === selectedPierCode);
             const activePierIndex = selectedPierIndex >= 0 ? selectedPierIndex : 0;
 
-            // Determine outbound vs inbound destination labels relative to chosen pier
             const destinationPier = piers[(activePierIndex + 1) % piers.length];
             const originPier = piers[activePierIndex];
 
@@ -331,18 +379,17 @@
             }
 
             if (!isLiveConnected) {
-                // Generate distinct schedules based on active pier index so switching terminals updates data instantly
                 upDepartures = generateStaticSchedule(now, 'up', activePierIndex);
                 downDepartures = generateStaticSchedule(now, 'down', (activePierIndex + 1) % piers.length);
             }
 
-            renderDepartureBoard(elUpTrains, upDepartures, now);
-            renderDepartureBoard(elDownTrains, downDepartures, now);
+            renderDepartureBoard(elUpTrains, upDepartures, now, route.isIsland);
+            renderDepartureBoard(elDownTrains, downDepartures, now, route.isIsland);
 
             if (isLiveConnected) {
-                showStatus(`Connected to Live JSON API for ${route.operator} (${originPier.n})`, 'success');
+                showStatus(`Connected to Live API Stream (${originPier.n})`, 'success');
             } else {
-                showStatus(`Displaying official timetable schedule from ${originPier.n} (${route.operator})`, 'warning');
+                showStatus(`Using Timetable Mode with Crowd Density Analytics (${originPier.n})`, 'warning');
             }
 
             isFetching = false;
@@ -406,18 +453,7 @@
             }
         }
 
-        function estimateLoadFactorHeuristic(targetTime) {
-            const hr = targetTime.getHours();
-            const day = targetTime.getDay();
-            
-            if (day >= 1 && day <= 5) {
-                if ((hr >= 7 && hr <= 9) || (hr >= 17 && hr <= 19)) return { label: 'Usually Busy', color: 'text-rose-400' };
-            }
-            if (hr >= 11 && hr <= 15) return { label: 'Usually Quiet', color: 'text-emerald-400' };
-            return { label: 'Moderate', color: 'text-amber-400' };
-        }
-
-        function renderDepartureBoard(container, departures, now) {
+        function renderDepartureBoard(container, departures, now, isIslandRoute) {
             if (!departures || departures.length === 0) {
                 container.innerHTML = `<div class="p-4 text-center text-slate-400 text-sm">No upcoming departures found.</div>`;
                 return;
@@ -426,29 +462,36 @@
             container.innerHTML = departures.map((dep) => {
                 const clockStr = dep.timestamp.toLocaleTimeString('en-HK', { hour: '2-digit', minute: '2-digit', hour12: false });
                 const countdown = formatCountdown(dep.timestamp, now);
-                const loadFactor = estimateLoadFactorHeuristic(dep.timestamp);
+                const load = computeLoadFactor(dep.timestamp, isIslandRoute);
                 
                 const liveDot = dep.isLive 
                     ? `<span class="flex h-2 w-2 relative mr-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>` 
                     : ``;
 
                 return `
-                    <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3.5 flex justify-between items-center shadow-sm hover:border-slate-600 transition">
-                        <div class="space-y-1">
-                            <div class="flex items-center">
-                                ${liveDot}
-                                <span class="text-sm font-bold text-slate-200 font-mono tracking-wide">${clockStr}</span>
+                    <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3.5 space-y-2.5 shadow-sm hover:border-slate-600 transition">
+                        <div class="flex justify-between items-center">
+                            <div class="space-y-0.5">
+                                <div class="flex items-center">
+                                    ${liveDot}
+                                    <span class="text-sm font-bold text-slate-200 font-mono tracking-wide">${clockStr}</span>
+                                </div>
+                                <div class="text-[11px] text-slate-400">Vessel: ${dep.vessel}</div>
                             </div>
-                            <div class="flex items-center gap-2 text-[11px]">
-                                <span class="text-slate-400">Vessel: ${dep.vessel}</span>
-                                <span class="text-slate-600">•</span>
-                                <span class="${loadFactor.color} font-medium"><i class="ph ph-users mr-1"></i>${loadFactor.label}</span>
+                            <div class="text-right">
+                                <span class="inline-block px-3 py-1.5 rounded-lg text-sm tracking-wide ${countdown.css}">
+                                    ${countdown.badge}
+                                </span>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <span class="inline-block px-3 py-1.5 rounded-lg text-sm tracking-wide ${countdown.css}">
-                                ${countdown.badge}
+                        <!-- Crowd Density Indicator Bar -->
+                        <div class="pt-2 border-t border-slate-700/40 flex items-center justify-between text-xs">
+                            <span class="${load.color} font-medium flex items-center gap-1">
+                                <i class="ph ph-users"></i> ${load.label}
                             </span>
+                            <div class="w-24 bg-slate-700/60 h-2 rounded-full overflow-hidden">
+                                <div class="${load.barBg} h-full rounded-full transition-all duration-500" style="width: ${load.pct}%"></div>
+                            </div>
                         </div>
                     </div>
                 `;
