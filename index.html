@@ -141,7 +141,6 @@
     </main>
 
     <script>
-        // --- Complete Hong Kong Ferry Database (Updated for Official Sun Ferry Spec) ---
         const FERRY_ROUTES = [
             { id: 'SF_CC', name: 'Sun Ferry: Central - Cheung Chau', type: 'sunferry', upCode: 'CECC', downCode: 'CCCE', operator: 'Sun Ferry', isIsland: true },
             { id: 'SF_MW', name: 'Sun Ferry: Central - Mui Wo', type: 'sunferry', upCode: 'CEMW', downCode: 'MWCE', operator: 'Sun Ferry', isIsland: true },
@@ -186,7 +185,6 @@
         const STATIC_OFFSETS_UP = [10, 30, 60, 95, 135];
         const STATIC_OFFSETS_DOWN = [15, 40, 75, 110, 150];
 
-        // DOM Elements
         const elLineSelect = document.getElementById('lineSelect');
         const elStationSelect = document.getElementById('stationSelect');
         const elGpsBtn = document.getElementById('gpsBtn');
@@ -242,7 +240,20 @@
             });
         }
 
-        // --- Sun Ferry & Operator API Fetcher ---
+        // --- Fetch with Strict 1.5s Timeout Wrapper to Prevent Hanging Spinners ---
+        async function fetchWithTimeout(url, options = {}, timeout = 1500) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            try {
+                const response = await fetch(url, { ...options, signal: controller.signal });
+                clearTimeout(id);
+                return response;
+            } catch (error) {
+                clearTimeout(id);
+                throw error;
+            }
+        }
+
         async function fetchLiveAPI(route, isReverse) {
             let apiCode = isReverse && route.downCode ? route.downCode : route.upCode;
             if (!apiCode) return null;
@@ -258,7 +269,6 @@
                 return null;
             }
 
-            // CORS proxies to bypass browser origin blocking
             const proxyUrls = [
                 `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
                 `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
@@ -266,12 +276,11 @@
 
             for (const url of proxyUrls) {
                 try {
-                    const response = await fetch(url, { method: 'GET' });
+                    const response = await fetchWithTimeout(url, { method: 'GET' }, 1500);
                     if (!response.ok) continue;
                     const json = await response.json();
                     const now = new Date();
 
-                    // Parse official Sun Ferry Specification response structure ({ data: [...] })
                     if (route.type === 'sunferry' && json && Array.isArray(json.data)) {
                         return json.data.map(item => {
                             let depTime = new Date();
@@ -292,7 +301,6 @@
                         }).filter(item => !isNaN(item.timestamp.getTime()));
                     }
 
-                    // Fallback parser for generic JSON arrays
                     let list = json.data || json.eta || json.entries || (Array.isArray(json) ? json : null);
                     if (list && Array.isArray(list)) {
                         return list.map(item => {
@@ -321,7 +329,6 @@
             }));
         }
 
-        // --- Passenger Load Factor Approximation Engine ---
         function computeLoadFactor(targetTime, isIslandRoute) {
             const day = targetTime.getDay();
             const hour = targetTime.getHours();
@@ -387,10 +394,14 @@
             let isLiveConnected = false;
 
             if (route.type !== 'static') {
-                upDepartures = await fetchLiveAPI(route, false);
-                downDepartures = await fetchLiveAPI(route, true);
-                if (upDepartures || downDepartures) {
-                    isLiveConnected = true;
+                try {
+                    upDepartures = await fetchLiveAPI(route, false);
+                    downDepartures = await fetchLiveAPI(route, true);
+                    if (upDepartures || downDepartures) {
+                        isLiveConnected = true;
+                    }
+                } catch (err) {
+                    isLiveConnected = false;
                 }
             }
 
