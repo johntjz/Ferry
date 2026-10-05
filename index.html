@@ -280,11 +280,6 @@
             <div id="fareModalContent" class="space-y-2">
                 <!-- Dynamic fare content loaded via JS -->
             </div>
-
-            <div class="bg-white/5 rounded-xl p-2.5 text-[10px] text-gray-400 space-y-1">
-                <p>• <strong data-i18n="Senior/Child/Disability Fare:">Senior/Child/Disability Fare:</strong> <span data-i18n="50% concessionary fare applies across most franchised routes.">50% concessionary fare applies across most franchised routes.</span></p>
-                <p>• <strong data-i18n="$2 Transport Fare Scheme:">$2 Transport Fare Scheme:</strong> <span data-i18n="HK elderly ($2 concession) eligible on designated routes with Elder Octopus / JoyYou Card.">HK elderly ($2 concession) eligible on designated routes with Elder Octopus / JoyYou Card.</span></p>
-            </div>
         </div>
     </div>
 
@@ -356,14 +351,21 @@
                 'Stops & Route Details': '停靠站及航線詳情',
                 'Final Terminus': '終點站',
                 'ETA': '預計到達',
+                
+                // Fare Translations
                 'Route Fare Breakdown': '航線票價明細',
+                'Passenger Type': '乘客類別',
+                'Mon - Sat': '星期一至六',
+                'Sun & Holiday': '星期日及假日',
+                'Adult': '成人',
+                'Resident (Adult)': '本島居民 (成人)',
+                'Child': '小童',
+                'Senior / Disabled': '長者 / 傷健',
+                'Roundtrip': '來回',
                 'Mondays to Saturdays (Non-Holidays):': '星期一至六（非假日）：',
                 'Sundays & HK Public Holidays:': '星期日及公眾假期：',
                 'Key Piers Served:': '主要停靠碼頭：',
-                'Senior/Child/Disability Fare:': '長者/小童/傷健人士票價：',
-                '50% concessionary fare applies across most franchised routes.': '大多數專營航線提供半價優惠。',
-                '$2 Transport Fare Scheme:': '$2 乘車優惠計劃：',
-                'HK elderly ($2 concession) eligible on designated routes with Elder Octopus / JoyYou Card.': '合資格長者使用樂悠咭可享有$2優惠。',
+
                 'Fast Ferry': '快速',
                 'Ordinary Ferry': '普通',
                 'Cargo OK': '載貨',
@@ -472,14 +474,21 @@
                 'Stops & Route Details': '停靠站及航线详情',
                 'Final Terminus': '终点站',
                 'ETA': '预计到达',
+                
+                // Fare Translations
                 'Route Fare Breakdown': '航线票价明细',
+                'Passenger Type': '乘客类别',
+                'Mon - Sat': '星期一至六',
+                'Sun & Holiday': '星期日及假日',
+                'Adult': '成人',
+                'Resident (Adult)': '本岛居民 (成人)',
+                'Child': '小童',
+                'Senior / Disabled': '长者 / 伤健',
+                'Roundtrip': '来回',
                 'Mondays to Saturdays (Non-Holidays):': '星期一至六（非假日）：',
                 'Sundays & HK Public Holidays:': '星期日及公众假期：',
                 'Key Piers Served:': '主要停靠码头：',
-                'Senior/Child/Disability Fare:': '长者/小童/伤健人士票价：',
-                '50% concessionary fare applies across most franchised routes.': '大多数专营航线提供半价优惠。',
-                '$2 Transport Fare Scheme:': '$2 乘车优惠计划：',
-                'HK elderly ($2 concession) eligible on designated routes with Elder Octopus / JoyYou Card.': '合资格长者使用乐悠咭可享有$2优惠。',
+
                 'Fast Ferry': '快速',
                 'Ordinary Ferry': '普通',
                 'Cargo OK': '载货',
@@ -973,7 +982,7 @@
             }
             
             return {
-                html: `<div class="bg-white/5 rounded px-1.5 py-0.5 border border-white/5 flex items-center shadow-inner" title="${t('Est. Load:')} ~${pct}%">${barsHtml}</div>`
+                html: `<div class="bg-[#0f172a] rounded px-2 py-0.5 border border-white/5 flex items-center shadow-inner" title="${t('Est. Load:')} ~${pct}%">${barsHtml}</div>`
             };
         }
 
@@ -1296,18 +1305,89 @@
             fareModalRouteTitle.textContent = t(route.name);
             fareModalOperator.textContent = `${t('Operated by')} ${t(route.operator)}`;
 
-            fareModalContent.innerHTML = `
-                <div class="bg-[#0f172a] rounded-xl p-3.5 border border-white/10 space-y-2">
-                    <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-                        <span class="text-gray-400 font-medium">${t('Mondays to Saturdays (Non-Holidays):')}</span>
-                        <span class="text-emerald-400 font-bold">${t_fare(route.fares.adultWeekday)}</span>
-                    </div>
-                    <div class="flex justify-between items-center text-sm pt-1">
-                        <span class="text-gray-400 font-medium">${t('Sundays & HK Public Holidays:')}</span>
-                        <span class="text-amber-400 font-bold">${t_fare(route.fares.adultHoliday)}</span>
-                    </div>
-                </div>
+            const f = route.fares || {};
+            let faresHtml = '';
 
+            function formatVal(v, c) {
+                if (v === undefined || v === null) return '-';
+                if (typeof v === 'string') return t_fare(v);
+                return `${c || 'HK$'}${Number(v).toFixed(2)}`;
+            }
+
+            if (typeof f.adultWeekday === 'number' || f.currency) {
+                const c = f.currency === 'HKD' ? 'HK$' : (f.currency || 'HK$');
+                const rt = f.isRoundTrip ? ` <span class="text-[10px] text-gray-500">(${t('Roundtrip')})</span>` : '';
+
+                faresHtml = `
+                    <div class="bg-[#0f172a] rounded-xl border border-white/10 overflow-hidden">
+                        <table class="w-full text-left text-xs text-gray-300">
+                            <thead class="bg-white/5 border-b border-white/10 text-gray-400">
+                                <tr>
+                                    <th class="p-2.5 font-medium">${t('Passenger Type')}</th>
+                                    <th class="p-2.5 font-medium">${t('Mon - Sat')}</th>
+                                    <th class="p-2.5 font-medium">${t('Sun & Holiday')}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                <tr class="hover:bg-white/5 transition">
+                                    <td class="p-2.5 text-white font-semibold">${t('Adult')}${rt}</td>
+                                    <td class="p-2.5 text-emerald-400 font-bold">${formatVal(f.adultWeekday, c)}</td>
+                                    <td class="p-2.5 text-amber-400 font-bold">${formatVal(f.adultHoliday, c)}</td>
+                                </tr>
+                `;
+
+                if (f.residentAdultWeekday !== undefined || f.residentAdultHoliday !== undefined) {
+                    faresHtml += `
+                                <tr class="hover:bg-white/5 transition">
+                                    <td class="p-2.5 text-indigo-300">${t('Resident (Adult)')}</td>
+                                    <td class="p-2.5 font-medium">${formatVal(f.residentAdultWeekday, c)}</td>
+                                    <td class="p-2.5 font-medium">${formatVal(f.residentAdultHoliday, c)}</td>
+                                </tr>
+                    `;
+                }
+
+                if (f.childWeekday !== undefined || f.childHoliday !== undefined) {
+                    faresHtml += `
+                                <tr class="hover:bg-white/5 transition">
+                                    <td class="p-2.5">${t('Child')}</td>
+                                    <td class="p-2.5 font-medium">${formatVal(f.childWeekday, c)}</td>
+                                    <td class="p-2.5 font-medium">${formatVal(f.childHoliday, c)}</td>
+                                </tr>
+                    `;
+                }
+
+                if (f.concessionWeekday !== undefined || f.concessionHoliday !== undefined) {
+                    faresHtml += `
+                                <tr class="hover:bg-white/5 transition">
+                                    <td class="p-2.5">${t('Senior / Disabled')}</td>
+                                    <td class="p-2.5 font-medium">${formatVal(f.concessionWeekday, c)}</td>
+                                    <td class="p-2.5 font-medium">${formatVal(f.concessionHoliday, c)}</td>
+                                </tr>
+                    `;
+                }
+
+                faresHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                faresHtml = `
+                    <div class="bg-[#0f172a] rounded-xl p-3.5 border border-white/10 space-y-2">
+                        <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                            <span class="text-gray-400 font-medium">${t('Mondays to Saturdays (Non-Holidays):')}</span>
+                            <span class="text-emerald-400 font-bold">${t_fare(f.adultWeekday)}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm pt-1">
+                            <span class="text-gray-400 font-medium">${t('Sundays & HK Public Holidays:')}</span>
+                            <span class="text-amber-400 font-bold">${t_fare(f.adultHoliday)}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            fareModalContent.innerHTML = `
+                ${faresHtml}
                 <div class="text-xs text-gray-300 space-y-1.5 pt-1">
                     <h4 class="font-bold text-white uppercase text-[10px] tracking-wider">${t('Key Piers Served:')}</h4>
                     <ul class="list-disc list-inside text-gray-400 space-y-0.5">
@@ -1323,4 +1403,3 @@
     </script>
 </body>
 </html>
-
