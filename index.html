@@ -311,7 +311,7 @@
                 'Central ➔ Discovery Bay': '中環 ➔ 愉景灣', 'Inter-Islands: Peng Chau ➔ Mui Wo ➔ Chi Ma Wan ➔ Cheung Chau': '橫水渡: 坪洲 ➔ 梅窩 ➔ 芝麻灣 ➔ 長洲',
                 'Peng Chau ➔ Trappist Monastery ➔ Discovery Bay': '坪洲 ➔ 神樂院 ➔ 愉景灣', 'Peng Chau ➔ Hei Ling Chau': '坪洲 ➔ 喜靈洲',
                 'Central ➔ Tsim Sha Tsui': '中環 ➔ 尖沙咀', 'Wan Chai ➔ Tsim Sha Tsui': '灣仔 ➔ 尖沙咀', 'Central ➔ Hung Hom': '中環 ➔ 紅磡',
-                'North Point ➔ Hung Hom': '北角 ➔ 紅磡', 'North Point ➔ Kowloon City': '北角 ➔ 九龍城', 'North Point ➔ Kwun Tong': '北角 ➔ 觀塘',
+                'North Point ➔ Hung Hom': '北角 ➔ 紅磡', 'North Point ➔ Kowloon City': '北角 ➔ 九龙城', 'North Point ➔ Kwun Tong': '北角 ➔ 觀塘',
                 'Sai Wan Ho ➔ Kwun Tong': '西灣河 ➔ 觀塘', 'Sai Wan Ho ➔ Sam Ka Tsuen (Lei Yue Mun)': '西灣河 ➔ 三家村 (鯉魚門)',
                 'Tseung Kwan O (TKO) ➔ Sai Wan Ho': '將軍澳 (TKO) ➔ 西灣河', 'Aberdeen ➔ Pak Kok Tsuen ➔ Yung Shue Wan': '香港仔 ➔ 北角村 ➔ 榕樹灣',
                 'Aberdeen ➔ Mo Tat Wan ➔ Sok Kwu Wan': '香港仔 ➔ 模達灣 ➔ 索罟灣', 'Aberdeen / Stanley ➔ Po Toi Island': '香港仔 / 赤柱 ➔ 蒲台島',
@@ -542,18 +542,21 @@
 
         // Comprehensive HK Ferry Routes Database
         const scheduleData = {
-            // OUTLYING ISLANDS
+            // OUTLYING ISLANDS (Staggered Directions)
             "central-cheung-chau": {
                 name: "Central ➔ Cheung Chau",
                 category: "islands",
                 operator: "Sun Ferry",
                 piers: { "CENTRAL": "Central Pier 5", "CC": "Cheung Chau" },
                 fares: { adultWeekday: "HK$14.20 (Ord) / $28.10 (Fast)", adultHoliday: "HK$21.20 (Ord) / $40.70 (Fast)" },
-                trips: generateBiDirectionalSchedules("CENTRAL", "CC", [
-                    "00:30","01:30","02:30","04:15","06:10","07:00","07:45","08:30","09:15","10:00","10:45",
-                    "11:30","12:15","13:00","13:45","14:30","15:15","16:00","16:45","17:30","18:15","19:00",
-                    "19:45","20:30","21:30","22:30","23:30"
-                ], 35)
+                trips: generateDirectionalSchedules(
+                    "CENTRAL", "CC",
+                    // Outbound: Central to Cheung Chau
+                    ["00:30","01:30","04:15","06:10","07:00","07:45","08:30","09:15","10:00","10:45","11:30","12:15","13:00","13:45","14:30","15:15","16:00","16:45","17:30","18:15","19:00","19:45","20:30","21:30","22:30","23:30"],
+                    // Inbound: Cheung Chau to Central
+                    ["00:30","01:30","02:20","05:10","06:00","06:40","07:15","07:45","08:15","08:45","09:15","10:00","10:45","11:30","12:15","13:00","13:45","14:30","15:15","16:00","16:45","17:30","18:15","19:00","20:00","21:00","22:00","23:00","23:45"],
+                    35
+                )
             },
             "central-mui-wo": {
                 name: "Central ➔ Mui Wo",
@@ -561,10 +564,14 @@
                 operator: "Sun Ferry",
                 piers: { "CENTRAL": "Central Pier 6", "MW": "Mui Wo" },
                 fares: { adultWeekday: "HK$16.60 (Ord) / $32.80 (Fast)", adultHoliday: "HK$25.50 (Ord) / $47.10 (Fast)" },
-                trips: generateBiDirectionalSchedules("CENTRAL", "MW", [
-                    "00:30","03:00","06:10","07:00","07:40","08:30","09:10","10:00","10:50","11:40","12:30",
-                    "13:20","14:10","15:00","15:50","16:40","17:30","18:20","19:10","20:00","21:00","22:00","23:30"
-                ], 35)
+                trips: generateDirectionalSchedules(
+                    "CENTRAL", "MW", 
+                    // Outbound: Central to Mui Wo
+                    ["00:30","03:00","06:10","07:00","07:40","08:30","09:10","10:00","10:50","11:30","12:10","13:00","13:50","14:40","15:30","16:20","17:10","18:00","18:50","19:40","20:30","21:30","22:30","23:30"],
+                    // Inbound: Mui Wo to Central
+                    ["01:30","04:15","06:10","07:00","07:40","08:00","08:40","09:00","09:45","10:15","10:45","11:15","11:45","12:15","12:45","13:15","13:45","14:15","14:45","15:15","15:45","16:15","16:45","17:20","18:10","19:10","20:10","21:10","22:10","23:10"], 
+                    35
+                )
             },
             "central-peng-chau": {
                 name: "Central ➔ Peng Chau",
@@ -572,10 +579,14 @@
                 operator: "HK & Kowloon Ferry",
                 piers: { "CENTRAL": "Central Pier 6", "PC": "Peng Chau" },
                 fares: { adultWeekday: "HK$16.60 (Ord) / $31.00 (Fast)", adultHoliday: "HK$23.90 (Ord) / $45.60 (Fast)" },
-                trips: generateBiDirectionalSchedules("CENTRAL", "PC", [
-                    "00:30","03:00","06:00","07:00","07:45","08:30","09:15","10:00","10:45","11:30","12:15",
-                    "13:00","13:45","14:30","15:15","16:00","16:45","17:30","18:15","19:00","20:00","21:00","22:30","23:30"
-                ], 30)
+                trips: generateDirectionalSchedules(
+                    "CENTRAL", "PC",
+                    // Outbound: Central to Peng Chau
+                    ["00:30","03:00","07:00","07:50","08:30","09:15","10:00","10:45","11:30","12:15","13:00","13:45","14:30","15:15","16:00","16:45","17:30","18:15","19:00","19:45","20:30","21:30","22:30","23:30"],
+                    // Inbound: Peng Chau to Central
+                    ["01:15","03:45","06:00","06:40","07:20","08:10","08:50","09:30","10:15","11:00","11:45","12:30","13:15","14:00","14:45","15:30","16:15","17:00","17:45","18:30","19:15","20:00","21:00","22:00","23:00"],
+                    30
+                )
             },
             "central-lamma-ysw": {
                 name: "Central ➔ Lamma Island (Yung Shue Wan)",
@@ -583,11 +594,16 @@
                 operator: "HK & Kowloon Ferry",
                 piers: { "CENTRAL": "Central Pier 4", "YSW": "Yung Shue Wan" },
                 fares: { adultWeekday: "HK$18.60", adultHoliday: "HK$25.90" },
-                trips: generateBiDirectionalSchedules("CENTRAL", "YSW", [
-                    "00:30","02:30","06:30","07:15","08:00","08:40","09:30","10:10","11:00","11:40","12:30",
-                    "13:10","14:00","14:40","15:30","16:15","17:00","17:40","18:30","19:15","20:00","21:00","22:30","23:30"
-                ], 27)
+                trips: generateDirectionalSchedules(
+                    "CENTRAL", "YSW",
+                    // Outbound: Central to Yung Shue Wan
+                    ["00:30","06:30","07:15","08:00","08:40","09:30","10:10","11:00","11:40","12:30","13:10","14:00","14:40","15:30","16:15","17:00","17:40","18:30","19:15","20:00","21:00","22:30","23:30"],
+                    // Inbound: Yung Shue Wan to Central
+                    ["01:15","06:20","07:00","07:30","08:00","08:40","09:20","10:00","10:40","11:20","12:00","12:40","13:20","14:00","14:40","15:20","16:00","16:40","17:20","18:00","18:40","19:30","20:30","21:30","22:30","23:30"],
+                    27
+                )
             },
+
             "central-lamma-skw": {
                 name: "Central ➔ Lamma Island (Sok Kwu Wan)",
                 category: "islands",
@@ -1016,7 +1032,7 @@
                 trips: generateBiDirectionalSchedules("HK", "MACAU", [
                     "07:30","08:30","09:30","10:30","11:30","12:30","13:30","14:30","15:30","16:30",
                     "17:30","18:30","19:30","20:30","21:30","22:30","23:30"
-                ], 65) // <-- Fixed to 65 minutes per user feedback in screenshot
+                ], 65) 
             },
             "cotai-water-jet-taipa": {
                 name: "Hong Kong (Sheung Wan) ➔ Macau Taipa",
@@ -1030,6 +1046,19 @@
                 ], 55)
             }
         };
+
+        function generateDirectionalSchedules(p1, p2, outboundTimes, inboundTimes, travelDurationMins) {
+            const trips = [];
+            // Outbound: P1 to P2
+            outboundTimes.forEach(tm => {
+                trips.push({ stops: [{ p: p1, t: tm }, { p: p2, t: addMinutesToTime(tm, travelDurationMins) }] });
+            });
+            // Inbound: P2 to P1
+            inboundTimes.forEach(tm => {
+                trips.push({ stops: [{ p: p2, t: tm }, { p: p1, t: addMinutesToTime(tm, travelDurationMins) }] });
+            });
+            return trips;
+        }
 
         function generateBiDirectionalSchedules(p1, p2, times, travelDurationMins) {
             const trips = [];
@@ -1448,7 +1477,6 @@
                                 </div>
                                 
                                 <div class="mt-2 flex items-center space-x-2 flex-wrap gap-y-1">
-                                    <!-- DISCRETE OPERATOR BADGE -->
                                     <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-gray-800 text-teal-300 border border-teal-500/30 tracking-wider uppercase">${t(dep.operator)}</span>
                                     <span class="text-xs text-gray-400">${t('Next Stop:')} <strong class="text-gray-200 font-semibold">${t(dep.nextStop)} (${dep.nextStopTime})</strong></span>
                                 </div>
