@@ -4,10 +4,10 @@ window.PulseFerry.registerRoute("central-mui-wo", {
     category: "islands",
     operator: "Sun Ferry",
     piers: { "CENTRAL": "Central Pier 6", "MW": "Mui Wo" },
-    fares: { adultWeekday: "HK$16.00 (Ord) / $32.10 (Fast)", adultHoliday: "HK$24.50 (Ord) / $48.20 (Fast)" },
+    fares: { adultWeekday: "HK$16.70 (Ord) / $33.50 (Fast)", adultHoliday: "HK$24.80 (Ord) / $47.60 (Fast)" },
     trips: window.PulseFerry.generateDirectional("CENTRAL", "MW",
         ["00:30","03:00","06:10","07:00","07:40","08:30","09:00","09:50","10:30","11:10","11:50","12:30","13:10","13:50","14:30","15:10","15:50","16:30","17:20","17:40","18:00","18:30","19:00","19:30","20:00","20:40","21:20","22:00","22:45","23:30"],
-        ["01:30","04:15","06:10","07:00","07:40","08:00","08:40","09:00","09:45","10:15","10:45","11:15","11:45","12:15","12:45","13:15","13:45","14:15","14:45","15:15","15:45","16:15","16:45","17:20","18:00","18:40","19:20","20:00","20:45","21:30"], 35)
+        ["03:40","05:55","06:20","07:00","07:40","08:20","09:00","09:40","10:20","11:00","11:40","12:20","13:00","13:40","14:20","15:00","15:40","16:20","17:00","17:35","18:00","18:40","19:20","20:00","20:40","21:20","22:00","22:45","23:30"], 35)
 });
 
 // 2. Central ➔ Cheung Chau
@@ -16,10 +16,11 @@ window.PulseFerry.registerRoute("central-cheung-chau", {
     category: "islands",
     operator: "Sun Ferry",
     piers: { "CENTRAL": "Central Pier 5", "CC": "Cheung Chau" },
-    fares: { adultWeekday: "HK$16.00 (Ord) / $32.10 (Fast)", adultHoliday: "HK$24.50 (Ord) / $48.20 (Fast)" },
+    fares: { adultWeekday: "HK$16.70 (Ord) / $32.90 (Fast)", adultHoliday: "HK$24.80 (Ord) / $47.60 (Fast)" },
     trips: {
         "CENTRAL-CC": [
             { t: "00:30", type: "fast", duration: 40 }, { t: "01:30", type: "fast", duration: 40 }, { t: "04:15", type: "fast", duration: 40 },
+            { t: "06:10", type: "fast", duration: 40 },
             { t: "06:30", type: "ordinary", duration: 60, cargo: true }, { t: "07:00", type: "fast", duration: 40 },
             { t: "07:30", type: "ordinary", duration: 60, cargo: true }, { t: "08:00", type: "fast", duration: 40 },
             { t: "08:30", type: "ordinary", duration: 60, cargo: true }, { t: "09:00", type: "fast", duration: 40 },
@@ -37,7 +38,7 @@ window.PulseFerry.registerRoute("central-cheung-chau", {
             { t: "20:30", type: "ordinary", duration: 60, cargo: true }, { t: "21:00", type: "fast", duration: 40 },
             { t: "21:30", type: "ordinary", duration: 60, cargo: true }, { t: "22:00", type: "fast", duration: 40 },
             { t: "22:30", type: "ordinary", duration: 60, cargo: true }, { t: "23:00", type: "fast", duration: 40 },
-            { t: "23:30", type: "ordinary", duration: 60, cargo: true }, { t: "23:55", type: "fast", duration: 40 }
+            { t: "23:30", type: "ordinary", duration: 60, cargo: true }, { t: "23:45", type: "fast", duration: 40 }
         ],
         "CC-CENTRAL": [
             { t: "05:15", type: "fast", duration: 40 }, { t: "06:00", type: "ordinary", duration: 60, cargo: true },
@@ -98,13 +99,13 @@ window.PulseFerry.registerRoute("inter-islands", {
         { stops: [{ p: "PC", t: "05:40" }, { p: "MW", t: "06:00" }, { p: "CMW", t: "06:15" }, { p: "CC", t: "06:35" }] },
         { stops: [{ p: "PC", t: "07:30" }, { p: "MW", t: "08:00" }, { p: "CMW", t: "08:20" }, { p: "CC", t: "08:45" }] },
         { stops: [{ p: "PC", t: "09:45" }, { p: "MW", t: "10:10" }, { p: "CMW", t: "10:30" }, { p: "CC", t: "10:50" }] },
-        { stops: [{ p: "PC", t: "11:45" }, { p: "MW", t: "12:15" }, { p: "CC", t: "12:45" }], skippedStops: ["CMW"] },
-        { stops: [{ p: "PC", t: "13:45" }, { p: "MW", t: "14:15" }, { p: "CMW", t: "14:35" }, { p: "CC", t: "15:00" }] },
+        { stops: [{ p: "PC", t: "11:55" }, { p: "MW", t: "12:15" }, { p: "CC", t: "12:45" }], skippedStops: ["CMW"] },
+        { stops: [{ p: "PC", t: "13:35" }, { p: "MW", t: "14:00" }, { p: "CMW", t: "14:15" }, { p: "CC", t: "15:00" }] },
         { stops: [{ p: "PC", t: "15:40" }, { p: "MW", t: "16:00" }, { p: "CMW", t: "16:15" }, { p: "CC", t: "16:50" }] },
-        { stops: [{ p: "PC", t: "17:45" }, { p: "MW", t: "18:15" }, { p: "CC", t: "18:45" }], skippedStops: ["CMW"] },
+        { stops: [{ p: "PC", t: "17:55" }, { p: "MW", t: "18:15" }, { p: "CC", t: "18:45" }], skippedStops: ["CMW"] },
         { stops: [{ p: "PC", t: "19:50" }, { p: "MW", t: "20:10" }, { p: "CMW", t: "20:30" }, { p: "CC", t: "21:00" }] },
         { stops: [{ p: "PC", t: "21:50" }, { p: "MW", t: "22:20" }, { p: "CC", t: "22:50" }], skippedStops: ["CMW"] },
-        { stops: [{ p: "PC", t: "23:40" }, { p: "MW", t: "00:05" }] },
+        { stops: [{ p: "PC", t: "23:45" }, { p: "MW", t: "00:05" }] },
         { stops: [{ p: "CC", t: "06:35" }, { p: "CMW", t: "06:52" }, { p: "MW", t: "07:10" }, { p: "PC", t: "07:30" }] },
         { stops: [{ p: "CC", t: "08:45" }, { p: "CMW", t: "09:05" }, { p: "MW", t: "09:25" }, { p: "PC", t: "09:45" }] },
         { stops: [{ p: "CC", t: "10:50" }, { p: "CMW", t: "11:10" }, { p: "MW", t: "11:35" }, { p: "PC", t: "11:55" }] },
