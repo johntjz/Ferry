@@ -4,7 +4,7 @@ window.PulseFerry.registerRoute("central-mui-wo", {
     category: "islands",
     operator: "Sun Ferry",
     piers: { "CENTRAL": "Central Pier 6", "MW": "Mui Wo" },
-    fares: { adultWeekday: "HK$16.70 (Ord) / $33.50 (Fast)", adultHoliday: "HK$24.80 (Ord) / $47.60 (Fast)" },
+    fares: { adultWeekday: "HK$16.70 (Ord) / $33.50 (Fast)", adultHoliday: "HK$24.20 (Ord) / $48.50 (Fast)" },
     trips: window.PulseFerry.generateDirectional("CENTRAL", "MW",
         ["00:30","03:00","06:10","07:00","07:40","08:30","09:00","09:50","10:30","11:10","11:50","12:30","13:10","13:50","14:30","15:10","15:50","16:30","17:20","17:40","18:00","18:30","19:00","19:30","20:00","20:40","21:20","22:00","22:45","23:30"],
         ["03:40","05:55","06:20","07:00","07:40","08:20","09:00","09:40","10:20","11:00","11:40","12:20","13:00","13:40","14:20","15:00","15:40","16:20","17:00","17:35","18:00","18:40","19:20","20:00","20:40","21:20","22:00","22:45","23:30"], 35)
@@ -84,7 +84,7 @@ window.PulseFerry.registerRoute("central-discovery-bay", {
     category: "islands",
     operator: "DB Transport",
     piers: { "CENTRAL": "Central Pier 3", "DB": "Discovery Bay" },
-    fares: { adultWeekday: "HK$58.00 (Single Ticket)", adultHoliday: "HK$58.00" },
+    fares: { adultWeekday: "HK$55.80 (Single Ticket)", adultHoliday: "HK$55.80" },
     trips: window.PulseFerry.generateFrequent("CENTRAL", "DB", "06:00", "23:30", 30, 30)
 });
 
@@ -155,7 +155,7 @@ window.PulseFerry.registerRoute("peng-chau-hei-ling-chau", {
     category: "islands",
     operator: "Sun Ferry / HKKF",
     piers: { "PC": "Peng Chau", "HLC": "Hei Ling Chau" },
-    fares: { adultWeekday: "HK$10.70", adultHoliday: "HK$10.70" },
+    fares: { adultWeekday: "HK$31.90", adultHoliday: "HK$46.60" },
     trips: window.PulseFerry.generateDirectional("PC", "HLC",
         ["01:00","09:45","11:15","12:45","14:15","15:45","18:30","20:00","21:45"],
         ["01:05","09:50","11:20","12:50","14:20","15:50","18:35","20:05","21:50"], 5)
