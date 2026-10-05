@@ -57,11 +57,7 @@
     <header class="w-full max-w-4xl bg-[#1e293b] rounded-2xl shadow-2xl overflow-hidden flex flex-col mb-4 ring-1 ring-white/10">
         
         <!-- Live System Status Bar -->
-        <div class="bg-[#0f172a] px-4 py-2.5 flex justify-between items-center border-b border-white/5 text-xs font-medium">
-            <div class="flex items-center space-x-2">
-                <div class="w-2.5 h-2.5 rounded-full bg-[#2dd4bf] animate-pulse"></div>
-                <!-- Removed "HK Ferry Network Live" text here -->
-            </div>
+        <div class="bg-[#0f172a] px-4 py-2.5 flex justify-end items-center border-b border-white/5 text-xs font-medium">
             <div class="flex items-center space-x-3">
                 <select id="langSelect" class="bg-white/5 text-white border border-white/10 rounded px-1.5 py-0.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-[#2dd4bf]">
                     <option value="en">EN</option>
@@ -86,9 +82,8 @@
                     <div>
                         <div class="flex items-center space-x-3">
                             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white" data-i18n="Pulse HK Ferry">Pulse HK Ferry</h1>
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#2dd4bf]/20 text-[#2dd4bf] border border-[#2dd4bf]/30">v1.1.0</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#2dd4bf]/20 text-[#2dd4bf] border border-[#2dd4bf]/30">v1.1.1</span>
                         </div>
-                        <!-- Removed "Real-time departure count..." description text here -->
                     </div>
                 </div>
 
@@ -314,7 +309,7 @@
 
                 // Routes
                 'Central ➔ Cheung Chau': '中環 ➔ 長洲', 'Central ➔ Mui Wo': '中環 ➔ 梅窩', 'Central ➔ Peng Chau': '中環 ➔ 坪洲',
-                'Central ➔ Lamma Island (Yung Shue Wan)': '中環 ➔ 南丫島 (榕樹灣)', 'Central ➔ Lamma Island (Sok Kwu Wan)': '中環 ➔ 南丫島 (索罟灣)',
+                'Central ➔ Lamma Island (Yung Shue Wan)': '中環 ➔ 南丫島 (榕樹灣)', 'Central ➔ Lamma Island (Sok Kwu Wan)': '中環 ➔ 南丫島 (索罟湾)',
                 'Central ➔ Discovery Bay': '中環 ➔ 愉景灣', 'Inter-Islands: Peng Chau ➔ Mui Wo ➔ Chi Ma Wan ➔ Cheung Chau': '橫水渡: 坪洲 ➔ 梅窩 ➔ 芝麻灣 ➔ 長洲',
                 'Peng Chau ➔ Trappist Monastery ➔ Discovery Bay': '坪洲 ➔ 神樂院 ➔ 愉景灣', 'Peng Chau ➔ Hei Ling Chau': '坪洲 ➔ 喜靈洲',
                 'Central ➔ Tsim Sha Tsui': '中環 ➔ 尖沙咀', 'Wan Chai ➔ Tsim Sha Tsui': '灣仔 ➔ 尖沙咀', 'Central ➔ Hung Hom': '中環 ➔ 紅磡',
@@ -568,7 +563,7 @@
         // Comprehensive HK Ferry Routes Database
         const scheduleData = {
             // OUTLYING ISLANDS
-        "central-cheung-chau": {
+            "central-cheung-chau": {
                 name: "Central ➔ Cheung Chau",
                 category: "islands",
                 operator: "Sun Ferry",
