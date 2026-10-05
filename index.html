@@ -528,15 +528,15 @@
 
         let currentLang = localStorage.getItem('pulseFerryLang') || 'en';
 
-        // GPS Coordinates Database for major piers
+        // GPS Coordinates Database for major piers (Sub-meter accuracy for dense waterfronts)
         const pierCoordinates = {
-            'Central Pier 5': {lat: 22.2871, lng: 114.1602},
-            'Central Pier 6': {lat: 22.2870, lng: 114.1607},
-            'Central Pier 4': {lat: 22.2872, lng: 114.1596},
-            'Central Pier 7': {lat: 22.2866, lng: 114.1614},
-            'Central Pier 3': {lat: 22.2873, lng: 114.1585},
-            'Central Pier 2': {lat: 22.2876, lng: 114.1575},
-            'Central Pier 8': {lat: 22.2863, lng: 114.1625},
+            'Central Pier 2': {lat: 22.28738, lng: 114.15767},
+            'Central Pier 3': {lat: 22.28723, lng: 114.15831},
+            'Central Pier 4': {lat: 22.28704, lng: 114.15897},
+            'Central Pier 5': {lat: 22.28682, lng: 114.15975},
+            'Central Pier 6': {lat: 22.28666, lng: 114.16053},
+            'Central Pier 7': {lat: 22.28646, lng: 114.16130},
+            'Central Pier 8': {lat: 22.28612, lng: 114.16215},
             'HK Macau Ferry Terminal (Sheung Wan)': {lat: 22.2882, lng: 114.1517},
             'Tsim Sha Tsui Star Ferry Pier': {lat: 22.2936, lng: 114.1693},
             'Wan Chai Ferry Pier': {lat: 22.2831, lng: 114.1755},
@@ -580,6 +580,7 @@
         function findNearestPierAndRoute(userLat, userLng) {
             let closestPierId = null;
             let closestRouteId = null;
+            let closestPierName = null;
             let minDistance = Infinity;
 
             for (const [routeKey, routeData] of Object.entries(scheduleData)) {
@@ -591,11 +592,12 @@
                             minDistance = dist;
                             closestPierId = pierId;
                             closestRouteId = routeKey;
+                            closestPierName = pierName;
                         }
                     }
                 }
             }
-            return { routeId: closestRouteId, pierId: closestPierId };
+            return { routeId: closestRouteId, pierId: closestPierId, pierName: closestPierName };
         }
 
         function t(text) {
@@ -699,16 +701,35 @@
             setInterval(updateLiveClock, 1000);
             setInterval(renderSchedule, 15000);
 
+            // Smart Search GPS Injector
             gpsBtn.addEventListener('click', () => {
                 if ("geolocation" in navigator) {
                     gpsBtnText.textContent = t('Locating...');
                     navigator.geolocation.getCurrentPosition((position) => {
                         const nearest = findNearestPierAndRoute(position.coords.latitude, position.coords.longitude);
-                        if (nearest.routeId && nearest.pierId) {
+                        if (nearest.pierName) {
+                            
+                            // 1. Force visual state to 'All Routes' to ensure no categories hide the nearest route
                             document.querySelector('.cat-pill[data-cat="all"]').click();
-                            routeSelect.value = nearest.routeId;
+                            
+                            // 2. Inject the nearest pier explicitly into the search bar
+                            searchInput.value = t(nearest.pierName); 
+                            clearSearchBtn.classList.remove('hidden');
+                            
+                            // 3. Trigger route filter (this narrows dropdown to ONLY routes servicing this pier)
+                            populateRoutes();
+                            
+                            // 4. Force select the first matching route in the filtered dropdown
+                            routeSelect.selectedIndex = 0;
+                            
+                            // 5. Populate and strictly select the exact departure pier to match the location
                             populatePiers();
-                            pierSelect.value = nearest.pierId;
+                            Array.from(pierSelect.options).forEach((opt, idx) => {
+                                if(opt.textContent.includes(t(nearest.pierName))) {
+                                    pierSelect.selectedIndex = idx;
+                                }
+                            });
+
                             renderSchedule();
                             if (isTimetableGridOpen) renderTimetableGrid();
                         }
@@ -716,7 +737,7 @@
                     }, (error) => {
                         alert(t('Location disabled or unavailable'));
                         gpsBtnText.textContent = t('Nearest Pier');
-                    });
+                    }, { enableHighAccuracy: true }); // Critical for Central Pier accuracy
                 } else {
                     alert(t('Location disabled or unavailable'));
                 }
@@ -826,7 +847,10 @@
                 if (currentActiveCategory !== 'all' && route.category !== currentActiveCategory) continue;
 
                 if (query !== '') {
-                    const searchable = `${route.name} ${t(route.name)} ${route.operator} ${t(route.operator)} ${Object.values(route.piers).join(' ')}`.toLowerCase();
+                    // Update search to explicitly check translated pier strings
+                    const pierNames = Object.values(route.piers);
+                    const translatedPiers = pierNames.map(p => t(p));
+                    const searchable = `${route.name} ${t(route.name)} ${route.operator} ${t(route.operator)} ${pierNames.join(' ')} ${translatedPiers.join(' ')}`.toLowerCase();
                     if (!searchable.includes(query)) continue;
                 }
 
@@ -1139,7 +1163,7 @@
                 `;
             });
             
-            // Assign complete string to container to completely prevent scroll jumping 
+            // Re-render whole container to completely avoid the jump-to-top bug on mobile scroll
             scheduleContainer.innerHTML = newContentHtml;
         }
 
