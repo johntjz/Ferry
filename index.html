@@ -159,7 +159,7 @@
                     <div>
                         <div class="flex items-center space-x-3">
                             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white" data-i18n="Pulse HK Ferry">Pulse HK Ferry</h1>
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#2dd4bf]/20 text-[#2dd4bf] border border-[#2dd4bf]/30">build 1.2</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#2dd4bf]/20 text-[#2dd4bf] border border-[#2dd4bf]/30">v1.3.0</span>
                         </div>
                     </div>
                 </div>
@@ -401,7 +401,7 @@
                 'Sai Kung Pier ➔ Yim Tin Tsai': '西貢碼頭 ➔ 鹽田梓', 'Sai Kung Pier ➔ Kau Sai Village / High Island': '西貢碼頭 ➔ 滘西村 / 糧船灣',
                 'Ma Liu Shui ➔ Sham Chung ➔ Lai Chi Chong ➔ Tap Mun ➔ Wong Shek': '馬料水 ➔ 深涌 ➔ 荔枝莊 ➔ 塔門 ➔ 黃石',
                 'Ma Liu Shui ➔ Tung Ping Chau': '馬料水 ➔ 東平洲', 'Sha Tau Kok / Ma Liu Shui ➔ Kat O ➔ Ap Chau': '沙頭角 / 馬料水 ➔ 吉澳 ➔ 鴨洲',
-                'Sha Tau Kok ➔ Lai Chi Wo': '沙頭角 ➔ 荔枝窩', 'Tuen Mun ➔ Tung Chung ➔ Sha Lo Wan ➔ Tai O': '屯門 ➔ 東涌 ➔ 沙螺灣 ➔ 大澳',
+                'Sha Tau Kok ➔ Lai Chi Wo': '沙头角 ➔ 荔枝窩', 'Tuen Mun ➔ Tung Chung ➔ Sha Lo Wan ➔ Tai O': '屯門 ➔ 東涌 ➔ 沙螺灣 ➔ 大澳',
                 'Park Island ➔ Central': '珀麗灣 ➔ 中環', 'Park Island ➔ Tsuen Wan': '珀麗灣 ➔ 荃灣', 'Sam Ka Tsuen ➔ Tung Lung Chau': '三家村 ➔ 東龍洲',
                 'Hong Kong (Sheung Wan) ➔ Macau Outer Harbour': '香港 (上環) ➔ 澳門外港', 'Hong Kong (Sheung Wan) ➔ Macau Taipa': '香港 (上環) ➔ 澳門氹仔',
 
@@ -532,7 +532,7 @@
             }
         };
 
-        let currentLang = 'en';
+        let currentLang = localStorage.getItem('pulseFerryLang') || 'en';
 
         function t(text) {
             if (!text) return '';
@@ -562,6 +562,7 @@
 
         document.getElementById('langSelect').addEventListener('change', (e) => {
             currentLang = e.target.value;
+            localStorage.setItem('pulseFerryLang', currentLang); // Saves the choice
             applyTranslations();
             populateRoutes();
             populatePiers();
@@ -623,6 +624,7 @@
         let isTimetableGridOpen = false;
 
         function initApp() {
+            document.getElementById('langSelect').value = currentLang; // Syncs the dropdown UI
             applyTranslations();
             populateRoutes();
             checkHolidayAndSundayStatus();
@@ -902,6 +904,10 @@
                             };
                         });
 
+                        const depMins = window.PulseFerry.timeToMins(departureStop.t);
+                        const arrMins = window.PulseFerry.timeToMins(finalStop.t);
+                        const travelDurationMins = (arrMins - depMins + 1440) % 1440;
+
                         departures.push({
                             operator: route.operator,
                             departureTime: departureStop.t,
@@ -911,6 +917,7 @@
                             destination: piersMapping[finalStop.p] || finalStop.p,
                             etaDestination: finalStop.t,
                             countdownMins: diffMinutes,
+                            travelDurationMins: travelDurationMins, // Journey duration from selected pier to terminus
                             itinerary: itinerary,
                             skippedStops: trip.skippedStops || [],
                             vesselType: trip.vesselType,
@@ -980,9 +987,9 @@
                 // Specific Vessel Badges & Cargo Indicator
                 let vesselBadge = '';
                 if (dep.vesselType === 'fast') {
-                    vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 border border-sky-500/30 tracking-wider">⚡ ${t('Fast Ferry')} (${dep.duration || 35}m)</span>`;
+                    vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 border border-sky-500/30 tracking-wider">⚡ ${t('Fast Ferry')}</span>`;
                 } else if (dep.vesselType === 'ordinary') {
-                    vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 tracking-wider">⛴️ ${t('Ordinary Ferry')} (${dep.duration || 55}m)${dep.cargo ? ` • ${t('Cargo OK')}` : ''}</span>`;
+                    vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 tracking-wider">⛴️ ${t('Ordinary Ferry')}${dep.cargo ? ` • ${t('Cargo OK')}` : ''}</span>`;
                 }
 
                 let itineraryHtml = '';
@@ -1039,8 +1046,12 @@
                                 <div class="px-3.5 py-1.5 rounded-xl border text-xs sm:text-sm shadow-sm ${countdownStyle}">
                                     ${countdownDisplay}
                                 </div>
-                                <div class="text-[11px] text-gray-400 mt-2 font-medium">
-                                    ${t('Arrive')} ${t(dep.destination)}: <span class="text-gray-100 font-bold font-mono">${dep.etaDestination}</span>
+                                <div class="text-[11px] text-gray-400 mt-2 font-medium flex items-center space-x-1.5">
+                                    <span>${t('Arrive')} ${t(dep.destination)}:</span>
+                                    <span class="text-gray-100 font-bold font-mono">${dep.etaDestination}</span>
+                                    <span class="text-[#2dd4bf] font-semibold text-[10px] bg-[#2dd4bf]/10 px-1.5 py-0.5 rounded border border-[#2dd4bf]/20">
+                                        ⏱️ ${dep.travelDurationMins} ${t('mins')}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -1105,6 +1116,10 @@
                     tripBadge = `<span class="ml-2 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1 py-0.5 rounded font-bold">Ord${trip.cargo ? ' 📦' : ''}</span>`;
                 }
 
+                const tripDepMins = window.PulseFerry.timeToMins(firstStop.t);
+                const tripArrMins = window.PulseFerry.timeToMins(lastStop.t);
+                const tripDurationMins = (tripArrMins - tripDepMins + 1440) % 1440;
+
                 tableHtml += `
                     <tr class="hover:bg-white/5 transition">
                         <td class="p-2.5 text-gray-500 font-mono">${idx + 1}</td>
@@ -1117,7 +1132,10 @@
                             ${isSkipped ? `<span class="ml-2 text-[10px] bg-red-900/40 text-red-300 px-1.5 py-0.5 rounded">${t('Express (Skipped Stop /)')}</span>` : ''}
                         </td>
                         <td class="p-2.5 font-semibold text-white">${t(route.piers[lastStop.p] || lastStop.p)}</td>
-                        <td class="p-2.5 text-gray-300 font-mono">${lastStop.t}</td>
+                        <td class="p-2.5 text-gray-300 font-mono">
+                            ${lastStop.t} 
+                            <span class="text-[10px] text-gray-400 font-sans ml-1">(${tripDurationMins}m)</span>
+                        </td>
                     </tr>
                 `;
             });
