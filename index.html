@@ -60,10 +60,17 @@
         <div class="bg-[#0f172a] px-4 py-2.5 flex justify-between items-center border-b border-white/5 text-xs font-medium">
             <div class="flex items-center space-x-2">
                 <div class="w-2.5 h-2.5 rounded-full bg-[#2dd4bf] animate-pulse"></div>
-                <span class="text-[#2dd4bf] uppercase tracking-wider font-bold">HK Ferry Network Live</span>
+                <span class="text-[#2dd4bf] uppercase tracking-wider font-bold" data-i18n="HK Ferry Network Live">HK Ferry Network Live</span>
             </div>
-            <div id="liveClock" class="text-gray-300 font-mono text-xs sm:text-sm font-semibold">
-                --:--:--
+            <div class="flex items-center space-x-3">
+                <select id="langSelect" class="bg-white/5 text-white border border-white/10 rounded px-1.5 py-0.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-[#2dd4bf]">
+                    <option value="en">EN</option>
+                    <option value="zh-TW">繁體</option>
+                    <option value="zh-CN">简体</option>
+                </select>
+                <div id="liveClock" class="text-gray-300 font-mono text-xs sm:text-sm font-semibold">
+                    --:--:--
+                </div>
             </div>
         </div>
 
@@ -77,23 +84,23 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">HK Ferry Live Schedule</h1>
-                        <p class="text-xs text-gray-400">Real-time departure count, route itinerary & fare database</p>
+                        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white" data-i18n="HK Ferry Live Schedule">HK Ferry Live Schedule</h1>
+                        <p class="text-xs text-gray-400" data-i18n="Real-time departure count, route itinerary & fare database">Real-time departure count, route itinerary & fare database</p>
                     </div>
                 </div>
 
                 <div class="flex items-center space-x-2">
                     <button id="fareBtn" class="flex items-center space-x-1.5 text-xs bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 px-3 py-2 rounded-xl border border-indigo-500/30 transition font-medium">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span>Fare Info</span>
+                        <span data-i18n="Fare Info">Fare Info</span>
                     </button>
                     <button id="viewToggleBtn" class="flex items-center space-x-1.5 text-xs bg-white/5 hover:bg-white/10 text-gray-200 px-3 py-2 rounded-xl border border-white/10 transition font-medium">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        <span id="viewToggleText">Full Timetable</span>
+                        <span id="viewToggleText" data-i18n="Full Timetable">Full Timetable</span>
                     </button>
                     <button id="refreshBtn" class="flex items-center space-x-1 text-xs bg-[#2dd4bf]/10 hover:bg-[#2dd4bf]/20 text-[#2dd4bf] px-3 py-2 rounded-xl border border-[#2dd4bf]/30 transition font-medium">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        <span class="hidden sm:inline">Refresh</span>
+                        <span class="hidden sm:inline" data-i18n="Refresh">Refresh</span>
                     </button>
                 </div>
             </div>
@@ -105,7 +112,7 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
-                        <input type="text" id="searchInput" placeholder="Search route, pier or island (e.g., Aberdeen, Tap Mun, Peng Chau)..." class="w-full bg-[#0f172a] text-sm text-white pl-9 pr-8 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#2dd4bf] focus:border-transparent transition shadow-inner placeholder-gray-500">
+                        <input type="text" id="searchInput" data-i18n-placeholder="Search route, pier or island (e.g., Aberdeen, Tap Mun, Peng Chau)..." placeholder="Search route, pier or island (e.g., Aberdeen, Tap Mun, Peng Chau)..." class="w-full bg-[#0f172a] text-sm text-white pl-9 pr-8 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#2dd4bf] focus:border-transparent transition shadow-inner placeholder-gray-500">
                         <button id="clearSearch" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
@@ -114,14 +121,14 @@
 
                 <!-- Category Pills -->
                 <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 hide-scrollbar text-xs">
-                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-[#2dd4bf] text-slate-900 font-bold shadow transition shrink-0" data-cat="all">All Routes</button>
-                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="islands">Outlying Islands</button>
-                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="harbour">Victoria Harbour</button>
-                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="aberdeen">Aberdeen & Lamma</button>
-                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="saikung">Sai Kung & Wong Shek</button>
-                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="tolo">Tolo Harbour & North</button>
-                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="lantau">Lantau West & Tuen Mun</button>
-                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="macau">Macau Cross-Boundary</button>
+                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-[#2dd4bf] text-slate-900 font-bold shadow transition shrink-0" data-cat="all" data-i18n="All Routes">All Routes</button>
+                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="islands" data-i18n="Outlying Islands">Outlying Islands</button>
+                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="harbour" data-i18n="Victoria Harbour">Victoria Harbour</button>
+                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="aberdeen" data-i18n="Aberdeen & Lamma">Aberdeen & Lamma</button>
+                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="saikung" data-i18n="Sai Kung & Wong Shek">Sai Kung & Wong Shek</button>
+                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="tolo" data-i18n="Tolo Harbour & North">Tolo Harbour & North</button>
+                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="lantau" data-i18n="Lantau West & Tuen Mun">Lantau West & Tuen Mun</button>
+                    <button class="cat-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="macau" data-i18n="Macau Cross-Boundary">Macau Cross-Boundary</button>
                 </div>
             </div>
 
@@ -130,7 +137,7 @@
                 <!-- Select Route -->
                 <div class="sm:col-span-7 space-y-1.5">
                     <label for="routeSelect" class="text-xs font-semibold text-gray-400 uppercase tracking-wide flex justify-between">
-                        <span>Ferry Route</span>
+                        <span data-i18n="Ferry Route">Ferry Route</span>
                         <span id="routeCountBadge" class="text-[10px] text-[#2dd4bf] font-bold">120+ Routes</span>
                     </label>
                     <div class="relative">
@@ -146,10 +153,10 @@
                 <!-- Select Departure Pier -->
                 <div class="sm:col-span-5 space-y-1.5">
                     <div class="flex justify-between items-center">
-                        <label for="pierSelect" class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Departure Pier</label>
+                        <label for="pierSelect" class="text-xs font-semibold text-gray-400 uppercase tracking-wide" data-i18n="Departure Pier">Departure Pier</label>
                         <button id="swapDirectionBtn" title="Swap direction" class="text-[11px] text-[#2dd4bf] hover:underline font-semibold flex items-center space-x-1">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-                            <span>Swap Direction</span>
+                            <span data-i18n="Swap Direction">Swap Direction</span>
                         </button>
                     </div>
                     <div class="relative">
@@ -172,8 +179,8 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
             </svg>
             <div class="text-xs sm:text-sm">
-                <span class="font-bold text-amber-300" id="holidayTitle">Holiday Fare Notice:</span>
-                <span id="holidayMessage">Sunday & HK Public Holiday fare rates apply today. Check pier fare tables for holiday surcharges.</span>
+                <span class="font-bold text-amber-300" id="holidayTitle" data-i18n="Holiday Fare Notice:">Holiday Fare Notice:</span>
+                <span id="holidayMessage" data-i18n="Sunday & HK Public Holiday fare rates apply today. Check pier fare tables for holiday surcharges.">Sunday & HK Public Holiday fare rates apply today. Check pier fare tables for holiday surcharges.</span>
             </div>
         </div>
     </div>
@@ -182,7 +189,7 @@
     <main id="scheduleContainer" class="w-full max-w-4xl space-y-3.5 pb-12">
         <div class="text-center text-gray-500 py-12 bg-[#1e293b] rounded-2xl border border-white/5">
             <div class="w-8 h-8 border-2 border-[#2dd4bf] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-            Loading departure schedules...
+            <span data-i18n="Loading departure schedules...">Loading departure schedules...</span>
         </div>
     </main>
 
@@ -193,7 +200,7 @@
                 <h2 id="timetableTitle" class="text-lg font-bold text-white">Full Route Daily Timetable</h2>
                 <p id="timetableSubtitle" class="text-xs text-gray-400">All scheduled departure sailings for today</p>
             </div>
-            <button id="closeTimetableBtn" class="text-xs bg-white/10 hover:bg-white/20 text-gray-200 px-3 py-1.5 rounded-lg border border-white/10">
+            <button id="closeTimetableBtn" class="text-xs bg-white/10 hover:bg-white/20 text-gray-200 px-3 py-1.5 rounded-lg border border-white/10" data-i18n="Back to Live View">
                 Back to Live View
             </button>
         </div>
@@ -214,7 +221,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 </div>
                 <div>
-                    <h3 id="fareModalRouteTitle" class="text-lg font-bold text-white">Route Fare Breakdown</h3>
+                    <h3 id="fareModalRouteTitle" class="text-lg font-bold text-white" data-i18n="Route Fare Breakdown">Route Fare Breakdown</h3>
                     <p id="fareModalOperator" class="text-xs text-indigo-400 font-semibold"></p>
                 </div>
             </div>
@@ -224,13 +231,258 @@
             </div>
 
             <div class="bg-white/5 rounded-xl p-3 text-[11px] text-gray-400 space-y-1">
-                <p>• <strong>Senior/Child/Disability Fare:</strong> 50% concessionary fare applies across most franchised routes.</p>
-                <p>• <strong>$2 Transport Fare Scheme:</strong> HK elderly ($2 concession) eligible on designated routes with Elder Octopus / JoyYou Card.</p>
+                <p>• <strong data-i18n="Senior/Child/Disability Fare:">Senior/Child/Disability Fare:</strong> <span data-i18n="50% concessionary fare applies across most franchised routes.">50% concessionary fare applies across most franchised routes.</span></p>
+                <p>• <strong data-i18n="$2 Transport Fare Scheme:">$2 Transport Fare Scheme:</strong> <span data-i18n="HK elderly ($2 concession) eligible on designated routes with Elder Octopus / JoyYou Card.">HK elderly ($2 concession) eligible on designated routes with Elder Octopus / JoyYou Card.</span></p>
             </div>
         </div>
     </div>
 
     <script>
+        // Internationalization (i18n) Dictionary
+        const i18n = {
+            'en': {}, // Fallback is raw keys
+            'zh-TW': {
+                'HK Ferry Network Live': '香港渡輪實時網絡',
+                'HK Ferry Live Schedule': '香港渡輪實時班次',
+                'Real-time departure count, route itinerary & fare database': '實時離港倒數、航線行程及票價資料庫',
+                'Fare Info': '票價資訊',
+                'Full Timetable': '完整時間表',
+                'Live Cards View': '實時卡片檢視',
+                'Refresh': '更新',
+                'Search route, pier or island (e.g., Aberdeen, Tap Mun, Peng Chau)...': '搜尋航線、碼頭或島嶼 (如: 香港仔, 塔門, 坪洲)...',
+                'All Routes': '所有航線',
+                'Outlying Islands': '離島',
+                'Victoria Harbour': '維多利亞港',
+                'Aberdeen & Lamma': '香港仔及南丫島',
+                'Sai Kung & Wong Shek': '西貢及黃石',
+                'Tolo Harbour & North': '吐露港及新界北',
+                'Lantau West & Tuen Mun': '大嶼山西及屯門',
+                'Macau Cross-Boundary': '澳門跨境',
+                'Ferry Route': '渡輪航線',
+                'Routes': '條航線',
+                'Route': '條航線',
+                'No routes match your search / filter': '沒有符合搜尋/過濾條件的航線',
+                'Departure Pier': '出發碼頭',
+                'Swap Direction': '切換方向',
+                'N/A': '不適用',
+                'Depart from': '由',
+                'Holiday Fare Notice:': '假日票價提示：',
+                'Sunday & HK Public Holiday fare rates apply today. Check pier fare tables for holiday surcharges.': '今日適用星期日及公眾假期票價。請查閱碼頭票價表了解假日附加費。',
+                'Sunday Service Notice:': '星期日服務提示：',
+                'Sunday fare rates and holiday sailing schedules apply today across all piers.': '今日各碼頭適用星期日票價及假日航班時間表。',
+                'HK Public Holiday': '香港公眾假期',
+                'Loading departure schedules...': '正在載入航班時間表...',
+                'No ferry route selected.': '未有選擇渡輪航線。',
+                'Please choose a route or adjust your category search filter above.': '請選擇航線或調整上方的分類搜尋過濾器。',
+                'No more scheduled departures from this pier today.': '今日此碼頭已沒有更多預定航班。',
+                'Please check back tomorrow, click "Full Timetable", or swap direction.': '請明日再來查看、點擊「完整時間表」或切換方向。',
+                'Departed': '已開出',
+                'Boarding Now': '正在登船',
+                'In': '還有',
+                'h': '小時',
+                'm': '分鐘',
+                'mins': '分鐘',
+                'Arrive': '抵達',
+                'to': '往',
+                'Next Stop:': '下一站：',
+                'Skipped (/)': '不停站 (/)',
+                'Express (Skipped Stop /)': '特快 (不停站 /)',
+                'Full Route Daily Timetable': '全線每日時間表',
+                'All scheduled departure sailings for today': '今日所有預定開出航班',
+                'Total Sailings:': '總航班數：',
+                'Operated by': '營運商：',
+                'Back to Live View': '返回實時畫面',
+                'Departure': '出發',
+                'Stops & Route Details': '停靠站及航線詳情',
+                'Final Terminus': '終點站',
+                'ETA': '預計到達',
+                'Route Fare Breakdown': '航線票價明細',
+                'Mondays to Saturdays (Non-Holidays):': '星期一至六（非假日）：',
+                'Sundays & HK Public Holidays:': '星期日及公眾假期：',
+                'Key Piers Served:': '主要停靠碼頭：',
+                'Senior/Child/Disability Fare:': '長者/小童/傷健人士票價：',
+                '50% concessionary fare applies across most franchised routes.': '大多數專營航線提供半價優惠。',
+                '$2 Transport Fare Scheme:': '$2 乘車優惠計劃：',
+                'HK elderly ($2 concession) eligible on designated routes with Elder Octopus / JoyYou Card.': '合資格長者使用長者八達通/樂悠咭可於指定航線享有$2優惠。',
+
+                // Routes
+                'Central ➔ Cheung Chau': '中環 ➔ 長洲', 'Central ➔ Mui Wo': '中環 ➔ 梅窩', 'Central ➔ Peng Chau': '中環 ➔ 坪洲',
+                'Central ➔ Lamma Island (Yung Shue Wan)': '中環 ➔ 南丫島 (榕樹灣)', 'Central ➔ Lamma Island (Sok Kwu Wan)': '中環 ➔ 南丫島 (索罟灣)',
+                'Central ➔ Discovery Bay': '中環 ➔ 愉景灣', 'Inter-Islands: Peng Chau ➔ Mui Wo ➔ Chi Ma Wan ➔ Cheung Chau': '橫水渡: 坪洲 ➔ 梅窩 ➔ 芝麻灣 ➔ 長洲',
+                'Peng Chau ➔ Trappist Monastery ➔ Discovery Bay': '坪洲 ➔ 神樂院 ➔ 愉景灣', 'Peng Chau ➔ Hei Ling Chau': '坪洲 ➔ 喜靈洲',
+                'Central ➔ Tsim Sha Tsui': '中環 ➔ 尖沙咀', 'Wan Chai ➔ Tsim Sha Tsui': '灣仔 ➔ 尖沙咀', 'Central ➔ Hung Hom': '中環 ➔ 紅磡',
+                'North Point ➔ Hung Hom': '北角 ➔ 紅磡', 'North Point ➔ Kowloon City': '北角 ➔ 九龍城', 'North Point ➔ Kwun Tong': '北角 ➔ 觀塘',
+                'Sai Wan Ho ➔ Kwun Tong': '西灣河 ➔ 觀塘', 'Sai Wan Ho ➔ Sam Ka Tsuen (Lei Yue Mun)': '西灣河 ➔ 三家村 (鯉魚門)',
+                'Tseung Kwan O (TKO) ➔ Sai Wan Ho': '將軍澳 (TKO) ➔ 西灣河', 'Aberdeen ➔ Pak Kok Tsuen ➔ Yung Shue Wan': '香港仔 ➔ 北角村 ➔ 榕樹灣',
+                'Aberdeen ➔ Mo Tat Wan ➔ Sok Kwu Wan': '香港仔 ➔ 模達灣 ➔ 索罟灣', 'Aberdeen / Stanley ➔ Po Toi Island': '香港仔 / 赤柱 ➔ 蒲台島',
+                'Wong Shek ➔ Chek Keng ➔ Tap Mun': '黃石 ➔ 赤徑 ➔ 塔門', 'Wong Shek ➔ Wan Tsai / Nam Fung Wan': '黃石 ➔ 灣仔 / 南風灣',
+                'Sai Kung Pier ➔ Yim Tin Tsai': '西貢碼頭 ➔ 鹽田梓', 'Sai Kung Pier ➔ Kau Sai Village / High Island': '西貢碼頭 ➔ 滘西村 / 糧船灣',
+                'Ma Liu Shui ➔ Sham Chung ➔ Lai Chi Chong ➔ Tap Mun ➔ Wong Shek': '馬料水 ➔ 深涌 ➔ 荔枝莊 ➔ 塔門 ➔ 黃石',
+                'Ma Liu Shui ➔ Tung Ping Chau': '馬料水 ➔ 東平洲', 'Sha Tau Kok / Ma Liu Shui ➔ Kat O ➔ Ap Chau': '沙頭角 / 馬料水 ➔ 吉澳 ➔ 鴨洲',
+                'Sha Tau Kok ➔ Lai Chi Wo': '沙頭角 ➔ 荔枝窩', 'Tuen Mun ➔ Tung Chung ➔ Sha Lo Wan ➔ Tai O': '屯門 ➔ 東涌 ➔ 沙螺灣 ➔ 大澳',
+                'Park Island ➔ Central': '珀麗灣 ➔ 中環', 'Park Island ➔ Tsuen Wan': '珀麗灣 ➔ 荃灣', 'Sam Ka Tsuen ➔ Tung Lung Chau': '三家村 ➔ 東龍洲',
+                'Hong Kong (Sheung Wan) ➔ Macau Outer Harbour': '香港 (上環) ➔ 澳門外港', 'Hong Kong (Sheung Wan) ➔ Macau Taipa': '香港 (上環) ➔ 澳門氹仔',
+
+                // Piers & Places
+                'Central': '中環', 'Central Pier 2': '中環2號碼頭', 'Central Pier 3': '中環3號碼頭', 'Central Pier 4': '中環4號碼頭', 'Central Pier 5': '中環5號碼頭', 'Central Pier 6': '中環6號碼頭', 'Central Pier 7': '中環7號碼頭', 'Central Pier 8': '中環8號碼頭',
+                'Cheung Chau': '長洲', 'Mui Wo': '梅窩', 'Peng Chau': '坪洲', 'Yung Shue Wan': '榕樹灣', 'Sok Kwu Wan': '索罟灣', 'Discovery Bay': '愉景灣', 'Discovery Bay (Nim Shue Wan)': '愉景灣 (稔樹灣)',
+                'Chi Ma Wan': '芝麻灣', 'Trappist Monastery': '神樂院', 'Hei Ling Chau': '喜靈洲', 'Tsim Sha Tsui Star Ferry Pier': '尖沙咀天星碼頭', 'Wan Chai Ferry Pier': '灣仔渡輪碼頭', 'Hung Hom Ferry Pier': '紅磡渡輪碼頭',
+                'North Point Ferry Pier': '北角渡輪碼頭', 'Kowloon City Ferry Pier': '九龍城渡輪碼頭', 'Kwun Tong Ferry Pier': '觀塘渡輪碼頭', 'Sai Wan Ho Pier': '西灣河碼頭', 'Kwun Tong Pier': '觀塘碼頭', 'Sam Ka Tsuen Pier': '三家村碼頭', 'Tseung Kwan O South Landing': '將軍澳南梯台',
+                'Aberdeen Promenade Pier': '香港仔海濱碼頭', 'Pak Kok Tsuen': '北角村', 'Mo Tat Wan': '模達灣', 'Aberdeen Landing': '香港仔梯台', 'Aberdeen': '香港仔', 'Stanley (Blake Pier)': '赤柱 (卜公碼頭)', 'Po Toi Island': '蒲台島',
+                'Wong Shek Pier': '黃石碼頭', 'Chek Keng': '赤徑', 'Tap Mun': '塔門', 'Wan Tsai Campsite Pier': '灣仔營地碼頭', 'Sai Kung Public Pier': '西貢公眾碼頭', 'Yim Tin Tsai Pier': '鹽田梓碼頭', 'Kau Sai Village': '滘西村',
+                'Ma Liu Shui Landing 3': '馬料水3號梯台', 'Sham Chung': '深涌', 'Lai Chi Chong': '荔枝莊', 'Tung Ping Chau': '東平洲', 'Kat O Pier': '吉澳碼頭', 'Ap Chau': '鴨洲', 'Sha Tau Kok Pier': '沙頭角碼頭', 'Lai Chi Wo': '荔枝窩',
+                'Tuen Mun Ferry Pier': '屯門渡輪碼頭', 'Tung Chung Development Pier': '東涌發展碼頭', 'Sha Lo Wan': '沙螺灣', 'Tai O Pier': '大澳碼頭', 'Park Island Ferry Pier': '珀麗灣渡輪碼頭', 'Tsuen Wan Pier': '荃灣碼頭', 'Tung Lung Chau Pier': '東龍洲碼頭',
+                'HK Macau Ferry Terminal (Sheung Wan)': '港澳碼頭 (上環)', 'Macau Outer Harbour': '澳門外港', 'Macau Taipa Ferry Terminal': '澳門氹仔客運碼頭',
+
+                // Operators
+                'Sun Ferry': '新渡輪', 'HK & Kowloon Ferry': '港九小輪', 'DB Transport': '愉景灣航運', 'Tsui Wah Ferry': '翠華船務', 'Star Ferry': '天星小輪', 'Fortune Ferry': '富裕小輪', 'Coral Sea Ferry': '珊瑚海船務', 'Chuen Kee Ferry': '全記渡',
+                'Pitow Ferry / Local Kaito': '街渡', 'Local Kaito Operators': '街渡', 'Best Ferry / Local Kaito': '街渡', 'Pitcl (Park Island Transport)': '珀麗灣客運', 'TurboJET': '噴射飛航', 'Cotai Water Jet': '金光飛航',
+
+                // Fares & Misc
+                '(Ord)': '(普通)', '(Fast)': '(高速)', '(Single Ticket)': '(單程)', '(Roundtrip)': '(來回)', '(Cotai Class)': '(金光飛航)', '(Economy)': '(普通位)', '(Super)': '(豪華位)'
+            },
+            'zh-CN': {
+                'HK Ferry Network Live': '香港渡轮实时网络',
+                'HK Ferry Live Schedule': '香港渡轮实时班次',
+                'Real-time departure count, route itinerary & fare database': '实时离港倒数、航线行程及票价数据库',
+                'Fare Info': '票价资讯',
+                'Full Timetable': '完整时间表',
+                'Live Cards View': '实时卡片视图',
+                'Refresh': '更新',
+                'Search route, pier or island (e.g., Aberdeen, Tap Mun, Peng Chau)...': '搜索航线、码头或岛屿 (如: 香港仔, 塔门, 坪洲)...',
+                'All Routes': '所有航线',
+                'Outlying Islands': '离岛',
+                'Victoria Harbour': '维多利亚港',
+                'Aberdeen & Lamma': '香港仔及南丫岛',
+                'Sai Kung & Wong Shek': '西贡及黄石',
+                'Tolo Harbour & North': '吐露港及新界北',
+                'Lantau West & Tuen Mun': '大屿山西及屯门',
+                'Macau Cross-Boundary': '澳门跨境',
+                'Ferry Route': '渡轮航线',
+                'Routes': '条航线',
+                'Route': '条航线',
+                'No routes match your search / filter': '没有符合搜索/过滤条件的航线',
+                'Departure Pier': '出发码头',
+                'Swap Direction': '切换方向',
+                'N/A': '不适用',
+                'Depart from': '由',
+                'Holiday Fare Notice:': '假日票价提示：',
+                'Sunday & HK Public Holiday fare rates apply today. Check pier fare tables for holiday surcharges.': '今日适用星期日及公众假期票价。请查阅码头票价表了解假日附加费。',
+                'Sunday Service Notice:': '星期日服务提示：',
+                'Sunday fare rates and holiday sailing schedules apply today across all piers.': '今日各码头适用星期日票价及假日航班时间表。',
+                'HK Public Holiday': '香港公众假期',
+                'Loading departure schedules...': '正在加载航班时间表...',
+                'No ferry route selected.': '未有选择渡轮航线。',
+                'Please choose a route or adjust your category search filter above.': '请选择航线或调整上方的分类搜索过滤器。',
+                'No more scheduled departures from this pier today.': '今日此码头已没有更多预定航班。',
+                'Please check back tomorrow, click "Full Timetable", or swap direction.': '请明日再来查看、点击“完整时间表”或切换方向。',
+                'Departed': '已开出',
+                'Boarding Now': '正在登船',
+                'In': '还有',
+                'h': '小时',
+                'm': '分钟',
+                'mins': '分钟',
+                'Arrive': '抵达',
+                'to': '往',
+                'Next Stop:': '下一站：',
+                'Skipped (/)': '不停站 (/)',
+                'Express (Skipped Stop /)': '特快 (不停站 /)',
+                'Full Route Daily Timetable': '全线每日时间表',
+                'All scheduled departure sailings for today': '今日所有预定开出航班',
+                'Total Sailings:': '总航班数：',
+                'Operated by': '营运商：',
+                'Back to Live View': '返回实时画面',
+                'Departure': '出发',
+                'Stops & Route Details': '停靠站及航线详情',
+                'Final Terminus': '终点站',
+                'ETA': '预计到达',
+                'Route Fare Breakdown': '航线票价明细',
+                'Mondays to Saturdays (Non-Holidays):': '星期一至六（非假日）：',
+                'Sundays & HK Public Holidays:': '星期日及公众假期：',
+                'Key Piers Served:': '主要停靠码头：',
+                'Senior/Child/Disability Fare:': '长者/小童/伤健人士票价：',
+                '50% concessionary fare applies across most franchised routes.': '大多数专营航线提供半价优惠。',
+                '$2 Transport Fare Scheme:': '$2 乘车优惠计划：',
+                'HK elderly ($2 concession) eligible on designated routes with Elder Octopus / JoyYou Card.': '合资格长者使用长者八达通/乐悠咭可于指定航线享有$2优惠。',
+
+                // Routes
+                'Central ➔ Cheung Chau': '中环 ➔ 长洲', 'Central ➔ Mui Wo': '中环 ➔ 梅窝', 'Central ➔ Peng Chau': '中环 ➔ 坪洲',
+                'Central ➔ Lamma Island (Yung Shue Wan)': '中环 ➔ 南丫岛 (榕树湾)', 'Central ➔ Lamma Island (Sok Kwu Wan)': '中环 ➔ 南丫岛 (索罟湾)',
+                'Central ➔ Discovery Bay': '中环 ➔ 愉景湾', 'Inter-Islands: Peng Chau ➔ Mui Wo ➔ Chi Ma Wan ➔ Cheung Chau': '横水渡: 坪洲 ➔ 梅窝 ➔ 芝麻湾 ➔ 长洲',
+                'Peng Chau ➔ Trappist Monastery ➔ Discovery Bay': '坪洲 ➔ 神乐院 ➔ 愉景湾', 'Peng Chau ➔ Hei Ling Chau': '坪洲 ➔ 喜灵洲',
+                'Central ➔ Tsim Sha Tsui': '中环 ➔ 尖沙咀', 'Wan Chai ➔ Tsim Sha Tsui': '湾仔 ➔ 尖沙咀', 'Central ➔ Hung Hom': '中环 ➔ 红磡',
+                'North Point ➔ Hung Hom': '北角 ➔ 红磡', 'North Point ➔ Kowloon City': '北角 ➔ 九龙城', 'North Point ➔ Kwun Tong': '北角 ➔ 观塘',
+                'Sai Wan Ho ➔ Kwun Tong': '西湾河 ➔ 观塘', 'Sai Wan Ho ➔ Sam Ka Tsuen (Lei Yue Mun)': '西湾河 ➔ 三家村 (鲤鱼门)',
+                'Tseung Kwan O (TKO) ➔ Sai Wan Ho': '将军澳 (TKO) ➔ 西湾河', 'Aberdeen ➔ Pak Kok Tsuen ➔ Yung Shue Wan': '香港仔 ➔ 北角村 ➔ 榕树湾',
+                'Aberdeen ➔ Mo Tat Wan ➔ Sok Kwu Wan': '香港仔 ➔ 模达湾 ➔ 索罟湾', 'Aberdeen / Stanley ➔ Po Toi Island': '香港仔 / 赤柱 ➔ 蒲台岛',
+                'Wong Shek ➔ Chek Keng ➔ Tap Mun': '黄石 ➔ 赤径 ➔ 塔门', 'Wong Shek ➔ Wan Tsai / Nam Fung Wan': '黄石 ➔ 湾仔 / 南风湾',
+                'Sai Kung Pier ➔ Yim Tin Tsai': '西贡码头 ➔ 盐田梓', 'Sai Kung Pier ➔ Kau Sai Village / High Island': '西贡码头 ➔ 滘西村 / 粮船湾',
+                'Ma Liu Shui ➔ Sham Chung ➔ Lai Chi Chong ➔ Tap Mun ➔ Wong Shek': '马料水 ➔ 深涌 ➔ 荔枝庄 ➔ 塔门 ➔ 黄石',
+                'Ma Liu Shui ➔ Tung Ping Chau': '马料水 ➔ 东平洲', 'Sha Tau Kok / Ma Liu Shui ➔ Kat O ➔ Ap Chau': '沙头角 / 马料水 ➔ 吉澳 ➔ 鸭洲',
+                'Sha Tau Kok ➔ Lai Chi Wo': '沙头角 ➔ 荔枝窝', 'Tuen Mun ➔ Tung Chung ➔ Sha Lo Wan ➔ Tai O': '屯门 ➔ 东涌 ➔ 沙螺湾 ➔ 大澳',
+                'Park Island ➔ Central': '珀丽湾 ➔ 中环', 'Park Island ➔ Tsuen Wan': '珀丽湾 ➔ 荃湾', 'Sam Ka Tsuen ➔ Tung Lung Chau': '三家村 ➔ 东龙洲',
+                'Hong Kong (Sheung Wan) ➔ Macau Outer Harbour': '香港 (上环) ➔ 澳门外港', 'Hong Kong (Sheung Wan) ➔ Macau Taipa': '香港 (上环) ➔ 澳门氹仔',
+
+                // Piers & Places
+                'Central': '中环', 'Central Pier 2': '中环2号码头', 'Central Pier 3': '中环3号码头', 'Central Pier 4': '中环4号码头', 'Central Pier 5': '中环5号码头', 'Central Pier 6': '中环6号码头', 'Central Pier 7': '中环7号码头', 'Central Pier 8': '中环8号码头',
+                'Cheung Chau': '长洲', 'Mui Wo': '梅窝', 'Peng Chau': '坪洲', 'Yung Shue Wan': '榕树湾', 'Sok Kwu Wan': '索罟湾', 'Discovery Bay': '愉景湾', 'Discovery Bay (Nim Shue Wan)': '愉景湾 (稔树湾)',
+                'Chi Ma Wan': '芝麻湾', 'Trappist Monastery': '神乐院', 'Hei Ling Chau': '喜灵洲', 'Tsim Sha Tsui Star Ferry Pier': '尖沙咀天星码头', 'Wan Chai Ferry Pier': '湾仔渡轮码头', 'Hung Hom Ferry Pier': '红磡渡轮码头',
+                'North Point Ferry Pier': '北角渡轮码头', 'Kowloon City Ferry Pier': '九龙城渡轮码头', 'Kwun Tong Ferry Pier': '观塘渡轮码头', 'Sai Wan Ho Pier': '西湾河码头', 'Kwun Tong Pier': '观塘码头', 'Sam Ka Tsuen Pier': '三家村码头', 'Tseung Kwan O South Landing': '将军澳南梯台',
+                'Aberdeen Promenade Pier': '香港仔海滨码头', 'Pak Kok Tsuen': '北角村', 'Mo Tat Wan': '模达湾', 'Aberdeen Landing': '香港仔梯台', 'Aberdeen': '香港仔', 'Stanley (Blake Pier)': '赤柱 (卜公码头)', 'Po Toi Island': '蒲台岛',
+                'Wong Shek Pier': '黄石码头', 'Chek Keng': '赤径', 'Tap Mun': '塔门', 'Wan Tsai Campsite Pier': '湾仔营地码头', 'Sai Kung Public Pier': '西贡公众码头', 'Yim Tin Tsai Pier': '盐田梓码头', 'Kau Sai Village': '滘西村',
+                'Ma Liu Shui Landing 3': '马料水3号梯台', 'Sham Chung': '深涌', 'Lai Chi Chong': '荔枝庄', 'Tung Ping Chau': '东平洲', 'Kat O Pier': '吉澳码头', 'Ap Chau': '鸭洲', 'Sha Tau Kok Pier': '沙头角码头', 'Lai Chi Wo': '荔枝窝',
+                'Tuen Mun Ferry Pier': '屯门渡轮码头', 'Tung Chung Development Pier': '东涌发展码头', 'Sha Lo Wan': '沙螺湾', 'Tai O Pier': '大澳码头', 'Park Island Ferry Pier': '珀丽湾渡轮码头', 'Tsuen Wan Pier': '荃湾码头', 'Tung Lung Chau Pier': '东龙洲码头',
+                'HK Macau Ferry Terminal (Sheung Wan)': '港澳码头 (上环)', 'Macau Outer Harbour': '澳门外港', 'Macau Taipa Ferry Terminal': '澳门氹仔客运码头',
+
+                // Operators
+                'Sun Ferry': '新渡轮', 'HK & Kowloon Ferry': '港九小轮', 'DB Transport': '愉景湾航运', 'Tsui Wah Ferry': '翠华船务', 'Star Ferry': '天星小轮', 'Fortune Ferry': '富裕小轮', 'Coral Sea Ferry': '珊瑚海船务', 'Chuen Kee Ferry': '全记渡',
+                'Pitow Ferry / Local Kaito': '街渡', 'Local Kaito Operators': '街渡', 'Best Ferry / Local Kaito': '街渡', 'Pitcl (Park Island Transport)': '珀丽湾客运', 'TurboJET': '喷射飞航', 'Cotai Water Jet': '金光飞航',
+
+                // Fares & Misc
+                '(Ord)': '(普通)', '(Fast)': '(高速)', '(Single Ticket)': '(单程)', '(Roundtrip)': '(来回)', '(Cotai Class)': '(金光飞航)', '(Economy)': '(普通位)', '(Super)': '(豪华位)'
+            }
+        };
+
+        let currentLang = 'en';
+
+        function t(text) {
+            if (!text) return '';
+            if (currentLang === 'en') return text;
+            return (i18n[currentLang] && i18n[currentLang][text]) ? i18n[currentLang][text] : text;
+        }
+
+        function t_fare(fareStr) {
+            if (currentLang === 'en') return fareStr;
+            let translated = fareStr;
+            ['(Ord)', '(Fast)', '(Single Ticket)', '(Roundtrip)', '(Cotai Class)', '(Economy)', '(Super)'].forEach(term => {
+                translated = translated.replace(term, t(term));
+            });
+            return translated;
+        }
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                el.textContent = t(el.getAttribute('data-i18n'));
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+            });
+            // Update toggle button text if toggled
+            const viewToggleText = document.getElementById('viewToggleText');
+            viewToggleText.textContent = isTimetableGridOpen ? t("Live Cards View") : t("Full Timetable");
+        }
+
+        document.getElementById('langSelect').addEventListener('change', (e) => {
+            currentLang = e.target.value;
+            applyTranslations();
+            populateRoutes();
+            populatePiers();
+            checkHolidayAndSundayStatus();
+            renderSchedule();
+            if (isTimetableGridOpen) renderTimetableGrid();
+        });
+
+
         // Comprehensive Hong Kong Statutory & Public Holidays Database (2025 - 2027)
         const HK_PUBLIC_HOLIDAYS = {
             // 2025
@@ -593,7 +845,7 @@
                 category: "aberdeen",
                 operator: "Tsui Wah Ferry",
                 piers: { "AB": "Aberdeen", "ST": "Stanley (Blake Pier)", "PTI": "Po Toi Island" },
-                fares: { adultWeekday: "HK$25.00 (Single)", adultHoliday: "HK$25.00" },
+                fares: { adultWeekday: "HK$25.00 (Single Ticket)", adultHoliday: "HK$25.00" },
                 trips: [
                     { stops: [{ p: "AB", t: "10:00" }, { p: "ST", t: "11:30" }, { p: "PTI", t: "12:00" }] },
                     { stops: [{ p: "ST", t: "15:00" }, { p: "PTI", t: "15:30" }] },
@@ -764,7 +1016,7 @@
                 trips: generateBiDirectionalSchedules("HK", "MACAU", [
                     "07:30","08:30","09:30","10:30","11:30","12:30","13:30","14:30","15:30","16:30",
                     "17:30","18:30","19:30","20:30","21:30","22:30","23:30"
-                ], 55)
+                ], 65) // <-- Fixed to 65 minutes per user feedback in screenshot
             },
             "cotai-water-jet-taipa": {
                 name: "Hong Kong (Sheung Wan) ➔ Macau Taipa",
@@ -781,11 +1033,9 @@
 
         function generateBiDirectionalSchedules(p1, p2, times, travelDurationMins) {
             const trips = [];
-            times.forEach(t => {
-                // Direction A -> B
-                trips.push({ stops: [{ p: p1, t: t }, { p: p2, t: addMinutesToTime(t, travelDurationMins) }] });
-                // Direction B -> A
-                trips.push({ stops: [{ p: p2, t: t }, { p: p1, t: addMinutesToTime(t, travelDurationMins) }] });
+            times.forEach(tm => {
+                trips.push({ stops: [{ p: p1, t: tm }, { p: p2, t: addMinutesToTime(tm, travelDurationMins) }] });
+                trips.push({ stops: [{ p: p2, t: tm }, { p: p1, t: addMinutesToTime(tm, travelDurationMins) }] });
             });
             return trips;
         }
@@ -794,7 +1044,6 @@
             const trips = [];
             let current = timeToMinutes(startTime);
             const end = timeToMinutes(endTime);
-
             while (current <= end) {
                 const timeStr = minutesToTime(current);
                 trips.push({ stops: [{ p: p1, t: timeStr }, { p: p2, t: addMinutesToTime(timeStr, travelMins) }] });
@@ -804,8 +1053,8 @@
             return trips;
         }
 
-        function timeToMinutes(t) {
-            const [h, m] = t.split(':').map(Number);
+        function timeToMinutes(tm) {
+            const [h, m] = tm.split(':').map(Number);
             return h * 60 + m;
         }
 
@@ -815,8 +1064,8 @@
             return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
         }
 
-        function addMinutesToTime(t, mins) {
-            return minutesToTime(timeToMinutes(t) + mins);
+        function addMinutesToTime(tm, mins) {
+            return minutesToTime(timeToMinutes(tm) + mins);
         }
 
         // DOM Handles
@@ -853,13 +1102,14 @@
         let isTimetableGridOpen = false;
 
         function initApp() {
+            applyTranslations();
             populateRoutes();
             checkHolidayAndSundayStatus();
             updateLiveClock();
 
             // Set up tickers
             setInterval(updateLiveClock, 1000);
-            setInterval(renderSchedule, 20000); // refresh countdowns every 20s
+            setInterval(renderSchedule, 20000);
 
             // Bind Event Listeners
             routeSelect.addEventListener('change', () => {
@@ -955,11 +1205,11 @@
             if (isSunday || holidayName) {
                 holidayBanner.classList.remove('hidden');
                 if (holidayName) {
-                    holidayTitle.textContent = `HK Public Holiday (${holidayName}):`;
-                    holidayMessage.textContent = ` Sunday & Statutory Public Holiday fare rates apply today (${dateStr}).`;
+                    holidayTitle.textContent = `${t('HK Public Holiday')} (${t(holidayName) || holidayName}):`;
+                    holidayMessage.textContent = ` ${t('Sunday & HK Public Holiday fare rates apply today. Check pier fare tables for holiday surcharges.')}`;
                 } else {
-                    holidayTitle.textContent = `Sunday Service Notice:`;
-                    holidayMessage.textContent = ` Sunday fare rates and holiday sailing schedules apply today across all piers.`;
+                    holidayTitle.textContent = t('Sunday Service Notice:');
+                    holidayMessage.textContent = ` ${t('Sunday fare rates and holiday sailing schedules apply today across all piers.')}`;
                 }
             } else {
                 holidayBanner.classList.add('hidden');
@@ -979,25 +1229,25 @@
                     continue;
                 }
 
-                // Search query check
+                // Search query check (search in localized strings as well if possible, or english)
                 if (query !== '') {
-                    const searchable = `${route.name} ${route.operator} ${Object.values(route.piers).join(' ')}`.toLowerCase();
+                    const searchable = `${route.name} ${t(route.name)} ${route.operator} ${t(route.operator)} ${Object.values(route.piers).join(' ')}`.toLowerCase();
                     if (!searchable.includes(query)) continue;
                 }
 
                 const option = document.createElement('option');
                 option.value = key;
-                option.textContent = route.name;
+                option.textContent = t(route.name);
                 routeSelect.appendChild(option);
                 matchedCount++;
             }
 
-            routeCountBadge.textContent = `${matchedCount} Route${matchedCount !== 1 ? 's' : ''}`;
+            routeCountBadge.textContent = `${matchedCount} ${matchedCount === 1 ? t('Route') : t('Routes')}`;
 
             if (matchedCount === 0) {
                 const option = document.createElement('option');
                 option.value = "";
-                option.textContent = "No routes match your search / filter";
+                option.textContent = t("No routes match your search / filter");
                 routeSelect.appendChild(option);
             } else if (currentSelected && [...routeSelect.options].some(o => o.value === currentSelected)) {
                 routeSelect.value = currentSelected;
@@ -1011,7 +1261,7 @@
             if (!currentRouteKey || !scheduleData[currentRouteKey]) {
                 const option = document.createElement('option');
                 option.value = '';
-                option.textContent = 'N/A';
+                option.textContent = t('N/A');
                 pierSelect.appendChild(option);
                 return;
             }
@@ -1021,7 +1271,7 @@
             for (const [key, name] of Object.entries(piers)) {
                 const option = document.createElement('option');
                 option.value = key;
-                option.textContent = `Depart from ${name}`;
+                option.textContent = `${t('Depart from')} ${t(name)}`;
                 pierSelect.appendChild(option);
             }
         }
@@ -1052,14 +1302,11 @@
             const isWeekend = now.getDay() === 0 || now.getDay() === 6;
 
             trips.forEach(trip => {
-                // Filter weekday/weekend specific trips
                 if (trip.weekdayOnly && isWeekend) return;
 
                 const stops = trip.stops;
-                // Check if selected pier exists in this trip
                 const pierIndex = stops.findIndex(s => s.p === pierKey);
 
-                // Selected pier MUST be in trip and MUST NOT be the final terminus
                 if (pierIndex !== -1 && pierIndex < stops.length - 1) {
                     const departureStop = stops[pierIndex];
                     const nextStop = stops[pierIndex + 1];
@@ -1110,7 +1357,6 @@
                 }
             });
 
-            // Return sorted chronologically
             return departures.sort((a, b) => a.departureDate - b.departureDate);
         }
 
@@ -1121,8 +1367,8 @@
             if (!routeKey || !scheduleData[routeKey]) {
                 scheduleContainer.innerHTML = `
                     <div class="bg-[#1e293b] rounded-2xl p-8 text-center text-gray-400 border border-white/5 fade-in">
-                        <p class="font-semibold text-gray-300">No ferry route selected.</p>
-                        <p class="text-xs text-gray-500 mt-1">Please choose a route or adjust your category search filter above.</p>
+                        <p class="font-semibold text-gray-300">${t('No ferry route selected.')}</p>
+                        <p class="text-xs text-gray-500 mt-1">${t('Please choose a route or adjust your category search filter above.')}</p>
                     </div>
                 `;
                 return;
@@ -1135,8 +1381,8 @@
                 scheduleContainer.innerHTML = `
                     <div class="bg-[#1e293b] rounded-2xl p-8 text-center text-gray-400 border border-white/5 fade-in">
                         <svg class="w-10 h-10 mx-auto mb-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <p class="font-medium text-gray-300">No more scheduled departures from this pier today.</p>
-                        <p class="text-xs text-gray-500 mt-1">Please check back tomorrow, click "Full Timetable", or swap direction.</p>
+                        <p class="font-medium text-gray-300">${t('No more scheduled departures from this pier today.')}</p>
+                        <p class="text-xs text-gray-500 mt-1">${t('Please check back tomorrow, click "Full Timetable", or swap direction.')}</p>
                     </div>
                 `;
                 return;
@@ -1147,15 +1393,19 @@
                 let countdownStyle = '';
 
                 if (dep.countdownMins < 0) {
-                    countdownDisplay = 'Departed';
+                    countdownDisplay = t('Departed');
                     countdownStyle = 'bg-gray-800 text-gray-400 border-gray-700';
                 } else if (dep.countdownMins === 0) {
-                    countdownDisplay = 'Boarding Now';
+                    countdownDisplay = t('Boarding Now');
                     countdownStyle = 'bg-red-500/20 text-red-400 border-red-500/30 animate-pulse font-bold';
                 } else {
                     const hrs = Math.floor(dep.countdownMins / 60);
                     const mins = dep.countdownMins % 60;
-                    countdownDisplay = hrs > 0 ? `In ${hrs}h ${mins}m` : `In ${mins} mins`;
+                    if (hrs > 0) {
+                        countdownDisplay = `${t('In')} ${hrs}${t('h')} ${mins}${t('m')}`;
+                    } else {
+                        countdownDisplay = `${t('In')} ${mins} ${t('mins')}`;
+                    }
                     countdownStyle = dep.countdownMins <= 15 
                         ? 'bg-amber-500/20 text-amber-300 border-amber-500/30 font-bold animate-pulse' 
                         : 'bg-[#2dd4bf]/15 text-[#2dd4bf] border-[#2dd4bf]/30 font-semibold';
@@ -1167,11 +1417,12 @@
                     const isFirst = i === 0;
                     const isLast = i === dep.itinerary.length - 1;
                     const isSkipped = dep.skippedStops.includes(stop.pKey);
+                    const localizedName = t(stop.name);
 
                     itineraryHtml += `
                         <div class="flex flex-col items-center min-w-[85px] relative px-1">
-                            <span class="text-[11px] ${isSkipped ? 'line-through text-red-400/80 font-normal' : 'text-gray-300 font-semibold'} mb-1 truncate max-w-[100px] text-center" title="${stop.name}">
-                                ${stop.name}
+                            <span class="text-[11px] ${isSkipped ? 'line-through text-red-400/80 font-normal' : 'text-gray-300 font-semibold'} mb-1 truncate max-w-[100px] text-center" title="${localizedName}">
+                                ${localizedName}
                             </span>
                             <div class="flex items-center w-full justify-center relative my-0.5">
                                 ${!isFirst ? `<div class="absolute right-[50%] top-1/2 -translate-y-1/2 w-full h-[2px] bg-gradient-to-r from-gray-700 to-[#2dd4bf]/50"></div>` : ''}
@@ -1179,7 +1430,7 @@
                                 </div>
                             </div>
                             <span class="text-xs ${isSkipped ? 'text-red-400 font-bold' : isFirst ? 'text-[#2dd4bf] font-extrabold' : 'text-gray-200 font-semibold'} mt-1">
-                                ${isSkipped ? '<span class="text-[10px] bg-red-900/50 text-red-300 px-1 py-0.5 rounded">Skipped (/)</span>' : stop.time}
+                                ${isSkipped ? `<span class="text-[10px] bg-red-900/50 text-red-300 px-1 py-0.5 rounded">${t('Skipped (/)')}</span>` : stop.time}
                             </span>
                         </div>
                     `;
@@ -1193,13 +1444,13 @@
                             <div>
                                 <div class="flex items-baseline space-x-2 sm:space-x-3 flex-wrap">
                                     <h2 class="text-3xl sm:text-4xl font-extrabold text-[#2dd4bf] tracking-tight font-mono">${dep.departureTime}</h2>
-                                    <span class="text-base sm:text-lg text-white font-bold">to ${dep.destination}</span>
+                                    <span class="text-base sm:text-lg text-white font-bold">${t('to')} ${t(dep.destination)}</span>
                                 </div>
                                 
                                 <div class="mt-2 flex items-center space-x-2 flex-wrap gap-y-1">
                                     <!-- DISCRETE OPERATOR BADGE -->
-                                    <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-gray-800 text-teal-300 border border-teal-500/30 tracking-wider uppercase">${dep.operator}</span>
-                                    <span class="text-xs text-gray-400">Next Stop: <strong class="text-gray-200 font-semibold">${dep.nextStop} (${dep.nextStopTime})</strong></span>
+                                    <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-gray-800 text-teal-300 border border-teal-500/30 tracking-wider uppercase">${t(dep.operator)}</span>
+                                    <span class="text-xs text-gray-400">${t('Next Stop:')} <strong class="text-gray-200 font-semibold">${t(dep.nextStop)} (${dep.nextStopTime})</strong></span>
                                 </div>
                             </div>
 
@@ -1209,7 +1460,7 @@
                                     ${countdownDisplay}
                                 </div>
                                 <div class="text-[11px] text-gray-400 mt-2 font-medium">
-                                    Arrive ${dep.destination}: <span class="text-gray-100 font-bold">${dep.etaDestination}</span>
+                                    ${t('Arrive')} ${t(dep.destination)}: <span class="text-gray-100 font-bold">${dep.etaDestination}</span>
                                 </div>
                             </div>
                         </div>
@@ -1232,12 +1483,11 @@
                 renderTimetableGrid();
                 timetableGridContainer.classList.remove('hidden');
                 scheduleContainer.classList.add('hidden');
-                viewToggleText.textContent = "Live Cards View";
             } else {
                 timetableGridContainer.classList.add('hidden');
                 scheduleContainer.classList.remove('hidden');
-                viewToggleText.textContent = "Full Timetable";
             }
+            viewToggleText.textContent = isTimetableGridOpen ? t("Live Cards View") : t("Full Timetable");
         }
 
         function renderTimetableGrid() {
@@ -1245,18 +1495,18 @@
             if (!routeKey || !scheduleData[routeKey]) return;
 
             const route = scheduleData[routeKey];
-            timetableTitle.textContent = `${route.name} - Full Timetable`;
-            timetableSubtitle.textContent = `Operator: ${route.operator} | Total Sailings: ${route.trips.length}`;
+            timetableTitle.textContent = `${t(route.name)} - ${t('Full Route Daily Timetable')}`;
+            timetableSubtitle.textContent = `${t('Operated by')} ${t(route.operator)} | ${t('Total Sailings:')} ${route.trips.length}`;
 
             let tableHtml = `
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
                         <tr class="bg-[#0f172a] text-gray-300 border-b border-white/10">
                             <th class="p-2.5 font-bold">#</th>
-                            <th class="p-2.5 font-bold">Departure</th>
-                            <th class="p-2.5 font-bold">Stops & Route Details</th>
-                            <th class="p-2.5 font-bold">Final Terminus</th>
-                            <th class="p-2.5 font-bold">ETA</th>
+                            <th class="p-2.5 font-bold">${t('Departure')}</th>
+                            <th class="p-2.5 font-bold">${t('Stops & Route Details')}</th>
+                            <th class="p-2.5 font-bold">${t('Final Terminus')}</th>
+                            <th class="p-2.5 font-bold">${t('ETA')}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-white/5">
@@ -1265,7 +1515,7 @@
             route.trips.forEach((trip, idx) => {
                 const firstStop = trip.stops[0];
                 const lastStop = trip.stops[trip.stops.length - 1];
-                const stopNames = trip.stops.map(s => `${route.piers[s.p]} (${s.t})`).join(' ➔ ');
+                const stopNames = trip.stops.map(s => `${t(route.piers[s.p])} (${s.t})`).join(' ➔ ');
                 const isSkipped = trip.skippedStops && trip.skippedStops.length > 0;
 
                 tableHtml += `
@@ -1274,9 +1524,9 @@
                         <td class="p-2.5 font-bold text-[#2dd4bf] font-mono text-sm">${firstStop.t}</td>
                         <td class="p-2.5 text-gray-300">
                             ${stopNames}
-                            ${isSkipped ? '<span class="ml-2 text-[10px] bg-red-900/40 text-red-300 px-1.5 py-0.5 rounded">Express (Skipped Stop /)</span>' : ''}
+                            ${isSkipped ? `<span class="ml-2 text-[10px] bg-red-900/40 text-red-300 px-1.5 py-0.5 rounded">${t('Express (Skipped Stop /)')}</span>` : ''}
                         </td>
-                        <td class="p-2.5 font-semibold text-white">${route.piers[lastStop.p]}</td>
+                        <td class="p-2.5 font-semibold text-white">${t(route.piers[lastStop.p])}</td>
                         <td class="p-2.5 text-gray-300 font-mono">${lastStop.t}</td>
                     </tr>
                 `;
@@ -1291,25 +1541,25 @@
             if (!routeKey || !scheduleData[routeKey]) return;
 
             const route = scheduleData[routeKey];
-            fareModalRouteTitle.textContent = route.name;
-            fareModalOperator.textContent = `Operated by ${route.operator}`;
+            fareModalRouteTitle.textContent = t(route.name);
+            fareModalOperator.textContent = `${t('Operated by')} ${t(route.operator)}`;
 
             fareModalContent.innerHTML = `
                 <div class="bg-[#0f172a] rounded-xl p-3.5 border border-white/10 space-y-2">
                     <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-                        <span class="text-gray-400 font-medium">Mondays to Saturdays (Non-Holidays):</span>
-                        <span class="text-emerald-400 font-bold">${route.fares.adultWeekday}</span>
+                        <span class="text-gray-400 font-medium">${t('Mondays to Saturdays (Non-Holidays):')}</span>
+                        <span class="text-emerald-400 font-bold">${t_fare(route.fares.adultWeekday)}</span>
                     </div>
                     <div class="flex justify-between items-center text-sm pt-1">
-                        <span class="text-gray-400 font-medium">Sundays & HK Public Holidays:</span>
-                        <span class="text-amber-400 font-bold">${route.fares.adultHoliday}</span>
+                        <span class="text-gray-400 font-medium">${t('Sundays & HK Public Holidays:')}</span>
+                        <span class="text-amber-400 font-bold">${t_fare(route.fares.adultHoliday)}</span>
                     </div>
                 </div>
 
                 <div class="text-xs text-gray-300 space-y-1.5 pt-1">
-                    <h4 class="font-bold text-white uppercase text-[10px] tracking-wider">Key Piers Served:</h4>
+                    <h4 class="font-bold text-white uppercase text-[10px] tracking-wider">${t('Key Piers Served:')}</h4>
                     <ul class="list-disc list-inside text-gray-400 space-y-0.5">
-                        ${Object.values(route.piers).map(p => `<li>${p}</li>`).join('')}
+                        ${Object.values(route.piers).map(p => `<li>${t(p)}</li>`).join('')}
                     </ul>
                 </div>
             `;
