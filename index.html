@@ -323,6 +323,9 @@
                 'Back': '返回',
                 'N/A': '不適用',
                 'Depart from': '由',
+                'Departing from': '由',
+                'All Destinations': '所有目的地',
+                'Please select a specific route to view full timetable.': '請選擇特定航線以查看完整時間表。',
                 'Holiday Fare Notice:': '假日票價提示：',
                 'Sunday & HK Public Holiday fare rates apply today. Check pier fare tables for holiday surcharges.': '今日適用星期日及公眾假期票價。',
                 'Sunday Service Notice:': '星期日服務提示：',
@@ -366,10 +369,7 @@
                 'Cargo OK': '載貨',
                 
                 // Load Factor
-                'Est. Load:': '客量:',
-                'High': '高',
-                'Medium': '中',
-                'Low': '低',
+                'Est. Load:': '客量',
 
                 // Routes
                 'Central ➔ Cheung Chau': '中環 ➔ 長洲', 'Central ➔ Mui Wo': '中環 ➔ 梅窩', 'Central ➔ Peng Chau': '中環 ➔ 坪洲',
@@ -439,6 +439,9 @@
                 'Back': '返回',
                 'N/A': '不适用',
                 'Depart from': '由',
+                'Departing from': '从',
+                'All Destinations': '所有目的地',
+                'Please select a specific route to view full timetable.': '请选择特定航线以查看完整时间表。',
                 'Holiday Fare Notice:': '假日票价提示：',
                 'Sunday & HK Public Holiday fare rates apply today. Check pier fare tables for holiday surcharges.': '今日适用星期日及公众假期票价。',
                 'Sunday Service Notice:': '星期日服务提示：',
@@ -482,10 +485,7 @@
                 'Cargo OK': '载货',
 
                 // Load Factor
-                'Est. Load:': '客量:',
-                'High': '高',
-                'Medium': '中',
-                'Low': '低',
+                'Est. Load:': '客量',
 
                 // Routes
                 'Central ➔ Cheung Chau': '中环 ➔ 长洲', 'Central ➔ Mui Wo': '中环 ➔ 梅窝', 'Central ➔ Peng Chau': '中环 ➔ 坪洲',
@@ -527,6 +527,7 @@
         };
 
         let currentLang = localStorage.getItem('pulseFerryLang') || 'en';
+        let currentGpsPierName = null;
 
         // GPS Coordinates Database for major piers (Sub-meter accuracy for dense waterfronts)
         const pierCoordinates = {
@@ -634,7 +635,7 @@
             populatePiers();
             checkHolidayAndSundayStatus();
             renderSchedule();
-            if (isTimetableGridOpen) renderTimetableGrid();
+            if (isTimetableGridOpen && routeSelect.value !== 'GPS_MODE') renderTimetableGrid();
         });
 
         // Hong Kong Statutory & Public Holidays Database
@@ -701,57 +702,50 @@
             setInterval(updateLiveClock, 1000);
             setInterval(renderSchedule, 15000);
 
-            // Smart Search GPS Injector
+            // GPS Smart Injector & Aggregation Engine
             gpsBtn.addEventListener('click', () => {
                 if ("geolocation" in navigator) {
                     gpsBtnText.textContent = t('Locating...');
                     navigator.geolocation.getCurrentPosition((position) => {
                         const nearest = findNearestPierAndRoute(position.coords.latitude, position.coords.longitude);
                         if (nearest.pierName) {
+                            currentGpsPierName = nearest.pierName;
                             
-                            // 1. Force visual state to 'All Routes' to ensure no categories hide the nearest route
-                            document.querySelector('.cat-pill[data-cat="all"]').click();
+                            // Reset filters to All to ensure no category overrides our GPS
+                            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('bg-[#2dd4bf]', 'text-slate-900', 'font-bold'));
+                            document.querySelector('.cat-pill[data-cat="all"]').classList.add('bg-[#2dd4bf]', 'text-slate-900', 'font-bold');
+                            currentActiveCategory = 'all';
                             
-                            // 2. Inject the nearest pier explicitly into the search bar
-                            searchInput.value = t(nearest.pierName); 
-                            clearSearchBtn.classList.remove('hidden');
+                            searchInput.value = '';
+                            clearSearchBtn.classList.add('hidden');
                             
-                            // 3. Trigger route filter (this narrows dropdown to ONLY routes servicing this pier)
                             populateRoutes();
-                            
-                            // 4. Force select the first matching route in the filtered dropdown
-                            routeSelect.selectedIndex = 0;
-                            
-                            // 5. Populate and strictly select the exact departure pier to match the location
+                            routeSelect.value = 'GPS_MODE';
                             populatePiers();
-                            Array.from(pierSelect.options).forEach((opt, idx) => {
-                                if(opt.textContent.includes(t(nearest.pierName))) {
-                                    pierSelect.selectedIndex = idx;
-                                }
-                            });
-
+                            
+                            if (isTimetableGridOpen) toggleTimetableGrid(); // Timetable unsupported in aggregate view
                             renderSchedule();
-                            if (isTimetableGridOpen) renderTimetableGrid();
                         }
                         gpsBtnText.textContent = t('Nearest Pier');
                     }, (error) => {
                         alert(t('Location disabled or unavailable'));
                         gpsBtnText.textContent = t('Nearest Pier');
-                    }, { enableHighAccuracy: true }); // Critical for Central Pier accuracy
+                    }, { enableHighAccuracy: true });
                 } else {
                     alert(t('Location disabled or unavailable'));
                 }
             });
 
             routeSelect.addEventListener('change', () => {
+                if(routeSelect.value !== 'GPS_MODE') currentGpsPierName = null;
                 populatePiers();
                 renderSchedule();
-                if (isTimetableGridOpen) renderTimetableGrid();
+                if (isTimetableGridOpen && routeSelect.value !== 'GPS_MODE') renderTimetableGrid();
             });
 
             pierSelect.addEventListener('change', () => {
                 renderSchedule();
-                if (isTimetableGridOpen) renderTimetableGrid();
+                if (isTimetableGridOpen && routeSelect.value !== 'GPS_MODE') renderTimetableGrid();
             });
 
             swapDirectionBtn.addEventListener('click', () => {
@@ -759,10 +753,11 @@
                 const nextIndex = (currentIndex + 1) % pierSelect.options.length;
                 pierSelect.selectedIndex = nextIndex;
                 renderSchedule();
-                if (isTimetableGridOpen) renderTimetableGrid();
+                if (isTimetableGridOpen && routeSelect.value !== 'GPS_MODE') renderTimetableGrid();
             });
 
             searchInput.addEventListener('input', () => {
+                currentGpsPierName = null;
                 const query = searchInput.value.trim().toLowerCase();
                 clearSearchBtn.classList.toggle('hidden', query === '');
                 populateRoutes();
@@ -771,6 +766,7 @@
             });
 
             clearSearchBtn.addEventListener('click', () => {
+                currentGpsPierName = null;
                 searchInput.value = '';
                 clearSearchBtn.classList.add('hidden');
                 populateRoutes();
@@ -780,6 +776,7 @@
 
             catPills.forEach(pill => {
                 pill.addEventListener('click', () => {
+                    currentGpsPierName = null;
                     catPills.forEach(p => {
                         p.classList.remove('bg-[#2dd4bf]', 'text-slate-900', 'font-bold');
                         p.classList.add('bg-white/5', 'text-gray-300', 'font-medium');
@@ -843,11 +840,17 @@
 
             let matchedCount = 0;
 
+            if (currentGpsPierName && query === '' && currentActiveCategory === 'all') {
+                const option = document.createElement('option');
+                option.value = 'GPS_MODE';
+                option.textContent = `📍 ${t('Departing from')} ${t(currentGpsPierName)}`;
+                routeSelect.appendChild(option);
+            }
+
             for (const [key, route] of Object.entries(scheduleData)) {
                 if (currentActiveCategory !== 'all' && route.category !== currentActiveCategory) continue;
 
                 if (query !== '') {
-                    // Update search to explicitly check translated pier strings
                     const pierNames = Object.values(route.piers);
                     const translatedPiers = pierNames.map(p => t(p));
                     const searchable = `${route.name} ${t(route.name)} ${route.operator} ${t(route.operator)} ${pierNames.join(' ')} ${translatedPiers.join(' ')}`.toLowerCase();
@@ -863,7 +866,7 @@
 
             routeCountBadge.textContent = `${matchedCount} ${matchedCount === 1 ? t('Route') : t('Routes')}`;
 
-            if (matchedCount === 0) {
+            if (matchedCount === 0 && !currentGpsPierName) {
                 const option = document.createElement('option');
                 option.value = "";
                 option.textContent = t("No routes match your search / filter");
@@ -876,6 +879,14 @@
         function populatePiers() {
             const currentRouteKey = routeSelect.value;
             pierSelect.innerHTML = '';
+
+            if (currentRouteKey === 'GPS_MODE' && currentGpsPierName) {
+                const option = document.createElement('option');
+                option.value = 'ALL_DEST';
+                option.textContent = `🗺️ ${t('All Destinations')}`;
+                pierSelect.appendChild(option);
+                return;
+            }
 
             if (!currentRouteKey || !scheduleData[currentRouteKey]) {
                 const option = document.createElement('option');
@@ -908,6 +919,7 @@
             return targetDate;
         }
 
+        // Updated Load Factor - Visual "People Bars" Only
         function getLoadFactorEstimate(date, routeKey, pierKey) {
             const hour = date.getHours();
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -940,35 +952,36 @@
             }
             
             let pct = Math.min(98, Math.max(5, base + variance - 10));
-            let level = '';
-            let colorClass = '';
             
-            if (pct >= 75) {
-                level = 'High';
-                colorClass = 'bg-red-500/20 text-red-400 border-red-500/30';
-            } else if (pct >= 50) {
-                level = 'Medium';
-                colorClass = 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-            } else {
-                level = 'Low';
-                colorClass = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+            // Map percentage to 10 visual bars
+            const bars = Math.max(1, Math.round(pct / 10));
+            
+            // User requested color thresholds
+            let colorClass = 'text-emerald-400';
+            if (bars >= 8) colorClass = 'text-red-500';
+            else if (bars >= 5) colorClass = 'text-amber-400';
+            
+            const personSvg = `<svg class="w-[11px] h-[11px] sm:w-[13px] sm:h-[13px] inline-block -mx-[0.5px]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`;
+            
+            let barsHtml = '';
+            for(let i=1; i<=10; i++) {
+                if(i <= bars) {
+                    barsHtml += `<span class="${colorClass}">${personSvg}</span>`;
+                } else {
+                    barsHtml += `<span class="text-gray-600/40">${personSvg}</span>`;
+                }
             }
             
             return {
-                text: `${t('Est. Load:')} ${t(level)} (~${pct}%)`,
-                colorClass: colorClass
+                html: `<div class="bg-white/5 rounded px-1.5 py-0.5 border border-white/5 flex items-center shadow-inner" title="${t('Est. Load:')} ~${pct}%">${barsHtml}</div>`
             };
         }
 
-        function getDepartures(routeKey, pierKey) {
-            if (!routeKey || !scheduleData[routeKey]) return [];
-
-            const route = scheduleData[routeKey];
+        // Modularized Departure Extractor to enable GPS Multi-Line Aggregation
+        function extractDeparturesForRoute(route, pierKey, now, isWeekend) {
+            const deps = [];
             const trips = route.trips || [];
             const piersMapping = route.piers || {};
-            const departures = [];
-            const now = new Date();
-            const isWeekend = now.getDay() === 0 || now.getDay() === 6;
 
             trips.forEach(trip => {
                 if (trip.weekdayOnly && isWeekend) return;
@@ -1015,7 +1028,7 @@
                         const arrMins = window.PulseFerry.timeToMins(finalStop.t);
                         const travelDurationMins = (arrMins - depMins + 1440) % 1440;
 
-                        departures.push({
+                        deps.push({
                             operator: route.operator,
                             departureTime: departureStop.t,
                             departureDate: departureDate,
@@ -1034,6 +1047,33 @@
                     }
                 }
             });
+            return deps;
+        }
+
+        function getDepartures(routeKey, pierKey) {
+            const departures = [];
+            const now = new Date();
+            const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+
+            if (routeKey === 'GPS_MODE' && currentGpsPierName) {
+                // GPS Aggregation Mode: Interleave departures from ALL lines servicing this physical pier
+                for (const [rKey, route] of Object.entries(scheduleData)) {
+                    let pKeyForRoute = null;
+                    for (const [k, v] of Object.entries(route.piers)) {
+                        if (v === currentGpsPierName) {
+                            pKeyForRoute = k;
+                            break;
+                        }
+                    }
+                    if (pKeyForRoute) {
+                        departures.push(...extractDeparturesForRoute(route, pKeyForRoute, now, isWeekend));
+                    }
+                }
+            } else {
+                // Standard Single Route Mode
+                if (!routeKey || !scheduleData[routeKey]) return [];
+                departures.push(...extractDeparturesForRoute(scheduleData[routeKey], pierKey, now, isWeekend));
+            }
 
             return departures.sort((a, b) => a.departureDate - b.departureDate);
         }
@@ -1042,7 +1082,7 @@
             const routeKey = routeSelect.value;
             const pierKey = pierSelect.value;
 
-            if (!routeKey || !scheduleData[routeKey]) {
+            if (routeKey !== 'GPS_MODE' && (!routeKey || !scheduleData[routeKey])) {
                 scheduleContainer.innerHTML = `
                     <div class="bg-[#1e293b] rounded-2xl p-8 text-center text-gray-400 border border-white/5 fade-in">
                         <p class="font-semibold text-gray-300">${t('No ferry route selected.')}</p>
@@ -1134,11 +1174,8 @@
                                 <div class="mt-2 flex items-center space-x-2 flex-wrap gap-y-1">
                                     <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-gray-800 text-teal-300 border border-teal-500/30 tracking-wider uppercase">${t(dep.operator)}</span>
                                     ${vesselBadge}
-                                    <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-md border tracking-wider uppercase flex items-center ${loadEstimate.colorClass}">
-                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                        ${loadEstimate.text}
-                                    </span>
-                                    <span class="text-xs text-gray-400 ml-1">${t('Next Stop:')} <strong class="text-gray-200 font-semibold">${t(dep.nextStop)} (${dep.nextStopTime})</strong></span>
+                                    ${loadEstimate.html}
+                                    <span class="text-[10px] text-gray-400 ml-1 mt-0.5">${t('Next Stop:')} <strong class="text-gray-200 font-semibold">${t(dep.nextStop)} (${dep.nextStopTime})</strong></span>
                                 </div>
                             </div>
                             <div class="flex flex-col items-end shrink-0">
@@ -1168,6 +1205,11 @@
         }
 
         function toggleTimetableGrid() {
+            if (routeSelect.value === 'GPS_MODE') {
+                alert(t('Please select a specific route to view full timetable.'));
+                return;
+            }
+
             isTimetableGridOpen = !isTimetableGridOpen;
             if (isTimetableGridOpen) {
                 renderTimetableGrid();
@@ -1182,7 +1224,7 @@
 
         function renderTimetableGrid() {
             const routeKey = routeSelect.value;
-            if (!routeKey || !scheduleData[routeKey]) return;
+            if (!routeKey || !scheduleData[routeKey] || routeKey === 'GPS_MODE') return;
 
             const route = scheduleData[routeKey];
             timetableTitle.textContent = `${t(route.name)} - ${t('Full Route Daily Timetable')}`;
@@ -1245,7 +1287,10 @@
 
         function openFareModal() {
             const routeKey = routeSelect.value;
-            if (!routeKey || !scheduleData[routeKey]) return;
+            if (!routeKey || !scheduleData[routeKey] || routeKey === 'GPS_MODE') {
+                 alert(t('Please select a specific route to view full timetable.'));
+                 return;
+            }
 
             const route = scheduleData[routeKey];
             fareModalRouteTitle.textContent = t(route.name);
@@ -1278,3 +1323,4 @@
     </script>
 </body>
 </html>
+
