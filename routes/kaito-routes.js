@@ -4,7 +4,16 @@ window.PulseFerry.registerRoute("wong-shek-tap-mun", {
     category: "saikung",
     operator: "Tsui Wah Ferry",
     piers: { "WS": "Wong Shek Pier", "CK": "Chek Keng Pier", "TM": "Tap Mun Pier" },
-    fares: { adultWeekday: "HK$11.00", adultHoliday: "HK$16.00" },
+    fares: {
+        currency: "HKD",
+        isRoundtrip: false,
+        adultWeekday: 11.00,
+        adultHoliday: 16.00,
+        childWeekday: 11.00,
+        childHoliday: 16.00,
+        concessionWeekday: 11.00,
+        concessionHoliday: 16.00
+    },
     trips: window.PulseFerry.generateDirectional("WS", "TM",
         ["08:30","10:35","12:30","14:30","16:30","18:30"],
         ["07:45","10:00","11:45","13:45","15:45","18:00"], 35)
@@ -16,7 +25,16 @@ window.PulseFerry.registerRoute("wong-shek-wan-tsai", {
     category: "saikung",
     operator: "Tsui Wah Ferry",
     piers: { "WS": "Wong Shek Pier", "WT": "Wan Tsai Campsite Pier" },
-    fares: { adultWeekday: "HK$11.00", adultHoliday: "HK$16.00" },
+    fares: {
+        currency: "HKD",
+        isRoundtrip: false,
+        adultWeekday: 11.00,
+        adultHoliday: 16.00,
+        childWeekday: 11.00,
+        childHoliday: 16.00,
+        concessionWeekday: 11.00,
+        concessionHoliday: 16.00
+    },
     trips: window.PulseFerry.generateFrequent("WS", "WT", "08:00", "18:00", 45, 15)
 });
 
@@ -26,7 +44,16 @@ window.PulseFerry.registerRoute("tolo-harbour-kaito", {
     category: "tolo",
     operator: "Tsui Wah Ferry",
     piers: { "MLS": "Ma Liu Shui Landing 3", "SC": "Sham Chung Pier", "LCC": "Lai Chi Chong Pier", "TM": "Tap Mun Pier", "WS": "Wong Shek Pier" },
-    fares: { adultWeekday: "HK$20.00", adultHoliday: "HK$30.00" },
+    fares: {
+        currency: "HKD",
+        isRoundtrip: false,
+        adultWeekday: 20.00,
+        adultHoliday: 30.00,
+        childWeekday: 20.00,
+        childHoliday: 30.00,
+        concessionWeekday: 20.00,
+        concessionHoliday: 30.00
+    },
     trips: [
         { stops: [{ p: "MLS", t: "08:30" }, { p: "SC", t: "09:05" }, { p: "LCC", t: "09:20" }, { p: "TM", t: "10:00" }, { p: "WS", t: "10:35" }] },
         { stops: [{ p: "MLS", t: "15:00" }, { p: "SC", t: "15:35" }, { p: "LCC", t: "15:50" }, { p: "TM", t: "16:30" }, { p: "WS", t: "17:00" }] },
@@ -41,7 +68,16 @@ window.PulseFerry.registerRoute("ma-liu-shui-tung-ping-chau", {
     category: "tolo",
     operator: "Tsui Wah Ferry",
     piers: { "MLS": "Ma Liu Shui Landing 3", "TPC": "Tung Ping Chau Pier" },
-    fares: { adultWeekday: "HK$100.00 (Roundtrip)", adultHoliday: "HK$100.00 (Roundtrip)" },
+    fares: {
+        currency: "HKD",
+        isRoundtrip: true,
+        adultWeekday: 100.00,
+        adultHoliday: 100.00,
+        childWeekday: 100.00,
+        childHoliday: 100.00,
+        concessionWeekday: 100.00,
+        concessionHoliday: 100.00
+    },
     trips: [
         { stops: [{ p: "MLS", t: "09:00" }, { p: "TPC", t: "10:30" }] },
         { stops: [{ p: "TPC", t: "17:15" }, { p: "MLS", t: "18:45" }] }
@@ -54,7 +90,16 @@ window.PulseFerry.registerRoute("sai-kung-yim-tin-tsai", {
     category: "saikung",
     operator: "Local Kaito",
     piers: { "SK": "Sai Kung Public Pier", "YTT": "Yim Tin Tsai Pier" },
-    fares: { adultWeekday: "HK$60.00 (Roundtrip)", adultHoliday: "HK$60.00 (Roundtrip)" },
+    fares: {
+        currency: "HKD",
+        isRoundtrip: true,
+        adultWeekday: 60.00,
+        adultHoliday: 60.00,
+        childWeekday: 60.00,
+        childHoliday: 60.00,
+        concessionWeekday: 60.00,
+        concessionHoliday: 60.00
+    },
     trips: window.PulseFerry.generateDirectional("SK", "YTT",
         ["10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00"],
         ["10:20","10:50","11:20","11:50","12:20","12:50","13:20","13:50","14:20","14:50","15:20"], 15)
@@ -66,7 +111,16 @@ window.PulseFerry.registerRoute("sai-kung-kau-sai-chau", {
     category: "saikung",
     operator: "Tsui Wah Ferry",
     piers: { "SK": "Sai Kung Public Pier", "KSV": "Kau Sai Village Pier", "LSW": "High Island (Leung Shuen Wan)" },
-    fares: { adultWeekday: "HK$35.00", adultHoliday: "HK$45.00" },
+    fares: {
+        currency: "HKD",
+        isRoundtrip: false,
+        adultWeekday: 35.00,
+        adultHoliday: 45.00,
+        childWeekday: 35.00,
+        childHoliday: 45.00,
+        concessionWeekday: 35.00,
+        concessionHoliday: 45.00
+    },
     trips: window.PulseFerry.generateDirectional("SK", "KSV",
         ["09:30","11:30","14:30","16:30"],
         ["10:15","12:15","15:15","17:15"], 35)
@@ -78,7 +132,16 @@ window.PulseFerry.registerRoute("sha-tau-kok-kat-o-ap-chau", {
     category: "tolo",
     operator: "Best Boundary / Local Kaito",
     piers: { "MLS": "Ma Liu Shui Landing 3", "STK": "Sha Tau Kok Pier", "KO": "Kat O Pier", "AC": "Ap Chau Pier" },
-    fares: { adultWeekday: "HK$90.00 (Roundtrip)", adultHoliday: "HK$90.00 (Roundtrip)" },
+    fares: {
+        currency: "HKD",
+        isRoundtrip: true,
+        adultWeekday: 90.00,
+        adultHoliday: 90.00,
+        childWeekday: 90.00,
+        childHoliday: 90.00,
+        concessionWeekday: 90.00,
+        concessionHoliday: 90.00
+    },
     trips: [
         { stops: [{ p: "MLS", t: "09:00" }, { p: "KO", t: "10:30" }, { p: "AC", t: "11:00" }] },
         { stops: [{ p: "AC", t: "12:30" }, { p: "KO", t: "13:00" }] },
@@ -92,7 +155,16 @@ window.PulseFerry.registerRoute("sha-tau-kok-lai-chi-wo", {
     category: "tolo",
     operator: "Local Kaito",
     piers: { "STK": "Sha Tau Kok Pier", "LCW": "Lai Chi Wo Pier" },
-    fares: { adultWeekday: "HK$40.00", adultHoliday: "HK$50.00" },
+    fares: {
+        currency: "HKD",
+        isRoundtrip: false,
+        adultWeekday: 40.00,
+        adultHoliday: 50.00,
+        childWeekday: 40.00,
+        childHoliday: 50.00,
+        concessionWeekday: 40.00,
+        concessionHoliday: 50.00
+    },
     trips: window.PulseFerry.generateDirectional("STK", "LCW",
         ["09:00","10:30","12:00","14:00","15:30"],
         ["09:45","11:15","12:45","14:45","16:15"], 30)
