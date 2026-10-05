@@ -26,7 +26,7 @@ window.PulseFerry.registerRoute("aberdeen-lamma-ysw", {
     category: "aberdeen",
     operator: "Tsui Wah Ferry",
     piers: { "AB": "Aberdeen Promenade Pier", "PKT": "Pak Kok Tsuen", "YSW": "Yung Shue Wan" },
-    fares: { adultWeekday: "HK$19.00", adultHoliday: "HK$19.00" },
+    fares: { adultWeekday: "HK$20.0ate", adultHoliday: "HK$20.00" },
     trips: [
         { stops: [{ p: "AB", t: "07:20" }, { p: "PKT", t: "07:40" }, { p: "YSW", t: "07:55" }] },
         { stops: [{ p: "AB", t: "08:50" }, { p: "PKT", t: "09:10" }, { p: "YSW", t: "09:25" }] },
@@ -58,7 +58,7 @@ window.PulseFerry.registerRoute("aberdeen-lamma-skw", {
     category: "aberdeen",
     operator: "Chuen Kee Ferry",
     piers: { "AB": "Aberdeen Landing", "MTW": "Mo Tat Wan", "SKW": "Sok Kwu Wan" },
-    fares: { adultWeekday: "HK$14.00", adultHoliday: "HK$19.80" },
+    fares: { adultWeekday: "HK$22.00", adultHoliday: "HK$31.00" },
     trips: [
         { stops: [{ p: "AB", t: "06:30" }, { p: "MTW", t: "06:50" }, { p: "SKW", t: "07:00" }] },
         { stops: [{ p: "AB", t: "08:00" }, { p: "MTW", t: "08:20" }, { p: "SKW", t: "08:30" }] },
@@ -88,7 +88,7 @@ window.PulseFerry.registerRoute("aberdeen-stanley-po-toi", {
     category: "aberdeen",
     operator: "Tsui Wah Ferry",
     piers: { "AB": "Aberdeen", "ST": "Stanley (Blake Pier)", "PTI": "Po Toi Island" },
-    fares: { adultWeekday: "HK$25.00 (Single Ticket)", adultHoliday: "HK$25.00" },
+    fares: { adultWeekday: "HK$50.00 (Single Ticket)", adultHoliday: "HK$50.00" },
     trips: [
         { stops: [{ p: "AB", t: "10:00" }, { p: "ST", t: "11:30" }, { p: "PTI", t: "12:00" }] },
         { weekendOnly: true, stops: [{ p: "AB", t: "15:00" }, { p: "PTI", t: "15:50" }] },
