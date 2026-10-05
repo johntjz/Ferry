@@ -2,9 +2,9 @@
 window.PulseFerry.registerRoute("park-island-central", {
     name: "Park Island ➔ Central",
     category: "islands",
-    operator: "PITCL",
+    operator: "Park Island Transport Company Limited (PITCL)",
     piers: { "PI": "Park Island Ferry Pier", "CENTRAL": "Central Pier 2" },
-    fares: { adultWeekday: "HK$27.00 (Visitor) / $21.40 (Resident)", adultHoliday: "HK$27.00 (Visitor) / $21.40 (Resident)" },
+    fares: { adultWeekday: "HK$27.00 (Visitor) / HK$21.40 (Resident)", adultHoliday: "HK$27.00 (Visitor) / HK$21.40 (Resident)" },
     trips: window.PulseFerry.generateDirectional("PI", "CENTRAL",
         ["06:30","07:00","07:30","08:00","08:30","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","18:30","19:00","19:30","20:00","21:00","22:00","23:30"],
         ["06:55","07:25","07:55","08:25","08:55","09:25","10:25","11:25","12:25","13:25","14:25","15:25","16:25","17:25","18:25","18:55","19:25","19:55","20:25","21:25","22:25","23:55"], 22)
@@ -14,7 +14,7 @@ window.PulseFerry.registerRoute("park-island-central", {
 window.PulseFerry.registerRoute("park-island-tsuen-wan", {
     name: "Park Island ➔ Tsuen Wan",
     category: "islands",
-    operator: "PITCL",
+    operator: "Park Island Transport Company Limited (PITCL)",
     piers: { "PI": "Park Island Ferry Pier", "TW": "Tsuen Wan Pier" },
     fares: { adultWeekday: "HK$12.00", adultHoliday: "HK$12.00" },
     trips: window.PulseFerry.generateDirectional("PI", "TW",
@@ -27,8 +27,8 @@ window.PulseFerry.registerRoute("tuen-mun-tai-o", {
     name: "Tuen Mun ➔ Tung Chung ➔ Sha Lo Wan ➔ Tai O",
     category: "lantau",
     operator: "Fortune Ferry",
-    piers: { "TM": "Tuen Mun Ferry Pier", "TC": "Tung Chung Development Pier", "SLW": "Sha Lo Wan", "TO": "Tai O Pier" },
-    fares: { adultWeekday: "HK$25.00 - $30.00", adultHoliday: "HK$32.00 - $38.00" },
+    piers: { "TM": "Tuen Mun Ferry Pier", "TC": "Tung Chung Development Pier", "SLW": "Sha Lo Wan Pier", "TO": "Tai O Pier" },
+    fares: { adultWeekday: "HK$25.00 - HK$30.00", adultHoliday: "HK$32.00 - HK$38.00" },
     trips: [
         { stops: [{ p: "TM", t: "08:00" }, { p: "TC", t: "08:20" }, { p: "SLW", t: "08:35" }, { p: "TO", t: "09:10" }], duration: 70 },
         { stops: [{ p: "TM", t: "09:00" }, { p: "TC", t: "09:20" }, { p: "SLW", t: "09:35" }, { p: "TO", t: "10:38" }], duration: 98 },
@@ -50,8 +50,8 @@ window.PulseFerry.registerRoute("turbojet-macau-outer", {
     name: "Hong Kong (Sheung Wan) ➔ Macau Outer Harbour",
     category: "macau",
     operator: "TurboJET",
-    piers: { "HK": "HK Macau Ferry Terminal (Sheung Wan)", "MACAU": "Macau Outer Harbour" },
-    fares: { adultWeekday: "HK$175.00 (Economy) / $335.00 (Super)", adultHoliday: "HK$190.00 (Economy) / $360.00 (Super)" },
+    piers: { "HK": "HK Macau Ferry Terminal (Sheung Wan)", "MACAU": "Macau Outer Harbour Ferry Terminal" },
+    fares: { adultWeekday: "HK$175.00 (Economy) / HK$335.00 (Super Class)", adultHoliday: "HK$190.00 (Economy) / HK$360.00 (Super Class)" },
     trips: window.PulseFerry.generateDirectional("HK", "MACAU",
         ["07:30","08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00","20:30","21:00","21:30","22:00","22:30","23:00","23:30"],
         ["07:30","08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00","20:30","21:00","21:30","22:00","22:30","23:00","23:30"], 55)
