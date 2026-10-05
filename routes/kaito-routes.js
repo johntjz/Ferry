@@ -3,11 +3,11 @@ window.PulseFerry.registerRoute("wong-shek-tap-mun", {
     name: "Wong Shek ➔ Chek Keng ➔ Tap Mun",
     category: "saikung",
     operator: "Tsui Wah Ferry",
-    piers: { "WS": "Wong Shek Pier", "CK": "Chek Keng", "TM": "Tap Mun" },
+    piers: { "WS": "Wong Shek Pier", "CK": "Chek Keng Pier", "TM": "Tap Mun Pier" },
     fares: { adultWeekday: "HK$11.00", adultHoliday: "HK$16.00" },
     trips: window.PulseFerry.generateDirectional("WS", "TM",
-        ["08:30","10:30","12:30","14:30","16:30"],
-        ["09:05","11:05","13:05","15:05","17:05"], 35)
+        ["08:30","10:35","12:30","14:30","16:30","18:30"],
+        ["07:45","10:00","11:45","13:45","15:45","18:00"], 35)
 });
 
 // 17. Wong Shek ➔ Wan Tsai / Nam Fung Wan
@@ -25,8 +25,8 @@ window.PulseFerry.registerRoute("tolo-harbour-kaito", {
     name: "Ma Liu Shui ➔ Sham Chung ➔ Lai Chi Chong ➔ Tap Mun ➔ Wong Shek",
     category: "tolo",
     operator: "Tsui Wah Ferry",
-    piers: { "MLS": "Ma Liu Shui Landing 3", "SC": "Sham Chung", "LCC": "Lai Chi Chong", "TM": "Tap Mun", "WS": "Wong Shek" },
-    fares: { adultWeekday: "HK$20.00 - $30.00", adultHoliday: "HK$30.00 - $40.00" },
+    piers: { "MLS": "Ma Liu Shui Landing 3", "SC": "Sham Chung Pier", "LCC": "Lai Chi Chong Pier", "TM": "Tap Mun Pier", "WS": "Wong Shek Pier" },
+    fares: { adultWeekday: "HK$20.00", adultHoliday: "HK$30.00" },
     trips: [
         { stops: [{ p: "MLS", t: "08:30" }, { p: "SC", t: "09:05" }, { p: "LCC", t: "09:20" }, { p: "TM", t: "10:00" }, { p: "WS", t: "10:35" }] },
         { stops: [{ p: "MLS", t: "15:00" }, { p: "SC", t: "15:35" }, { p: "LCC", t: "15:50" }, { p: "TM", t: "16:30" }, { p: "WS", t: "17:00" }] },
@@ -40,7 +40,7 @@ window.PulseFerry.registerRoute("ma-liu-shui-tung-ping-chau", {
     name: "Ma Liu Shui ➔ Tung Ping Chau",
     category: "tolo",
     operator: "Tsui Wah Ferry",
-    piers: { "MLS": "Ma Liu Shui Landing 3", "TPC": "Tung Ping Chau" },
+    piers: { "MLS": "Ma Liu Shui Landing 3", "TPC": "Tung Ping Chau Pier" },
     fares: { adultWeekday: "HK$100.00 (Roundtrip)", adultHoliday: "HK$100.00 (Roundtrip)" },
     trips: [
         { stops: [{ p: "MLS", t: "09:00" }, { p: "TPC", t: "10:30" }] },
@@ -64,8 +64,8 @@ window.PulseFerry.registerRoute("sai-kung-yim-tin-tsai", {
 window.PulseFerry.registerRoute("sai-kung-kau-sai-chau", {
     name: "Sai Kung ➔ Kau Sai Village / High Island",
     category: "saikung",
-    operator: "Local Kaito",
-    piers: { "SK": "Sai Kung Public Pier", "KSV": "Kau Sai Village" },
+    operator: "Tsui Wah Ferry",
+    piers: { "SK": "Sai Kung Public Pier", "KSV": "Kau Sai Village Pier", "LSW": "High Island (Leung Shuen Wan)" },
     fares: { adultWeekday: "HK$35.00", adultHoliday: "HK$45.00" },
     trips: window.PulseFerry.generateDirectional("SK", "KSV",
         ["09:30","11:30","14:30","16:30"],
@@ -74,11 +74,11 @@ window.PulseFerry.registerRoute("sai-kung-kau-sai-chau", {
 
 // 22. Sha Tau Kok / Ma Liu Shui ➔ Kat O ➔ Ap Chau
 window.PulseFerry.registerRoute("sha-tau-kok-kat-o-ap-chau", {
-    name: "Sha Tau Kok / Ma Liu Shui ➔ Kat O ➔ Ap Chau",
+    name: "Ma Liu Shui / Sha Tau Kok ➔ Kat O ➔ Ap Chau",
     category: "tolo",
-    operator: "Local Kaito",
-    piers: { "MLS": "Ma Liu Shui Landing 3", "KO": "Kat O Pier", "AC": "Ap Chau" },
-    fares: { adultWeekday: "HK$50.00 - $90.00", adultHoliday: "HK$50.00 - $90.00" },
+    operator: "Best Boundary / Local Kaito",
+    piers: { "MLS": "Ma Liu Shui Landing 3", "STK": "Sha Tau Kok Pier", "KO": "Kat O Pier", "AC": "Ap Chau Pier" },
+    fares: { adultWeekday: "HK$90.00 (Roundtrip)", adultHoliday: "HK$90.00 (Roundtrip)" },
     trips: [
         { stops: [{ p: "MLS", t: "09:00" }, { p: "KO", t: "10:30" }, { p: "AC", t: "11:00" }] },
         { stops: [{ p: "AC", t: "12:30" }, { p: "KO", t: "13:00" }] },
@@ -91,7 +91,7 @@ window.PulseFerry.registerRoute("sha-tau-kok-lai-chi-wo", {
     name: "Sha Tau Kok ➔ Lai Chi Wo",
     category: "tolo",
     operator: "Local Kaito",
-    piers: { "STK": "Sha Tau Kok Pier", "LCW": "Lai Chi Wo" },
+    piers: { "STK": "Sha Tau Kok Pier", "LCW": "Lai Chi Wo Pier" },
     fares: { adultWeekday: "HK$40.00", adultHoliday: "HK$50.00" },
     trips: window.PulseFerry.generateDirectional("STK", "LCW",
         ["09:00","10:30","12:00","14:00","15:30"],
