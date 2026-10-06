@@ -1,4 +1,4 @@
-<!-- VERSION: 2026-10-06 20:12:34 HKT - Ferry Load Factor & Weather API Patch -->
+<!-- VERSION: 2026-10-06 20:20:15 HKT - Patch: Syntax Fix & Full Route Restoration -->
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -138,7 +138,7 @@
         <div class="bg-[#0f172a] px-3 py-2 flex justify-between items-center border-b border-white/5 text-[10px] sm:text-xs font-medium text-gray-400">
             <div class="flex items-center space-x-2">
                 <span id="liveClock" class="font-mono text-gray-300 font-semibold tracking-wide">--:--:--</span>
-                <span class="text-[9px] bg-white/10 text-white/50 px-1.5 py-0.5 rounded shadow-inner tracking-wider">Build: 2026-10-06 20:12</span>
+                <span class="text-[9px] bg-white/10 text-white/50 px-1.5 py-0.5 rounded shadow-inner tracking-wider">Build: 2026-10-06 20:20</span>
             </div>
             <select id="langSelect" class="bg-white/5 text-white border border-white/10 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf]">
                 <option value="en">EN</option>
@@ -288,7 +288,7 @@
     </div>
 
     <script>
-        // Internationalization (i18n) Dictionary
+        // Complete Internationalization (i18n) Dictionary
         const i18n = {
             'en': {},
             'zh-TW': {
@@ -300,6 +300,7 @@
                 'Live Cards View': '實時卡片檢視',
                 'Nearest Pier': '最近碼頭',
                 'Locating...': '定位中...',
+                'Location disabled or unavailable': '無法取得位置',
                 'Search route or pier...': '搜尋航線或碼頭...',
                 'All Routes': '所有航線',
                 'Outlying Islands': '離島',
@@ -317,7 +318,9 @@
                 'Swap Direction': '切換方向',
                 'Swap': '切換',
                 'Back': '返回',
+                'N/A': '不適用',
                 'Depart from': '由',
+                'Departing from': '由',
                 'All Destinations': '所有目的地',
                 'Please select a specific route to view full timetable.': '請選擇特定航線以查看完整時間表。',
                 'Holiday Fare Notice:': '假日票價提示：',
@@ -342,6 +345,10 @@
                 'Full Route Daily Timetable': '全線每日時間表',
                 'Total Sailings:': '總航班數：',
                 'Operated by': '營運商：',
+                'Departure': '出發',
+                'Stops & Route Details': '停靠站及航線詳情',
+                'Final Terminus': '終點站',
+                'ETA': '預計到達',
                 
                 // Fare Translations
                 'Route Fare Breakdown': '航線票價明細',
@@ -360,9 +367,9 @@
                 'Fast Ferry': '快速',
                 'Ordinary Ferry': '普通',
                 'Cargo OK': '載貨',
-                
-                // NEW UX/Weather additions
-                'Whole row to yourself': '可獨佔整排座位',
+
+                // Comfort & Queue status labels
+                'Whole row to yourself': '整排座位任坐',
                 'Seats available': '有充裕座位',
                 'Elbow to elbow': '非常擁擠 (可能需企位)',
                 'Quick unload on arrival': '到埗快速下船',
@@ -374,12 +381,42 @@
                 'Breezy Sea Conditions': '海面有風',
                 'Moderate winds detected. Ferries are operating normally but expect a bumpier ride than usual.': '偵測到中等風力。渡輪正常運作，但航程可能較平常顛簸。',
 
-                // Routes & Places omitted for brevity in system instruction adherence, assuming they map over seamlessly 
+                // Routes
                 'Central ➔ Cheung Chau': '中環 ➔ 長洲', 'Central ➔ Mui Wo': '中環 ➔ 梅窩', 'Central ➔ Peng Chau': '中環 ➔ 坪洲',
                 'Central ➔ Lamma Island (Yung Shue Wan)': '中環 ➔ 南丫島(榕樹灣)', 'Central ➔ Lamma Island (Sok Kwu Wan)': '中環 ➔ 南丫島(索罟灣)',
-                'Central': '中環', 'Cheung Chau': '長洲', 'Mui Wo': '梅窩', 'Peng Chau': '坪洲', 'Yung Shue Wan': '榕樹灣', 'Sok Kwu Wan': '索罟灣',
-                'Sun Ferry': '新渡輪', 'HK & Kowloon Ferry': '港九小輪', 'DB Transport': '愉景灣航運',
-                '(Ord)': '(普通)', '(Fast)': '(高速)'
+                'Central ➔ Discovery Bay': '中環 ➔ 愉景灣', 'Inter-Islands: Peng Chau ➔ Mui Wo ➔ Chi Ma Wan ➔ Cheung Chau': '橫水渡: 坪洲➔梅窩➔芝麻灣➔長洲',
+                'Peng Chau ➔ Trappist Monastery ➔ Discovery Bay': '坪洲 ➔ 神樂院 ➔ 愉景灣', 'Peng Chau ➔ Hei Ling Chau': '坪洲 ➔ 喜靈洲',
+                'Central ➔ Tsim Sha Tsui': '中環 ➔ 尖沙咀', 'Wan Chai ➔ Tsim Sha Tsui': '灣仔 ➔ 尖沙咀', 'Central ➔ Hung Hom': '中環 ➔ 紅磡',
+                'North Point ➔ Hung Hom': '北角 ➔ 紅磡', 'North Point ➔ Kowloon City': '北角 ➔ 九龍城', 'North Point ➔ Kwun Tong': '北角 ➔ 觀塘',
+                'Sai Wan Ho ➔ Kwun Tong': '西灣河 ➔ 觀塘', 'Sai Wan Ho ➔ Sam Ka Tsuen (Lei Yue Mun)': '西灣河 ➔ 三家村',
+                'Tseung Kwan O (TKO) ➔ Sai Wan Ho': '將軍澳 ➔ 西灣河', 'Aberdeen ➔ Pak Kok Tsuen ➔ Yung Shue Wan': '香港仔 ➔ 北角村 ➔ 榕樹灣',
+                'Aberdeen ➔ Mo Tat Wan ➔ Sok Kwu Wan': '香港仔 ➔ 模達灣 ➔ 索罟灣', 'Aberdeen / Stanley ➔ Po Toi Island': '香港仔/赤柱 ➔ 蒲台島',
+                'Wong Shek ➔ Chek Keng ➔ Tap Mun': '黃石 ➔ 赤徑 ➔ 塔門', 'Wong Shek ➔ Wan Tsai / Nam Fung Wan': '黃石 ➔ 灣仔/南風灣',
+                'Sai Kung Pier ➔ Yim Tin Tsai': '西貢 ➔ 鹽田梓', 'Sai Kung Pier ➔ Kau Sai Village / High Island': '西貢 ➔ 滘西村/糧船灣',
+                'Ma Liu Shui ➔ Sham Chung ➔ Lai Chi Chong ➔ Tap Mun ➔ Wong Shek': '馬料水➔深涌➔荔枝莊➔塔門➔黃石',
+                'Ma Liu Shui ➔ Tung Ping Chau': '馬料水 ➔ 東平洲', 'Sha Tau Kok / Ma Liu Shui ➔ Kat O ➔ Ap Chau': '沙頭角/馬料水 ➔ 吉澳 ➔ 鴨洲',
+                'Sha Tau Kok ➔ Lai Chi Wo': '沙頭角 ➔ 荔枝窩', 'Tuen Mun ➔ Tung Chung ➔ Sha Lo Wan ➔ Tai O': '屯門 ➔ 東涌 ➔ 沙螺灣 ➔ 大澳',
+                'Park Island ➔ Central': '珀麗灣 ➔ 中環', 'Park Island ➔ Tsuen Wan': '珀麗灣 ➔ 荃灣', 'Sam Ka Tsuen ➔ Tung Lung Chau': '三家村 ➔ 東龍洲',
+                'Hong Kong (Sheung Wan) ➔ Macau Outer Harbour': '香港(上環) ➔ 澳門外港', 'Hong Kong (Sheung Wan) ➔ Macau Taipa': '香港(上環) ➔ 澳門氹仔',
+
+                // Piers & Places
+                'Central': '中環', 'Central Pier 2': '中環2號碼頭', 'Central Pier 3': '中環3號碼頭', 'Central Pier 4': '中環4號碼頭', 'Central Pier 5': '中環5號碼頭', 'Central Pier 6': '中環6號碼頭', 'Central Pier 7': '中環7號碼頭', 'Central Pier 8': '中環8號碼頭',
+                'Cheung Chau': '長洲', 'Mui Wo': '梅窩', 'Peng Chau': '坪洲', 'Yung Shue Wan': '榕樹灣', 'Sok Kwu Wan': '索罟灣', 'Discovery Bay': '愉景灣', 'Discovery Bay (Nim Shue Wan)': '愉景灣(稔樹灣)',
+                'Chi Ma Wan': '芝麻灣', 'Trappist Monastery': '神樂院', 'Hei Ling Chau': '喜靈洲', 'Tsim Sha Tsui Star Ferry Pier': '尖沙咀天星碼頭', 'Wan Chai Ferry Pier': '灣仔碼頭', 'Hung Hom Ferry Pier': '紅磡碼頭',
+                'North Point Ferry Pier': '北角碼頭', 'Kowloon City Ferry Pier': '九龍城碼頭', 'Kwun Tong Ferry Pier': '觀塘碼頭', 'Sai Wan Ho Pier': '西灣河碼頭', 'Kwun Tong Pier': '觀塘碼頭', 'Sam Ka Tsuen Pier': '三家村碼頭', 'Tseung Kwan O South Landing': '將軍澳南梯台',
+                'Aberdeen Promenade Pier': '香港仔海濱碼頭', 'Pak Kok Tsuen': '北角村', 'Mo Tat Wan': '模達灣', 'Aberdeen Landing': '香港仔梯台', 'Aberdeen': '香港仔', 'Stanley (Blake Pier)': '赤柱(卜公碼頭)', 'Po Toi Island': '蒲台島',
+                'Wong Shek Pier': '黃石碼頭', 'Chek Keng': '赤徑', 'Tap Mun': '塔門', 'Wan Tsai Campsite Pier': '灣仔營地碼頭', 'Sai Kung Public Pier': '西貢公眾碼頭', 'Yim Tin Tsai Pier': '鹽田梓碼頭', 'Kau Sai Village': '滘西村',
+                'Ma Liu Shui Landing 3': '馬料水3號梯台', 'Sham Chung': '深涌', 'Lai Chi Chong': '荔枝莊', 'Tung Ping Chau': '東平洲', 'Kat O Pier': '吉澳碼頭', 'Ap Chau': '鴨洲', 'Sha Tau Kok Pier': '沙頭角碼頭', 'Lai Chi Wo': '荔枝窩',
+                'Tuen Mun Ferry Pier': '屯門碼頭', 'Tung Chung Development Pier': '東涌發展碼頭', 'Sha Lo Wan': '沙螺灣', 'Tai O Pier': '大澳碼頭', 'Park Island Ferry Pier': '珀麗灣碼頭', 'Tsuen Wan Pier': '荃灣碼頭', 'Tung Lung Chau Pier': '東龍洲碼頭',
+                'HK Macau Ferry Terminal (Sheung Wan)': '港澳碼頭(上環)', 'Macau Outer Harbour': '澳門外港', 'Macau Taipa Ferry Terminal': '澳門氹仔客運碼頭',
+                'Macau Outer Harbour Ferry Terminal': '澳門外港客運碼頭',
+
+                // Operators
+                'Sun Ferry': '新渡輪', 'HK & Kowloon Ferry': '港九小輪', 'DB Transport': '愉景灣航運', 'Tsui Wah Ferry': '翠華船務', 'Star Ferry': '天星小輪', 'Fortune Ferry': '富裕小輪', 'Coral Sea Ferry': '珊瑚海船務', 'Chuen Kee Ferry': '全記渡',
+                'Pitow Ferry / Local Kaito': '街渡', 'Local Kaito Operators': '街渡', 'Best Ferry / Local Kaito': '街渡', 'Pitcl': '珀麗灣客運', 'TurboJET': '噴射飛航', 'Cotai Water Jet': '金光飛航',
+
+                // Fares & Misc
+                '(Ord)': '(普通)', '(Fast)': '(高速)', '(Single Ticket)': '(單程)', '(Roundtrip)': '(來回)', '(Cotai Class)': '(金光飛航)', '(Economy)': '(普通位)', '(Super)': '(豪華位)'
             },
             'zh-CN': {
                 'Pulse HK Ferry': 'Pulse 香港渡轮',
@@ -390,20 +427,37 @@
                 'Live Cards View': '实时卡片视图',
                 'Nearest Pier': '最近码头',
                 'Locating...': '定位中...',
+                'Location disabled or unavailable': '无法获取位置',
                 'Search route or pier...': '搜索航线或码头...',
                 'All Routes': '所有航线',
                 'Outlying Islands': '离岛',
                 'Victoria Harbour': '维多利亚港',
                 'Aberdeen & Lamma': '香港仔及南丫岛',
+                'Sai Kung & Wong Shek': '西贡及黄石',
+                'Tolo Harbour & North': '吐露港及新界北',
+                'Lantau West & Tuen Mun': '大屿山西及屯门',
+                'Macau Cross-Boundary': '澳门跨境',
                 'Ferry Route': '渡轮航线',
+                'Routes': '条航线',
+                'Route': '条航线',
+                'No routes match your search / filter': '没有符合条件的航线',
                 'Departure Pier': '出发码头',
                 'Swap Direction': '切换方向',
                 'Swap': '切换',
+                'Back': '返回',
+                'N/A': '不适用',
                 'Depart from': '由',
+                'Departing from': '从',
+                'All Destinations': '所有目的地',
+                'Please select a specific route to view full timetable.': '请选择特定航线以查看完整时间表。',
                 'Holiday Fare Notice:': '假日票价提示：',
                 'Sunday & HK Public Holiday fare rates apply today.': '今日适用星期日及公众假期票价。',
                 'Sunday Service Notice:': '星期日服务提示：',
+                'HK Public Holiday': '香港公众假期',
                 'Loading departure schedules...': '正在加载航班时间表...',
+                'No ferry route selected.': '未有选择渡轮航线。',
+                'Please choose a route or adjust your category search filter above.': '请选择航线或调整搜索过滤器。',
+                'No more scheduled departures from this pier today.': '今日此码头已没有更多航班。',
                 'Departed': '已开出',
                 'Boarding Now': '正在登船',
                 'In': '还有',
@@ -413,8 +467,35 @@
                 'Arrive': '抵达',
                 'to': '往',
                 'Next Stop:': '下一站：',
+                'Skipped (/)': '不停站',
+                'Express (Skipped Stop /)': '特快 (不停站)',
+                'Full Route Daily Timetable': '全线每日时间表',
+                'Total Sailings:': '总航班数：',
+                'Operated by': '营运商：',
+                'Departure': '出发',
+                'Stops & Route Details': '停靠站及航线详情',
+                'Final Terminus': '终点站',
+                'ETA': '预计到达',
                 
-                // NEW UX/Weather additions
+                // Fare Translations
+                'Route Fare Breakdown': '航线票价明细',
+                'Passenger Type': '乘客类别',
+                'Mon - Sat': '星期一至六',
+                'Sun & Holiday': '星期日及假日',
+                'Adult': '成人',
+                'Resident (Adult)': '本岛居民 (成人)',
+                'Child': '小童',
+                'Senior / Disabled': '长者 / 伤健',
+                'Roundtrip': '来回',
+                'Mondays to Saturdays (Non-Holidays):': '星期一至六（非假日）：',
+                'Sundays & HK Public Holidays:': '星期日及公众假期：',
+                'Key Piers Served:': '主要停靠码头：',
+
+                'Fast Ferry': '快速',
+                'Ordinary Ferry': '普通',
+                'Cargo OK': '载货',
+
+                // Comfort & Queue status labels
                 'Whole row to yourself': '整排座位任坐',
                 'Seats available': '有充裕座位',
                 'Elbow to elbow': '非常拥挤 (可能需站立)',
@@ -426,41 +507,103 @@
                 'km/h). Ferry services may experience delays, heavy rocking, or sudden suspensions. Check with operators.': '公里/小时)。渡轮服务可能会延误、剧烈摇晃或突然暂停。请向营运商查询。',
                 'Breezy Sea Conditions': '海面有风',
                 'Moderate winds detected. Ferries are operating normally but expect a bumpier ride than usual.': '侦测到中等风力。渡轮正常运作，但航程可能较平常颠簸。',
-                
-                'Fast Ferry': '快速', 'Ordinary Ferry': '普通', 'Cargo OK': '载货'
+
+                // Routes
+                'Central ➔ Cheung Chau': '中环 ➔ 长洲', 'Central ➔ Mui Wo': '中环 ➔ 梅窝', 'Central ➔ Peng Chau': '中环 ➔ 坪洲',
+                'Central ➔ Lamma Island (Yung Shue Wan)': '中环 ➔ 南丫岛(榕树湾)', 'Central ➔ Lamma Island (Sok Kwu Wan)': '中环 ➔ 南丫岛(索罟湾)',
+                'Central ➔ Discovery Bay': '中环 ➔ 愉景湾', 'Inter-Islands: Peng Chau ➔ Mui Wo ➔ Chi Ma Wan ➔ Cheung Chau': '横水渡: 坪洲➔梅窝➔芝麻湾➔长洲',
+                'Peng Chau ➔ Trappist Monastery ➔ Discovery Bay': '坪洲 ➔ 神乐院 ➔ 愉景湾', 'Peng Chau ➔ Hei Ling Chau': '坪洲 ➔ 喜灵洲',
+                'Central ➔ Tsim Sha Tsui': '中环 ➔ 尖沙咀', 'Wan Chai ➔ Tsim Sha Tsui': '湾仔 ➔ 尖沙咀', 'Central ➔ Hung Hom': '中环 ➔ 红磡',
+                'North Point ➔ Hung Hom': '北角 ➔ 红磡', 'North Point ➔ Kowloon City': '北角 ➔ 九龙城', 'North Point ➔ Kwun Tong': '北角 ➔ 观塘',
+                'Sai Wan Ho ➔ Kwun Tong': '西湾河 ➔ 观塘', 'Sai Wan Ho ➔ Sam Ka Tsuen (Lei Yue Mun)': '西湾河 ➔ 三家村',
+                'Tseung Kwan O (TKO) ➔ Sai Wan Ho': '将军澳 ➔ 西湾河', 'Aberdeen ➔ Pak Kok Tsuen ➔ Yung Shue Wan': '香港仔 ➔ 北角村 ➔ 榕树湾',
+                'Aberdeen ➔ Mo Tat Wan ➔ Sok Kwu Wan': '香港仔 ➔ 模达湾 ➔ 索罟湾', 'Aberdeen / Stanley ➔ Po Toi Island': '香港仔/赤柱 ➔ 蒲台岛',
+                'Wong Shek ➔ Chek Keng ➔ Tap Mun': '黄石 ➔ 赤径 ➔ 塔门', 'Wong Shek ➔ Wan Tsai / Nam Fung Wan': '黄石 ➔ 湾仔/南风湾',
+                'Sai Kung Pier ➔ Yim Tin Tsai': '西贡 ➔ 盐田梓', 'Sai Kung Pier ➔ Kau Sai Village / High Island': '西贡 ➔ 滘西村/粮船湾',
+                'Ma Liu Shui ➔ Sham Chung ➔ Lai Chi Chong ➔ Tap Mun ➔ Wong Shek': '马料水➔深涌➔荔枝庄➔塔门➔黄石',
+                'Ma Liu Shui ➔ Tung Ping Chau': '马料水 ➔ 东平洲', 'Sha Tau Kok / Ma Liu Shui ➔ Kat O ➔ Ap Chau': '沙头角/马料水 ➔ 吉澳 ➔ 鸭洲',
+                'Sha Tau Kok ➔ Lai Chi Wo': '沙头角 ➔ 荔枝窝', 'Tuen Mun ➔ Tung Chung ➔ Sha Lo Wan ➔ Tai O': '屯门 ➔ 东涌 ➔ 沙螺湾 ➔ 大澳',
+                'Park Island ➔ Central': '珀丽湾 ➔ 中环', 'Park Island ➔ Tsuen Wan': '珀丽湾 ➔ 荃湾', 'Sam Ka Tsuen ➔ Tung Lung Chau': '三家村 ➔ 东龙洲',
+                'Hong Kong (Sheung Wan) ➔ Macau Outer Harbour': '香港(上环) ➔ 澳门外港', 'Hong Kong (Sheung Wan) ➔ Macau Taipa': '香港(上环) ➔ 澳门氹仔',
+
+                // Piers & Places
+                'Central': '中环', 'Central Pier 2': '中环2号码头', 'Central Pier 3': '中环3号码头', 'Central Pier 4': '中环4号码头', 'Central Pier 5': '中环5号码头', 'Central Pier 6': '中环6号码头', 'Central Pier 7': '中环7号码头', 'Central Pier 8': '中环8号码头',
+                'Cheung Chau': '长洲', 'Mui Wo': '梅窝', 'Peng Chau': '坪洲', 'Yung Shue Wan': '榕树湾', 'Sok Kwu Wan': '索罟湾', 'Discovery Bay': '愉景湾', 'Discovery Bay (Nim Shue Wan)': '愉景湾(稔树湾)',
+                'Chi Ma Wan': '芝麻湾', 'Trappist Monastery': '神乐院', 'Hei Ling Chau': '喜灵洲', 'Tsim Sha Tsui Star Ferry Pier': '尖沙咀天星码头', 'Wan Chai Ferry Pier': '湾仔码头', 'Hung Hom Ferry Pier': '红磡码头',
+                'North Point Ferry Pier': '北角码头', 'Kowloon City Ferry Pier': '九龙城码头', 'Kwun Tong Ferry Pier': '观塘码头', 'Sai Wan Ho Pier': '西湾河码头', 'Kwun Tong Pier': '观塘码头', 'Sam Ka Tsuen Pier': '三家村码头', 'Tseung Kwan O South Landing': '将军澳南梯台',
+                'Aberdeen Promenade Pier': '香港仔海滨码头', 'Pak Kok Tsuen': '北角村', 'Mo Tat Wan': '模达湾', 'Aberdeen Landing': '香港仔梯台', 'Aberdeen': '香港仔', 'Stanley (Blake Pier)': '赤柱(卜公码头)', 'Po Toi Island': '蒲台岛',
+                'Wong Shek Pier': '黄石码头', 'Chek Keng': '赤径', 'Tap Mun': '塔门', 'Wan Tsai Campsite Pier': '湾仔营地码头', 'Sai Kung Public Pier': '西贡公众码头', 'Yim Tin Tsai Pier': '盐田梓码头', 'Kau Sai Village': '滘西村',
+                'Ma Liu Shui Landing 3': '马料水3号梯台', 'Sham Chung': '深涌', 'Lai Chi Chong': '荔枝庄', 'Tung Ping Chau': '东平洲', 'Kat O Pier': '吉澳码头', 'Ap Chau': '鸭洲', 'Sha Tau Kok Pier': '沙头角码头', 'Lai Chi Wo': '荔枝窝',
+                'Tuen Mun Ferry Pier': '屯门码头', 'Tung Chung Development Pier': '东涌发展码头', 'Sha Lo Wan': '沙螺湾', 'Tai O Pier': '大澳码头', 'Park Island Ferry Pier': '珀丽湾码头', 'Tsuen Wan Pier': '荃湾码头', 'Tung Lung Chau Pier': '东龙洲码头',
+                'HK Macau Ferry Terminal (Sheung Wan)': '港澳码头(上环)', 'Macau Outer Harbour': '澳门外港', 'Macau Taipa Ferry Terminal': '澳门氹仔客运码头',
+                'Macau Outer Harbour Ferry Terminal': '澳门外港客运码头',
+
+                // Operators
+                'Sun Ferry': '新渡轮', 'HK & Kowloon Ferry': '港九小轮', 'DB Transport': '愉景湾航运', 'Tsui Wah Ferry': '翠华船务', 'Star Ferry': '天星小轮', 'Fortune Ferry': '富裕小轮', 'Coral Sea Ferry': '珊瑚海船务', 'Chuen Kee Ferry': '全记渡',
+                'Pitow Ferry / Local Kaito': '街渡', 'Local Kaito Operators': '街渡', 'Best Ferry / Local Kaito': '街渡', 'Pitcl': '珀丽湾客运', 'TurboJET': '喷射飞航', 'Cotai Water Jet': '金光飞航',
+
+                // Fares & Misc
+                '(Ord)': '(普通)', '(Fast)': '(高速)', '(Single Ticket)': '(单程)', '(Roundtrip)': '(来回)', '(Cotai Class)': '(金光飞航)', '(Economy)': '(普通位)', '(Super)': '(豪华位)'
             }
         };
 
         let currentLang = localStorage.getItem('pulseFerryLang') || 'en';
         let currentGpsPierName = null;
         let isHolidayPricingToday = false;
-        let globalWeatherWarningHtml = ''; 
+        let globalWeatherWarningHtml = '';
 
-        // GPS Coordinates Database for major piers 
+        // GPS Coordinates Database for major piers
         const pierCoordinates = {
-            'Central Pier 2': {lat: 22.28738, lng: 114.15767}, 'Central Pier 3': {lat: 22.28723, lng: 114.15831},
-            'Central Pier 4': {lat: 22.28704, lng: 114.15897}, 'Central Pier 5': {lat: 22.28682, lng: 114.15975},
-            'Central Pier 6': {lat: 22.28666, lng: 114.16053}, 'Central Pier 7': {lat: 22.28646, lng: 114.16130},
-            'Central Pier 8': {lat: 22.28612, lng: 114.16215}, 'Tsim Sha Tsui Star Ferry Pier': {lat: 22.2936, lng: 114.1693},
-            'Yung Shue Wan': {lat: 22.2268, lng: 114.1120}, 'Sok Kwu Wan': {lat: 22.2045, lng: 114.1302},
-            'Cheung Chau': {lat: 22.2081, lng: 114.0287}, 'Mui Wo': {lat: 22.2646, lng: 114.0016},
-            'Peng Chau': {lat: 22.2836, lng: 114.0378}, 'Discovery Bay': {lat: 22.2965, lng: 114.0205}
+            'Central Pier 2': {lat: 22.28738, lng: 114.15767},
+            'Central Pier 3': {lat: 22.28723, lng: 114.15831},
+            'Central Pier 4': {lat: 22.28704, lng: 114.15897},
+            'Central Pier 5': {lat: 22.28682, lng: 114.15975},
+            'Central Pier 6': {lat: 22.28666, lng: 114.16053},
+            'Central Pier 7': {lat: 22.28646, lng: 114.16130},
+            'Central Pier 8': {lat: 22.28612, lng: 114.16215},
+            'HK Macau Ferry Terminal (Sheung Wan)': {lat: 22.2882, lng: 114.1517},
+            'Tsim Sha Tsui Star Ferry Pier': {lat: 22.2936, lng: 114.1693},
+            'Wan Chai Ferry Pier': {lat: 22.2831, lng: 114.1755},
+            'Hung Hom Ferry Pier': {lat: 22.3000, lng: 114.1885},
+            'North Point Ferry Pier': {lat: 22.2936, lng: 114.2005},
+            'Kowloon City Ferry Pier': {lat: 22.3168, lng: 114.1950},
+            'Kwun Tong Ferry Pier': {lat: 22.3087, lng: 114.2205},
+            'Sai Wan Ho Pier': {lat: 22.2847, lng: 114.2217},
+            'Sam Ka Tsuen Pier': {lat: 22.2906, lng: 114.2383},
+            'Aberdeen Promenade Pier': {lat: 22.2472, lng: 114.1557},
+            'Aberdeen Landing': {lat: 22.2472, lng: 114.1557},
+            'Yung Shue Wan': {lat: 22.2268, lng: 114.1120},
+            'Sok Kwu Wan': {lat: 22.2045, lng: 114.1302},
+            'Cheung Chau': {lat: 22.2081, lng: 114.0287},
+            'Mui Wo': {lat: 22.2646, lng: 114.0016},
+            'Peng Chau': {lat: 22.2836, lng: 114.0378},
+            'Discovery Bay': {lat: 22.2965, lng: 114.0205},
+            'Park Island Ferry Pier': {lat: 22.3486, lng: 114.0620},
+            'Tsuen Wan Pier': {lat: 22.3664, lng: 114.1087},
+            'Tuen Mun Ferry Pier': {lat: 22.3698, lng: 113.9610},
+            'Tung Chung Development Pier': {lat: 22.2941, lng: 113.9405},
+            'Tai O Pier': {lat: 22.2541, lng: 113.8617},
+            'Sai Kung Public Pier': {lat: 22.3815, lng: 114.2743},
+            'Wong Shek Pier': {lat: 22.4332, lng: 114.3361},
+            'Ma Liu Shui Landing 3': {lat: 22.4165, lng: 114.2120},
+            'Macau Outer Harbour Ferry Terminal': {lat: 22.1966, lng: 113.5559},
+            'Macau Taipa Ferry Terminal': {lat: 22.1625, lng: 113.5786}
         };
 
         function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; 
-            const dLat = (lat2-lat1) * Math.PI / 180;
-            const dLon = (lon2-lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                    Math.sin(dLon/2) * Math.sin(dLon/2);
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         }
 
         function findNearestPierAndRoute(userLat, userLng) {
             let closestPierId = null, closestRouteId = null, closestPierName = null, minDistance = Infinity;
             for (const [routeKey, routeData] of Object.entries(scheduleData)) {
-                for (const [pierId, pierName] of Object.entries(routeData.piers)) {
+                for (const [pierId, pierName] of Object.entries(routeData.piers || {})) {
                     const coords = pierCoordinates[pierName];
                     if (coords) {
                         const dist = getDistance(userLat, userLng, coords.lat, coords.lng);
@@ -494,18 +637,9 @@
         function applyTranslations() {
             document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.getAttribute('data-i18n')));
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = t(el.getAttribute('data-i18n-placeholder')));
-            document.getElementById('viewToggleText').textContent = isTimetableGridOpen ? t("Live Cards View") : t("Timetable");
+            const viewToggleText = document.getElementById('viewToggleText');
+            if (viewToggleText) viewToggleText.textContent = isTimetableGridOpen ? t("Live Cards View") : t("Timetable");
         }
-
-        document.getElementById('langSelect').addEventListener('change', (e) => {
-            currentLang = e.target.value;
-            localStorage.setItem('pulseFerryLang', currentLang);
-            applyTranslations();
-            populateRoutes();
-            populatePiers();
-            renderSchedule();
-            if (isTimetableGridOpen && routeSelect.value !== 'GPS_MODE') renderTimetableGrid();
-        });
 
         // Hardcoded HK Public Holidays for logic evaluation
         const HK_PUBLIC_HOLIDAYS = {
@@ -525,7 +659,7 @@
             document.getElementById('langSelect').value = currentLang;
             applyTranslations();
             checkHolidayAndSundayStatus();
-            fetchWeatherDisruptions(); // Fetch sea state API asynchronously
+            fetchWeatherDisruptions();
             
             populateRoutes();
             updateLiveClock();
@@ -533,19 +667,65 @@
             setInterval(updateLiveClock, 1000);
             setInterval(renderSchedule, 15000);
 
+            document.getElementById('langSelect').addEventListener('change', (e) => {
+                currentLang = e.target.value;
+                localStorage.setItem('pulseFerryLang', currentLang);
+                applyTranslations();
+                populateRoutes();
+                populatePiers();
+                renderSchedule();
+                if (isTimetableGridOpen && routeSelect.value !== 'GPS_MODE') renderTimetableGrid();
+            });
+
             document.getElementById('gpsBtn').addEventListener('click', handleGPSClick);
-            routeSelect.addEventListener('change', () => { if(routeSelect.value !== 'GPS_MODE') currentGpsPierName = null; populatePiers(); renderSchedule(); if (isTimetableGridOpen) renderTimetableGrid(); });
-            pierSelect.addEventListener('change', () => { renderSchedule(); if (isTimetableGridOpen) renderTimetableGrid(); });
-            document.getElementById('swapDirectionBtn').addEventListener('click', () => { pierSelect.selectedIndex = (pierSelect.selectedIndex + 1) % pierSelect.options.length; renderSchedule(); if (isTimetableGridOpen) renderTimetableGrid(); });
             
-            searchInput.addEventListener('input', () => { currentGpsPierName = null; document.getElementById('clearSearch').classList.toggle('hidden', searchInput.value === ''); populateRoutes(); populatePiers(); renderSchedule(); });
-            document.getElementById('clearSearch').addEventListener('click', () => { currentGpsPierName = null; searchInput.value = ''; document.getElementById('clearSearch').classList.add('hidden'); populateRoutes(); populatePiers(); renderSchedule(); });
+            routeSelect.addEventListener('change', () => { 
+                if (routeSelect.value !== 'GPS_MODE') currentGpsPierName = null; 
+                populatePiers(); 
+                renderSchedule(); 
+                if (isTimetableGridOpen && routeSelect.value !== 'GPS_MODE') renderTimetableGrid(); 
+            });
+
+            pierSelect.addEventListener('change', () => { 
+                renderSchedule(); 
+                if (isTimetableGridOpen && routeSelect.value !== 'GPS_MODE') renderTimetableGrid(); 
+            });
+
+            document.getElementById('swapDirectionBtn').addEventListener('click', () => { 
+                if (pierSelect.options.length > 1) {
+                    pierSelect.selectedIndex = (pierSelect.selectedIndex + 1) % pierSelect.options.length; 
+                    renderSchedule(); 
+                    if (isTimetableGridOpen && routeSelect.value !== 'GPS_MODE') renderTimetableGrid();
+                }
+            });
+            
+            searchInput.addEventListener('input', () => { 
+                currentGpsPierName = null; 
+                document.getElementById('clearSearch').classList.toggle('hidden', searchInput.value === ''); 
+                populateRoutes(); 
+                populatePiers(); 
+                renderSchedule(); 
+            });
+
+            document.getElementById('clearSearch').addEventListener('click', () => { 
+                currentGpsPierName = null; 
+                searchInput.value = ''; 
+                document.getElementById('clearSearch').classList.add('hidden'); 
+                populateRoutes(); 
+                populatePiers(); 
+                renderSchedule(); 
+            });
             
             document.querySelectorAll('.cat-pill').forEach(pill => {
                 pill.addEventListener('click', () => {
                     currentGpsPierName = null;
-                    document.querySelectorAll('.cat-pill').forEach(p => p.classList.replace('bg-[#2dd4bf]', 'bg-white/5') || p.classList.replace('text-slate-900', 'text-gray-300'));
-                    pill.classList.replace('bg-white/5', 'bg-[#2dd4bf]') || pill.classList.replace('text-gray-300', 'text-slate-900');
+                    document.querySelectorAll('.cat-pill').forEach(p => {
+                        p.classList.remove('bg-[#2dd4bf]', 'text-slate-900', 'font-bold');
+                        p.classList.add('bg-white/5', 'text-gray-300', 'font-medium');
+                    });
+                    pill.classList.remove('bg-white/5', 'text-gray-300', 'font-medium');
+                    pill.classList.add('bg-[#2dd4bf]', 'text-slate-900', 'font-bold');
+                    
                     currentActiveCategory = pill.dataset.cat;
                     populateRoutes();
                     populatePiers();
@@ -569,10 +749,18 @@
                     const nearest = findNearestPierAndRoute(position.coords.latitude, position.coords.longitude);
                     if (nearest.pierName) {
                         currentGpsPierName = nearest.pierName;
-                        document.querySelectorAll('.cat-pill').forEach(p => p.classList.replace('bg-[#2dd4bf]', 'bg-white/5'));
-                        document.querySelector('.cat-pill[data-cat="all"]').classList.replace('bg-white/5', 'bg-[#2dd4bf]');
+                        document.querySelectorAll('.cat-pill').forEach(p => {
+                            p.classList.remove('bg-[#2dd4bf]', 'text-slate-900', 'font-bold');
+                            p.classList.add('bg-white/5', 'text-gray-300', 'font-medium');
+                        });
+                        const allPill = document.querySelector('.cat-pill[data-cat="all"]');
+                        if (allPill) {
+                            allPill.classList.remove('bg-white/5', 'text-gray-300', 'font-medium');
+                            allPill.classList.add('bg-[#2dd4bf]', 'text-slate-900', 'font-bold');
+                        }
                         currentActiveCategory = 'all';
-                        searchInput.value = ''; document.getElementById('clearSearch').classList.add('hidden');
+                        searchInput.value = ''; 
+                        document.getElementById('clearSearch').classList.add('hidden');
                         populateRoutes();
                         routeSelect.value = 'GPS_MODE';
                         populatePiers();
@@ -589,7 +777,10 @@
 
         function updateLiveClock() {
             const now = new Date();
-            document.getElementById('liveClock').textContent = now.toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            const liveClockEl = document.getElementById('liveClock');
+            if (liveClockEl) {
+                liveClockEl.textContent = now.toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            }
         }
 
         function checkHolidayAndSundayStatus() {
@@ -597,26 +788,28 @@
             const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             const holidayName = HK_PUBLIC_HOLIDAYS[dateStr];
             
-            isHolidayPricingToday = (now.getDay() === 0 || holidayName);
+            isHolidayPricingToday = (now.getDay() === 0 || !!holidayName);
 
-            if (isHolidayPricingToday) {
-                document.getElementById('holidayBanner').classList.remove('hidden');
-                document.getElementById('holidayTitle').textContent = holidayName ? `${t('HK Public Holiday')} (${t(holidayName) || holidayName}):` : t('Sunday Service Notice:');
-            } else {
-                document.getElementById('holidayBanner').classList.add('hidden');
+            const holidayBanner = document.getElementById('holidayBanner');
+            if (holidayBanner) {
+                if (isHolidayPricingToday) {
+                    holidayBanner.classList.remove('hidden');
+                    document.getElementById('holidayTitle').textContent = holidayName ? `${t('HK Public Holiday')} (${t(holidayName) || holidayName}):` : t('Sunday Service Notice:');
+                } else {
+                    holidayBanner.classList.add('hidden');
+                }
             }
         }
 
-        // Feature 2: Free Open-Meteo API Fetch for sea condition alerts
         async function fetchWeatherDisruptions() {
             try {
                 const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=22.28&longitude=114.16&current=wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh');
                 const data = await res.json();
-                const gusts = data.current.wind_gusts_10m;
+                const gusts = data?.current?.wind_gusts_10m || 0;
 
                 if (gusts > 60) {
                     globalWeatherWarningHtml = `
-                        <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mb-4 flex items-start space-x-3 fade-in shadow-inner">
+                        <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mb-3 flex items-start space-x-3 fade-in shadow-inner">
                             <span class="text-2xl mt-0.5">🌊</span>
                             <div>
                                 <h4 class="text-red-400 font-bold text-sm">${t('Rough Sea Conditions Warning')}</h4>
@@ -625,7 +818,7 @@
                         </div>`;
                 } else if (gusts > 40) {
                     globalWeatherWarningHtml = `
-                        <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 mb-4 flex items-start space-x-3 fade-in shadow-inner">
+                        <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 mb-3 flex items-start space-x-3 fade-in shadow-inner">
                             <span class="text-2xl mt-0.5">🌬️</span>
                             <div>
                                 <h4 class="text-amber-400 font-bold text-sm">${t('Breezy Sea Conditions')}</h4>
@@ -633,8 +826,10 @@
                             </div>
                         </div>`;
                 }
-                renderSchedule(); // Inject HTML safely
-            } catch(e) { console.log("Weather API skipped.", e); }
+                renderSchedule();
+            } catch(e) {
+                // Silently ignore if offline
+            }
         }
 
         function populateRoutes() {
@@ -645,37 +840,48 @@
 
             if (currentGpsPierName && query === '' && currentActiveCategory === 'all') {
                 const option = document.createElement('option');
-                option.value = 'GPS_MODE'; option.textContent = `📍 ${t('Departing from')} ${t(currentGpsPierName)}`;
+                option.value = 'GPS_MODE'; 
+                option.textContent = `📍 ${t('Departing from')} ${t(currentGpsPierName)}`;
                 routeSelect.appendChild(option);
             }
 
             for (const [key, route] of Object.entries(scheduleData)) {
                 if (currentActiveCategory !== 'all' && route.category !== currentActiveCategory) continue;
                 if (query !== '') {
-                    const searchable = `${route.name} ${t(route.name)} ${route.operator} ${t(route.operator)}`.toLowerCase();
+                    const pierNames = Object.values(route.piers || {});
+                    const translatedPiers = pierNames.map(p => t(p));
+                    const searchable = `${route.name} ${t(route.name)} ${route.operator} ${t(route.operator)} ${pierNames.join(' ')} ${translatedPiers.join(' ')}`.toLowerCase();
                     if (!searchable.includes(query)) continue;
                 }
                 const option = document.createElement('option');
-                option.value = key; option.textContent = t(route.name);
+                option.value = key; 
+                option.textContent = t(route.name);
                 routeSelect.appendChild(option);
                 matchedCount++;
             }
+
             document.getElementById('routeCountBadge').textContent = `${matchedCount} ${matchedCount === 1 ? t('Route') : t('Routes')}`;
-            if (currentSelected && [...routeSelect.options].some(o => o.value === currentSelected)) routeSelect.value = currentSelected;
+            if (currentSelected && [...routeSelect.options].some(o => o.value === currentSelected)) {
+                routeSelect.value = currentSelected;
+            }
         }
 
         function populatePiers() {
             pierSelect.innerHTML = '';
             const routeKey = routeSelect.value;
             if (routeKey === 'GPS_MODE') {
-                const opt = document.createElement('option'); opt.value = 'ALL_DEST'; opt.textContent = `🗺️ ${t('All Destinations')}`;
-                pierSelect.appendChild(opt); return;
+                const opt = document.createElement('option'); 
+                opt.value = 'ALL_DEST'; 
+                opt.textContent = `🗺️ ${t('All Destinations')}`;
+                pierSelect.appendChild(opt); 
+                return;
             }
             if (!routeKey || !scheduleData[routeKey]) return;
             
-            for (const [key, name] of Object.entries(scheduleData[routeKey].piers)) {
+            for (const [key, name] of Object.entries(scheduleData[routeKey].piers || {})) {
                 const option = document.createElement('option');
-                option.value = key; option.textContent = `${t('Depart from')} ${t(name)}`;
+                option.value = key; 
+                option.textContent = `${t('Depart from')} ${t(name)}`;
                 pierSelect.appendChild(option);
             }
         }
@@ -704,17 +910,21 @@
                     const diffMinutes = Math.floor((departureDate.getTime() - now.getTime()) / 60000);
                     
                     if (diffMinutes >= -15 && diffMinutes < 1440) {
+                        const finalStop = stops[stops.length - 1];
+                        const nextStop = stops[pierIndex + 1];
+
                         deps.push({
                             operator: route.operator,
                             departureTime: stops[pierIndex].t,
                             departureDate: departureDate,
-                            nextStop: route.piers[stops[pierIndex + 1].p] || stops[pierIndex + 1].p,
-                            nextStopTime: stops[pierIndex + 1].t,
-                            destination: route.piers[stops[stops.length - 1].p] || stops[stops.length - 1].p,
-                            etaDestination: stops[stops.length - 1].t,
+                            nextStop: route.piers[nextStop.p] || nextStop.p,
+                            nextStopTime: nextStop.t,
+                            destination: route.piers[finalStop.p] || finalStop.p,
+                            etaDestination: finalStop.t,
                             countdownMins: diffMinutes,
-                            travelDurationMins: (window.PulseFerry.timeToMins(stops[stops.length - 1].t) - window.PulseFerry.timeToMins(stops[pierIndex].t) + 1440) % 1440,
-                            vesselType: trip.vesselType, cargo: trip.cargo,
+                            travelDurationMins: (window.PulseFerry.timeToMins(finalStop.t) - window.PulseFerry.timeToMins(stops[pierIndex].t) + 1440) % 1440,
+                            vesselType: trip.vesselType, 
+                            cargo: trip.cargo,
                             routeFares: route.fares
                         });
                     }
@@ -734,9 +944,24 @@
 
             const now = new Date();
             const isWeekend = now.getDay() === 0 || now.getDay() === 6;
-            const departures = routeKey === 'GPS_MODE' 
-                ? Object.values(scheduleData).flatMap(r => extractDeparturesForRoute(r, Object.keys(r.piers).find(k => r.piers[k] === currentGpsPierName), now, isWeekend))
-                : extractDeparturesForRoute(scheduleData[routeKey], pierKey, now, isWeekend);
+            let departures = [];
+
+            if (routeKey === 'GPS_MODE' && currentGpsPierName) {
+                for (const [rKey, r] of Object.entries(scheduleData)) {
+                    let matchingPierKey = null;
+                    for (const [k, v] of Object.entries(r.piers || {})) {
+                        if (v === currentGpsPierName) {
+                            matchingPierKey = k;
+                            break;
+                        }
+                    }
+                    if (matchingPierKey) {
+                        departures.push(...extractDeparturesForRoute(r, matchingPierKey, now, isWeekend));
+                    }
+                }
+            } else if (scheduleData[routeKey]) {
+                departures = extractDeparturesForRoute(scheduleData[routeKey], pierKey, now, isWeekend);
+            }
 
             departures.sort((a, b) => a.departureDate - b.departureDate);
             
@@ -748,10 +973,23 @@
             let newContentHtml = globalWeatherWarningHtml;
 
             departures.forEach((dep, index) => {
-                let countdownDisplay = dep.countdownMins < 0 ? t('Departed') : dep.countdownMins === 0 ? t('Boarding Now') : (Math.floor(dep.countdownMins / 60) > 0 ? `${t('In')} ${Math.floor(dep.countdownMins/60)}${t('h')} ${dep.countdownMins%60}${t('m')}` : `${t('In')} ${dep.countdownMins} ${t('mins')}`);
-                let countdownStyle = dep.countdownMins < 0 ? 'bg-gray-800 text-gray-500 border-gray-700' : dep.countdownMins === 0 ? 'bg-red-500/20 text-red-400 border-red-500/30 animate-pulse font-bold' : (dep.countdownMins <= 15 ? 'bg-amber-500/20 text-amber-300 border-amber-500/30 font-bold animate-pulse' : 'bg-[#2dd4bf]/15 text-[#2dd4bf] border-[#2dd4bf]/30 font-semibold');
+                let countdownDisplay = '';
+                let countdownStyle = '';
 
-                // Feature 1: Intuitive Simplified Load Factor Symbol System 
+                if (dep.countdownMins < 0) {
+                    countdownDisplay = t('Departed');
+                    countdownStyle = 'bg-gray-800 text-gray-500 border-gray-700';
+                } else if (dep.countdownMins === 0) {
+                    countdownDisplay = t('Boarding Now');
+                    countdownStyle = 'bg-red-500/20 text-red-400 border-red-500/30 animate-pulse font-bold';
+                } else {
+                    const hrs = Math.floor(dep.countdownMins / 60);
+                    const mins = dep.countdownMins % 60;
+                    countdownDisplay = hrs > 0 ? `${t('In')} ${hrs}${t('h')} ${mins}${t('m')}` : `${t('In')} ${mins} ${t('mins')}`;
+                    countdownStyle = dep.countdownMins <= 15 ? 'bg-amber-500/20 text-amber-300 border-amber-500/30 font-bold animate-pulse' : 'bg-[#2dd4bf]/15 text-[#2dd4bf] border-[#2dd4bf]/30 font-semibold';
+                }
+
+                // Intuitive Load Factor Symbol System 
                 const hour = dep.departureDate.getHours();
                 const isPeak = (!isWeekend && ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19))) || (isWeekend && (hour >= 14 && hour <= 18));
                 const isMid = hour >= 10 && hour <= 16;
@@ -761,19 +999,19 @@
                 const queueText = isPeak ? 'Giant queue to exit' : (isMid ? 'Moderate queue to exit' : 'Quick unload on arrival');
                 const queueEmoji = isPeak ? '🐌' : '🚶‍♂️';
 
-                // Feature 3: Smart Hide Next Stop if it is the Final Destination
+                // Smart Hide Next Stop if it is identical to Destination
                 let nextStopHtml = '';
                 if (dep.nextStop !== dep.destination) {
                     nextStopHtml = `<span class="text-[10px] text-gray-400 ml-1 mt-0.5">${t('Next Stop:')} <strong class="text-gray-200 font-semibold">${t(dep.nextStop)} (${dep.nextStopTime})</strong></span>`;
                 }
                 
-                // Feature 4: Auto-pricing contextual extraction directly on card
+                // Auto-pricing contextual extraction directly on card
                 let displayFare = '';
                 if (dep.routeFares) {
                     let activeFare = isHolidayPricingToday ? dep.routeFares.adultHoliday : dep.routeFares.adultWeekday;
-                    if (activeFare !== undefined) {
+                    if (activeFare !== undefined && activeFare !== null) {
                         let currency = dep.routeFares.currency === 'HKD' ? 'HK$' : (dep.routeFares.currency || 'HK$');
-                        displayFare = typeof activeFare === 'string' ? activeFare : `${currency}${Number(activeFare).toFixed(1)}`;
+                        displayFare = typeof activeFare === 'string' ? t_fare(activeFare) : `${currency}${Number(activeFare).toFixed(1)}`;
                     }
                 }
 
@@ -788,7 +1026,7 @@
                                 <div class="mt-1 flex items-center space-x-2 flex-wrap gap-y-1">
                                     <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-800 text-teal-300 border border-teal-500/30 uppercase">${t(dep.operator)}</span>
                                     <span class="text-[10px] font-bold px-2 py-0.5 rounded ${dep.vesselType === 'fast' ? 'bg-sky-500/20 text-sky-300 border-sky-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'} border">
-                                        ${dep.vesselType === 'fast' ? '⚡ ' + t('Fast Ferry') : '⛴️️ ' + t('Ordinary Ferry') + (dep.cargo ? ' 📦' : '')}
+                                        ${dep.vesselType === 'fast' ? '⚡ ' + t('Fast Ferry') : '⛴️ ' + t('Ordinary Ferry') + (dep.cargo ? ' 📦' : '')}
                                     </span>
                                     ${nextStopHtml}
                                 </div>
@@ -801,13 +1039,12 @@
                                 <div class="text-[11px] text-gray-400 font-medium flex items-center space-x-1">
                                     <span>${t('Arrive')} ${t(dep.destination)}:</span>
                                     <span class="text-gray-100 font-bold font-mono text-sm">${dep.etaDestination}</span>
-                                    <!-- Duration cleanly moved beside ETA -->
                                     <span class="text-[#2dd4bf]/70 font-semibold font-mono">(${dep.travelDurationMins}${t('m')})</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Refined Minimalistic Load Factor Widget -->
+                        <!-- Minimalist Comfort & Queue Widgets -->
                         <div class="mt-3.5 flex flex-col sm:flex-row items-center gap-2 border-t border-white/5 pt-3">
                             <div class="flex-1 w-full bg-white/5 border border-white/10 rounded-lg p-2.5 flex items-center space-x-2.5">
                                 <span class="text-xl leading-none">${seatEmoji}</span>
@@ -824,7 +1061,6 @@
             scheduleContainer.innerHTML = newContentHtml;
         }
 
-        // Keeping full modal render functionality for Concessions lookup
         function toggleTimetableGrid() {
             if (routeSelect.value === 'GPS_MODE') return alert(t('Please select a specific route to view full timetable.'));
             isTimetableGridOpen = !isTimetableGridOpen;
@@ -835,27 +1071,30 @@
         }
 
         function renderTimetableGrid() {
-            const route = scheduleData[routeSelect.value]; if(!route) return;
+            const route = scheduleData[routeSelect.value]; 
+            if (!route) return;
             document.getElementById('timetableTitle').textContent = `${t(route.name)} - ${t('Full Route Daily Timetable')}`;
             document.getElementById('timetableSubtitle').textContent = `${t('Operated by')} ${t(route.operator)} | ${t('Total Sailings:')} ${route.trips.length}`;
             
             let tableHtml = `<table class="w-full text-left text-xs border-collapse"><thead><tr class="bg-[#0f172a] text-gray-300 border-b border-white/10"><th class="p-2.5 font-bold">#</th><th class="p-2.5 font-bold">${t('Departure')}</th><th class="p-2.5 font-bold">${t('Stops & Route Details')}</th><th class="p-2.5 font-bold">${t('Final Terminus')}</th><th class="p-2.5 font-bold">${t('ETA')}</th></tr></thead><tbody class="divide-y divide-white/5">`;
             route.trips.forEach((trip, idx) => {
-                const fStop = trip.stops[0], lStop = trip.stops[trip.stops.length-1];
-                tableHtml += `<tr class="hover:bg-white/5 transition"><td class="p-2.5 text-gray-500 font-mono">${idx+1}</td><td class="p-2.5 font-bold text-[#2dd4bf] font-mono text-sm">${fStop.t}</td><td class="p-2.5 text-gray-300">${trip.stops.map(s => `${t(route.piers[s.p]\vert{}\vert{}s.p)}(${s.t})`).join(' ➔ ')}</td><td class="p-2.5 font-semibold text-white">${t(route.piers[lStop.p]||lStop.p)}</td><td class="p-2.5 text-gray-300 font-mono">${lStop.t}</td></tr>`;
+                const fStop = trip.stops[0], lStop = trip.stops[trip.stops.length - 1];
+                tableHtml += `<tr class="hover:bg-white/5 transition"><td class="p-2.5 text-gray-500 font-mono">${idx + 1}</td><td class="p-2.5 font-bold text-[#2dd4bf] font-mono text-sm">${fStop.t}</td><td class="p-2.5 text-gray-300">${trip.stops.map(s => `${t(route.piers[s.p] \vert{}\vert{} s.p)} (${s.t})`).join(' ➔ ')}</td><td class="p-2.5 font-semibold text-white">${t(route.piers[lStop.p] || lStop.p)}</td><td class="p-2.5 text-gray-300 font-mono">${lStop.t}</td></tr>`;
             });
             document.getElementById('timetableContent').innerHTML = tableHtml + `</tbody></table>`;
         }
 
         function openFareModal() {
-            const route = scheduleData[routeSelect.value]; if(!route || routeSelect.value === 'GPS_MODE') return alert(t('Please select a specific route to view full timetable.'));
+            const route = scheduleData[routeSelect.value]; 
+            if (!route || routeSelect.value === 'GPS_MODE') return alert(t('Please select a specific route to view full timetable.'));
             document.getElementById('fareModalRouteTitle').textContent = t(route.name);
             document.getElementById('fareModalOperator').textContent = `${t('Operated by')} ${t(route.operator)}`;
             
             const f = route.fares || {};
             let fHtml = typeof f.adultWeekday === 'number' || f.currency ? 
-                `<div class="bg-[#0f172a] rounded-xl border border-white/10 overflow-hidden"><table class="w-full text-left text-xs text-gray-300"><thead class="bg-white/5 border-b border-white/10 text-gray-400"><tr><th class="p-2.5 font-medium">${t('Passenger Type')}</th><th class="p-2.5 font-medium">${t('Mon - Sat')}</th><th class="p-2.5 font-medium">${t('Sun & Holiday')}</th></tr></thead><tbody class="divide-y divide-white/5"><tr class="hover:bg-white/5 transition"><td class="p-2.5 text-white font-semibold">${t('Adult')}</td><td class="p-2.5 text-emerald-400 font-bold">${f.currency||'HK$'}${Number(f.adultWeekday).toFixed(2)}</td><td class="p-2.5 text-amber-400 font-bold">${f.currency||'HK$'}${Number(f.adultHoliday).toFixed(2)}</td></tr></tbody></table></div>` : 
-                `<div class="bg-[#0f172a] rounded-xl p-3.5 border border-white/10 space-y-2"><div class="flex justify-between text-sm"><span class="text-gray-400">${t('Mondays to Saturdays (Non-Holidays):')}</span><span class="text-emerald-400 font-bold">${t_fare(f.adultWeekday)}</span></div></div>`;
+                `<div class="bg-[#0f172a] rounded-xl border border-white/10 overflow-hidden"><table class="w-full text-left text-xs text-gray-300"><thead class="bg-white/5 border-b border-white/10 text-gray-400"><tr><th class="p-2.5 font-medium">${t('Passenger Type')}</th><th class="p-2.5 font-medium">${t('Mon - Sat')}</th><th class="p-2.5 font-medium">${t('Sun & Holiday')}</th></tr></thead><tbody class="divide-y divide-white/5"><tr class="hover:bg-white/5 transition"><td class="p-2.5 text-white font-semibold">${t('Adult')}</td><td class="p-2.5 text-emerald-400 font-bold">${f.currency || 'HK$'}${Number(f.adultWeekday).toFixed(2)}</td><td class="p-2.5 text-amber-400 font-bold">${f.currency || 'HK$'}${Number(f.adultHoliday).toFixed(2)}</td></tr></tbody></table></div>` : 
+                `<div class="bg-[#0f172a] rounded-xl p-3.5 border border-white/10 space-y-2"><div class="flex justify-between text-sm"><span class="text-gray-400">${t('Mondays to Saturdays (Non-Holidays):')}</span><span class="text-emerald-400 font-bold">${t_fare(f.adultWeekday)}</span></div><div class="flex justify-between text-sm"><span class="text-gray-400">${t('Sundays & HK Public Holidays:')}</span><span class="text-amber-400 font-bold">${t_fare(f.adultHoliday)}</span></div></div>`;
+            
             document.getElementById('fareModalContent').innerHTML = fHtml;
             document.getElementById('fareModal').classList.remove('hidden');
         }
