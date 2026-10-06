@@ -1,4 +1,4 @@
-<!-- VERSION: 2026-10-06 21:00:00 HKT - Replaced Categories with LocalStorage Recent Routes -->
+<!-- VERSION: 2026-10-06 21:10:00 HKT - Commute History (Route + Pier) Patch -->
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -105,12 +105,11 @@
         };
     </script>
 
-    <!-- Cache Busting Tags -->
-    <script src="routes/islands-major.js?v=202610062100"></script>
-    <script src="routes/lamma-routes.js?v=202610062100"></script>
-    <script src="routes/harbour-routes.js?v=202610062100"></script>
-    <script src="routes/kaito-routes.js?v=202610062100"></script>
-    <script src="routes/regional-macau.js?v=202610062100"></script>
+    <script src="routes/islands-major.js?v=202610062110"></script>
+    <script src="routes/lamma-routes.js?v=202610062110"></script>
+    <script src="routes/harbour-routes.js?v=202610062110"></script>
+    <script src="routes/kaito-routes.js?v=202610062110"></script>
+    <script src="routes/regional-macau.js?v=202610062110"></script>
 </head>
 <body class="min-h-screen flex flex-col items-center p-2 sm:p-6 text-gray-100">
 
@@ -119,7 +118,7 @@
         <div class="bg-[#0f172a] px-3 py-2 flex justify-between items-center border-b border-white/5 text-[10px] sm:text-xs font-medium text-gray-400">
             <div class="flex items-center space-x-2">
                 <span id="liveClock" class="font-mono text-gray-300 font-semibold tracking-wide">--:--:--</span>
-                <span class="text-[9px] bg-white/10 text-white/50 px-1.5 py-0.5 rounded shadow-inner tracking-wider">Build: 2026-10-06 21:00</span>
+                <span class="text-[9px] bg-white/10 text-white/50 px-1.5 py-0.5 rounded shadow-inner tracking-wider">Build: 2026-10-06 21:10</span>
             </div>
             <select id="langSelect" class="bg-white/5 text-white border border-white/10 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf]">
                 <option value="en">EN</option>
@@ -150,8 +149,8 @@
                     </button>
                 </div>
 
-                <!-- Recent Routes Container -->
-                <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 hide-scrollbar text-[10px] sm:text-xs min-h-[28px]" id="recentRoutesContainer">
+                <!-- Upgraded Quick Commute Bar: Saves specific Route AND Pier direction -->
+                <div class="flex items-center space-x-2 overflow-x-auto pb-1 hide-scrollbar min-h-[38px] mt-2" id="recentRoutesContainer">
                     <!-- Populated via JS LocalStorage -->
                 </div>
             </div>
@@ -240,7 +239,7 @@
                 'Sai Kung Pier ➔ Yim Tin Tsai': '西貢 ➔ 鹽田梓', 'Sai Kung Pier ➔ Kau Sai Village / High Island': '西貢 ➔ 滘西村/糧船灣',
                 'Ma Liu Shui ➔ Sham Chung ➔ Lai Chi Chong ➔ Tap Mun ➔ Wong Shek': '馬料水➔深涌➔荔枝莊➔塔門➔黃石',
                 'Ma Liu Shui ➔ Tung Ping Chau': '馬料水 ➔ 東平洲', 'Sha Tau Kok / Ma Liu Shui ➔ Kat O ➔ Ap Chau': '沙頭角/馬料水 ➔ 吉澳 ➔ 鴨洲',
-                'Sha Tau Kok ➔ Lai Chi Wo': '沙頭角 ➔ 荔枝窩', 'Tuen Mun ➔ Tung Chung ➔ Sha Lo Wan ➔ Tai O': '屯門 ➔ 東涌 ➔ 沙螺灣 ➔ 大澳',
+                'Sha Tau Kok ➔ Lai Chi Wo': '沙头角 ➔ 荔枝窩', 'Tuen Mun ➔ Tung Chung ➔ Sha Lo Wan ➔ Tai O': '屯門 ➔ 東涌 ➔ 沙螺灣 ➔ 大澳',
                 'Park Island ➔ Central': '珀麗灣 ➔ 中環', 'Park Island ➔ Tsuen Wan': '珀麗灣 ➔ 荃灣', 'Sam Ka Tsuen ➔ Tung Lung Chau': '三家村 ➔ 東龍洲',
                 'Hong Kong (Sheung Wan) ➔ Macau Outer Harbour': '香港(上環) ➔ 澳門外港', 'Hong Kong (Sheung Wan) ➔ Macau Taipa': '香港(上環) ➔ 澳門氹仔',
                 'Central': '中環', 'Central Pier 2': '中環2號碼頭', 'Central Pier 3': '中環3號碼頭', 'Central Pier 4': '中環4號碼頭', 'Central Pier 5': '中環5號碼頭', 'Central Pier 6': '中環6號碼頭', 'Central Pier 7': '中環7號碼頭', 'Central Pier 8': '中環8號碼頭',
@@ -290,7 +289,7 @@
         let isHolidayPricingToday = false;
         let globalWeatherWarningHtml = '';
         let scheduleData = {};
-        const RECENT_ROUTES_KEY = 'pulseFerryRecentRoutes';
+        const RECENT_ROUTES_KEY = 'pulseFerryCommutes_v2'; // Unique key to ignore old string-only cache
 
         const pierCoordinates = {
             'Central Pier 2': {lat: 22.28738, lng: 114.15767}, 'Central Pier 3': {lat: 22.28723, lng: 114.15831},
@@ -322,7 +321,6 @@
             fetchWeatherDisruptions();
             
             populateRoutes();
-            renderRecentRoutes();
             updateLiveClock();
 
             setInterval(updateLiveClock, 1000);
@@ -344,21 +342,28 @@
             if (gpsBtn) gpsBtn.addEventListener('click', handleGPSClick);
 
             const routeSelect = document.getElementById('routeSelect');
+            const pierSelect = document.getElementById('pierSelect');
+
             if (routeSelect) {
                 routeSelect.addEventListener('change', () => { 
-                    if (routeSelect.value !== 'GPS_MODE' && routeSelect.value !== '') {
-                        currentGpsPierName = null; 
-                        updateRecentRoutes(routeSelect.value);
-                    }
+                    if (routeSelect.value !== 'GPS_MODE') currentGpsPierName = null; 
                     populatePiers(); 
+                    if (routeSelect.value !== 'GPS_MODE' && routeSelect.value !== '') {
+                        updateRecentRoutes(routeSelect.value, pierSelect ? pierSelect.value : '');
+                    }
                     renderSchedule(); 
                     renderRecentRoutes();
                 });
             }
 
-            const pierSelect = document.getElementById('pierSelect');
             if (pierSelect) {
-                pierSelect.addEventListener('change', () => renderSchedule());
+                pierSelect.addEventListener('change', () => {
+                    if (routeSelect.value !== 'GPS_MODE' && routeSelect.value !== '') {
+                        updateRecentRoutes(routeSelect.value, pierSelect.value);
+                    }
+                    renderSchedule();
+                    renderRecentRoutes();
+                });
             }
 
             const swapBtn = document.getElementById('swapDirectionBtn');
@@ -366,7 +371,11 @@
                 swapBtn.addEventListener('click', () => { 
                     if (pierSelect && pierSelect.options.length > 1) {
                         pierSelect.selectedIndex = (pierSelect.selectedIndex + 1) % pierSelect.options.length; 
+                        if (routeSelect.value !== 'GPS_MODE' && routeSelect.value !== '') {
+                            updateRecentRoutes(routeSelect.value, pierSelect.value);
+                        }
                         renderSchedule(); 
+                        renderRecentRoutes();
                     }
                 });
             }
@@ -392,17 +401,23 @@
                 });
             }
 
+            // Initial load sequence
             populatePiers();
             renderSchedule();
+            renderRecentRoutes();
         }
 
-        // Local Storage Methods for Recent Routes
-        function updateRecentRoutes(routeKey) {
-            if (!routeKey || routeKey === 'GPS_MODE') return;
+        // Local Storage Methods for Recent Commutes (Route + Pier)
+        function updateRecentRoutes(routeKey, pierKey) {
+            if (!routeKey || routeKey === 'GPS_MODE' || !pierKey) return;
             let recents = JSON.parse(localStorage.getItem(RECENT_ROUTES_KEY) || '[]');
-            recents = recents.filter(k => k !== routeKey); // Remove if exists
-            recents.unshift(routeKey); // Push to front
-            if (recents.length > 5) recents.pop(); // Keep max 5
+            
+            // Remove exact combination if it exists to push it to the front
+            recents = recents.filter(item => !(item.r === routeKey && item.p === pierKey));
+            
+            recents.unshift({r: routeKey, p: pierKey});
+            if (recents.length > 4) recents.pop(); // Keep exactly 4 max buttons
+            
             localStorage.setItem(RECENT_ROUTES_KEY, JSON.stringify(recents));
         }
 
@@ -411,7 +426,8 @@
             if (!container) return;
             
             let recents = JSON.parse(localStorage.getItem(RECENT_ROUTES_KEY) || '[]');
-            recents = recents.filter(k => scheduleData[k]); // Filter invalid keys
+            // Filter invalid keys from memory
+            recents = recents.filter(item => scheduleData[item.r] && scheduleData[item.r].piers && scheduleData[item.r].piers[item.p]);
 
             if (recents.length === 0) {
                 container.innerHTML = `<span class="text-gray-500 italic px-2">${t('Your recent routes will appear here')}</span>`;
@@ -419,21 +435,31 @@
             }
 
             const routeSelect = document.getElementById('routeSelect');
-            const currentRoute = routeSelect ? routeSelect.value : '';
+            const pierSelect = document.getElementById('pierSelect');
+            const currentR = routeSelect ? routeSelect.value : '';
+            const currentP = pierSelect ? pierSelect.value : '';
 
             let html = `<span class="text-gray-400 font-semibold px-1 shrink-0 flex items-center"><svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>`;
             
-            recents.forEach(key => {
-                const routeName = t(scheduleData[key].name);
-                const isSelected = (currentRoute === key);
-                const bgClass = isSelected ? 'bg-[#2dd4bf] text-slate-900 font-bold' : 'bg-white/5 hover:bg-white/10 text-gray-300 font-medium';
-                html += `<button class="px-2.5 py-1 rounded-lg shadow transition shrink-0 ${bgClass}" onclick="selectRecentRoute('${key}')">${routeName}</button>`;
+            recents.forEach(item => {
+                const route = scheduleData[item.r];
+                const routeName = t(route.name);
+                const pierName = t(route.piers[item.p]);
+                const isSelected = (currentR === item.r && currentP === item.p);
+                const bgClass = isSelected ? 'bg-[#2dd4bf] text-slate-900 shadow-md ring-1 ring-teal-400' : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5';
+                
+                html += `
+                <button class="px-2.5 py-1.5 rounded-lg transition shrink-0 flex flex-col items-start text-left ${bgClass}" onclick="selectRecentRoute('${item.r}', '${item.p}')">
+                    <span class="text-[10px] sm:text-[11px] font-bold leading-tight tracking-tight">${routeName}</span>
+                    <span class="text-[8px] sm:text-[9px] font-medium opacity-80 leading-tight mt-0.5">${t('Depart from')} ${pierName}</span>
+                </button>`;
             });
             container.innerHTML = html;
         }
 
-        window.selectRecentRoute = function(key) {
+        window.selectRecentRoute = function(r, p) {
             const routeSelect = document.getElementById('routeSelect');
+            const pierSelect = document.getElementById('pierSelect');
             const searchInput = document.getElementById('searchInput');
             const clearSearchBtn = document.getElementById('clearSearch');
             
@@ -444,9 +470,14 @@
             populateRoutes(); 
             
             if (routeSelect) {
-                routeSelect.value = key;
-                updateRecentRoutes(key);
+                routeSelect.value = r;
                 populatePiers();
+                
+                if (pierSelect) {
+                    pierSelect.value = p;
+                }
+                
+                updateRecentRoutes(r, p);
                 renderSchedule();
                 renderRecentRoutes();
             }
@@ -519,7 +550,7 @@
                         if (routeSelect) routeSelect.value = 'GPS_MODE';
                         populatePiers();
                         renderSchedule();
-                        renderRecentRoutes(); // Renders without highlights
+                        renderRecentRoutes(); 
                     }
                     if (btnText) btnText.textContent = t('Nearest Pier');
                 }, () => {
@@ -633,7 +664,7 @@
             if (routeKey === 'GPS_MODE') {
                 const opt = document.createElement('option'); 
                 opt.value = 'ALL_DEST'; 
-                opt.textContent = `🗺️️ ${t('All Destinations')}`;
+                opt.textContent = `🗺️ ${t('All Destinations')}`;
                 pierSelect.appendChild(opt); 
                 return;
             }
