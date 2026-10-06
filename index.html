@@ -1,4 +1,4 @@
-<!-- VERSION: 2026-10-06 20:50:00 HKT - Operator Badges Purged & Clean Card Header -->
+<!-- VERSION: 2026-10-06 21:00:00 HKT - Replaced Categories with LocalStorage Recent Routes -->
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -106,11 +106,11 @@
     </script>
 
     <!-- Cache Busting Tags -->
-    <script src="routes/islands-major.js?v=202610062050"></script>
-    <script src="routes/lamma-routes.js?v=202610062050"></script>
-    <script src="routes/harbour-routes.js?v=202610062050"></script>
-    <script src="routes/kaito-routes.js?v=202610062050"></script>
-    <script src="routes/regional-macau.js?v=202610062050"></script>
+    <script src="routes/islands-major.js?v=202610062100"></script>
+    <script src="routes/lamma-routes.js?v=202610062100"></script>
+    <script src="routes/harbour-routes.js?v=202610062100"></script>
+    <script src="routes/kaito-routes.js?v=202610062100"></script>
+    <script src="routes/regional-macau.js?v=202610062100"></script>
 </head>
 <body class="min-h-screen flex flex-col items-center p-2 sm:p-6 text-gray-100">
 
@@ -119,7 +119,7 @@
         <div class="bg-[#0f172a] px-3 py-2 flex justify-between items-center border-b border-white/5 text-[10px] sm:text-xs font-medium text-gray-400">
             <div class="flex items-center space-x-2">
                 <span id="liveClock" class="font-mono text-gray-300 font-semibold tracking-wide">--:--:--</span>
-                <span class="text-[9px] bg-white/10 text-white/50 px-1.5 py-0.5 rounded shadow-inner tracking-wider">Build: 2026-10-06 20:50</span>
+                <span class="text-[9px] bg-white/10 text-white/50 px-1.5 py-0.5 rounded shadow-inner tracking-wider">Build: 2026-10-06 21:00</span>
             </div>
             <select id="langSelect" class="bg-white/5 text-white border border-white/10 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf]">
                 <option value="en">EN</option>
@@ -150,12 +150,9 @@
                     </button>
                 </div>
 
-                <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 hide-scrollbar text-[10px] sm:text-xs" id="categoryContainer">
-                    <button class="cat-pill px-2.5 py-1 rounded-lg bg-[#2dd4bf] text-slate-900 font-bold shadow transition shrink-0" data-cat="all" data-i18n="All Routes">All Routes</button>
-                    <button class="cat-pill px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="islands" data-i18n="Outlying Islands">Outlying Islands</button>
-                    <button class="cat-pill px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="harbour" data-i18n="Victoria Harbour">Victoria Harbour</button>
-                    <button class="cat-pill px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="aberdeen" data-i18n="Aberdeen & Lamma">Aberdeen & Lamma</button>
-                    <button class="cat-pill px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="saikung" data-i18n="Sai Kung & Wong Shek">Sai Kung & Wong Shek</button>
+                <!-- Recent Routes Container -->
+                <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 hide-scrollbar text-[10px] sm:text-xs min-h-[28px]" id="recentRoutesContainer">
+                    <!-- Populated via JS LocalStorage -->
                 </div>
             </div>
 
@@ -215,9 +212,7 @@
             'zh-TW': {
                 'Pulse HK Ferry': 'Pulse 香港渡輪',
                 'Nearest Pier': '最近碼頭', 'Locating...': '定位中...', 'Location disabled or unavailable': '無法取得位置',
-                'Search route or pier...': '搜尋航線或碼頭...', 'All Routes': '所有航線', 'Outlying Islands': '離島',
-                'Victoria Harbour': '維多利亞港', 'Aberdeen & Lamma': '香港仔及南丫島', 'Sai Kung & Wong Shek': '西貢及黃石',
-                'Tolo Harbour & North': '吐露港及新界北', 'Lantau West & Tuen Mun': '大嶼山西及屯門', 'Macau Cross-Boundary': '澳門跨境',
+                'Search route or pier...': '搜尋航線或碼頭...',
                 'Ferry Route': '渡輪航線', 'Routes': '條航線', 'Route': '條航線', 'No routes match your search / filter': '沒有符合條件的航線',
                 'Departure Pier': '出發碼頭', 'Swap Direction': '切換方向', 'Swap': '切換', 'Depart from': '由',
                 'All Destinations': '所有目的地', 'Holiday Fare Notice:': '假日票價提示：', 'Sunday & HK Public Holiday fare rates apply today.': '今日適用星期日及公眾假期票價。',
@@ -231,6 +226,7 @@
                 'Rough Sea Conditions Warning': '海面大浪警告', 'High winds detected (Gusts up to': '偵測到強風 (陣風高達',
                 'km/h). Ferry services may experience delays, heavy rocking, or sudden suspensions. Check with operators.': '公里/小時)。渡輪服務可能會延誤、劇烈搖晃或突然暫停。請向營運商查詢。',
                 'Breezy Sea Conditions': '海面有風', 'Moderate winds detected. Ferries are operating normally but expect a bumpier ride than usual.': '偵測到中等風力。渡輪正常運作，但航程可能較平常顛簸。',
+                'Your recent routes will appear here': '您最近搜尋的航線將顯示於此',
                 'Central ➔ Cheung Chau': '中環 ➔ 長洲', 'Central ➔ Mui Wo': '中環 ➔ 梅窩', 'Central ➔ Peng Chau': '中環 ➔ 坪洲',
                 'Central ➔ Lamma Island (Yung Shue Wan)': '中環 ➔ 南丫島(榕樹灣)', 'Central ➔ Lamma Island (Sok Kwu Wan)': '中環 ➔ 南丫島(索罟灣)',
                 'Central ➔ Discovery Bay': '中環 ➔ 愉景灣', 'Inter-Islands: Peng Chau ➔ Mui Wo ➔ Chi Ma Wan ➔ Cheung Chau': '橫水渡: 坪洲➔梅窩➔芝麻灣➔長洲',
@@ -253,9 +249,7 @@
             'zh-CN': {
                 'Pulse HK Ferry': 'Pulse 香港渡轮',
                 'Nearest Pier': '最近码头', 'Locating...': '定位中...', 'Location disabled or unavailable': '无法获取位置',
-                'Search route or pier...': '搜索航线或码头...', 'All Routes': '所有航线', 'Outlying Islands': '离岛',
-                'Victoria Harbour': '维多利亚港', 'Aberdeen & Lamma': '香港仔及南丫岛', 'Sai Kung & Wong Shek': '西贡及黄石',
-                'Tolo Harbour & North': '吐露港及新界北', 'Lantau West & Tuen Mun': '大屿山西及屯门', 'Macau Cross-Boundary': '澳门跨境',
+                'Search route or pier...': '搜索航线或码头...', 
                 'Ferry Route': '渡轮航线', 'Routes': '条航线', 'Route': '条航线', 'No routes match your search / filter': '没有符合条件的航线',
                 'Departure Pier': '出发码头', 'Swap Direction': '切换方向', 'Swap': '切换', 'Depart from': '由',
                 'All Destinations': '所有目的地', 'Holiday Fare Notice:': '假日票价提示：', 'Sunday & HK Public Holiday fare rates apply today.': '今日适用星期日及公众假期票价。',
@@ -269,6 +263,7 @@
                 'Rough Sea Conditions Warning': '海面大浪警告', 'High winds detected (Gusts up to': '侦测到强风 (阵风高达',
                 'km/h). Ferry services may experience delays, heavy rocking, or sudden suspensions. Check with operators.': '公里/小时)。渡轮服务可能会延误、剧烈摇晃或突然暂停。请向营运商查询。',
                 'Breezy Sea Conditions': '海面有风', 'Moderate winds detected. Ferries are operating normally but expect a bumpier ride than usual.': '侦测到中等风力。渡轮正常运作，但航程可能较平常颠簸。',
+                'Your recent routes will appear here': '您最近搜寻的航线将显示于此',
                 'Central ➔ Cheung Chau': '中环 ➔ 长洲', 'Central ➔ Mui Wo': '中环 ➔ 梅窝', 'Central ➔ Peng Chau': '中环 ➔ 坪洲',
                 'Central ➔ Lamma Island (Yung Shue Wan)': '中环 ➔ 南丫岛(榕树湾)', 'Central ➔ Lamma Island (Sok Kwu Wan)': '中环 ➔ 南丫岛(索罟湾)',
                 'Central ➔ Discovery Bay': '中环 ➔ 愉景湾', 'Inter-Islands: Peng Chau ➔ Mui Wo ➔ Chi Ma Wan ➔ Cheung Chau': '横水渡: 坪洲➔梅窝➔芝麻湾➔长洲',
@@ -295,6 +290,7 @@
         let isHolidayPricingToday = false;
         let globalWeatherWarningHtml = '';
         let scheduleData = {};
+        const RECENT_ROUTES_KEY = 'pulseFerryRecentRoutes';
 
         const pierCoordinates = {
             'Central Pier 2': {lat: 22.28738, lng: 114.15767}, 'Central Pier 3': {lat: 22.28723, lng: 114.15831},
@@ -326,6 +322,7 @@
             fetchWeatherDisruptions();
             
             populateRoutes();
+            renderRecentRoutes();
             updateLiveClock();
 
             setInterval(updateLiveClock, 1000);
@@ -339,6 +336,7 @@
                     populateRoutes();
                     populatePiers();
                     renderSchedule();
+                    renderRecentRoutes();
                 });
             }
 
@@ -348,9 +346,13 @@
             const routeSelect = document.getElementById('routeSelect');
             if (routeSelect) {
                 routeSelect.addEventListener('change', () => { 
-                    if (routeSelect.value !== 'GPS_MODE') currentGpsPierName = null; 
+                    if (routeSelect.value !== 'GPS_MODE' && routeSelect.value !== '') {
+                        currentGpsPierName = null; 
+                        updateRecentRoutes(routeSelect.value);
+                    }
                     populatePiers(); 
                     renderSchedule(); 
+                    renderRecentRoutes();
                 });
             }
 
@@ -390,31 +392,79 @@
                 });
             }
 
-            document.querySelectorAll('.cat-pill').forEach(pill => {
-                pill.addEventListener('click', () => {
-                    currentGpsPierName = null;
-                    document.querySelectorAll('.cat-pill').forEach(p => {
-                        p.classList.remove('bg-[#2dd4bf]', 'text-slate-900', 'font-bold');
-                        p.classList.add('bg-white/5', 'text-gray-300', 'font-medium');
-                    });
-                    pill.classList.remove('bg-white/5', 'text-gray-300', 'font-medium');
-                    pill.classList.add('bg-[#2dd4bf]', 'text-slate-900', 'font-bold');
-                    
-                    window.currentActiveCategory = pill.dataset.cat;
-                    populateRoutes();
-                    populatePiers();
-                    renderSchedule();
-                });
-            });
-
             populatePiers();
             renderSchedule();
         }
+
+        // Local Storage Methods for Recent Routes
+        function updateRecentRoutes(routeKey) {
+            if (!routeKey || routeKey === 'GPS_MODE') return;
+            let recents = JSON.parse(localStorage.getItem(RECENT_ROUTES_KEY) || '[]');
+            recents = recents.filter(k => k !== routeKey); // Remove if exists
+            recents.unshift(routeKey); // Push to front
+            if (recents.length > 5) recents.pop(); // Keep max 5
+            localStorage.setItem(RECENT_ROUTES_KEY, JSON.stringify(recents));
+        }
+
+        function renderRecentRoutes() {
+            const container = document.getElementById('recentRoutesContainer');
+            if (!container) return;
+            
+            let recents = JSON.parse(localStorage.getItem(RECENT_ROUTES_KEY) || '[]');
+            recents = recents.filter(k => scheduleData[k]); // Filter invalid keys
+
+            if (recents.length === 0) {
+                container.innerHTML = `<span class="text-gray-500 italic px-2">${t('Your recent routes will appear here')}</span>`;
+                return;
+            }
+
+            const routeSelect = document.getElementById('routeSelect');
+            const currentRoute = routeSelect ? routeSelect.value : '';
+
+            let html = `<span class="text-gray-400 font-semibold px-1 shrink-0 flex items-center"><svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>`;
+            
+            recents.forEach(key => {
+                const routeName = t(scheduleData[key].name);
+                const isSelected = (currentRoute === key);
+                const bgClass = isSelected ? 'bg-[#2dd4bf] text-slate-900 font-bold' : 'bg-white/5 hover:bg-white/10 text-gray-300 font-medium';
+                html += `<button class="px-2.5 py-1 rounded-lg shadow transition shrink-0 ${bgClass}" onclick="selectRecentRoute('${key}')">${routeName}</button>`;
+            });
+            container.innerHTML = html;
+        }
+
+        window.selectRecentRoute = function(key) {
+            const routeSelect = document.getElementById('routeSelect');
+            const searchInput = document.getElementById('searchInput');
+            const clearSearchBtn = document.getElementById('clearSearch');
+            
+            if (searchInput) searchInput.value = ''; 
+            if (clearSearchBtn) clearSearchBtn.classList.add('hidden');
+            
+            currentGpsPierName = null; 
+            populateRoutes(); 
+            
+            if (routeSelect) {
+                routeSelect.value = key;
+                updateRecentRoutes(key);
+                populatePiers();
+                renderSchedule();
+                renderRecentRoutes();
+            }
+        };
 
         function t(text) {
             if (!text) return '';
             if (currentLang === 'en') return text;
             return (i18n[currentLang] && i18n[currentLang][text]) ? i18n[currentLang][text] : text;
+        }
+
+        function t_fare(fareStr) {
+            if (currentLang === 'en') return fareStr;
+            let translated = fareStr;
+            ['(Ord)', '(Fast)', '(Single Ticket)', '(Roundtrip)'].forEach(term => {
+                translated = translated.replace(term, t(term));
+            });
+            return translated;
         }
 
         function applyTranslations() {
@@ -458,16 +508,7 @@
                     const nearest = findNearestPierAndRoute(position.coords.latitude, position.coords.longitude);
                     if (nearest.pierName) {
                         currentGpsPierName = nearest.pierName;
-                        document.querySelectorAll('.cat-pill').forEach(p => {
-                            p.classList.remove('bg-[#2dd4bf]', 'text-slate-900', 'font-bold');
-                            p.classList.add('bg-white/5', 'text-gray-300', 'font-medium');
-                        });
-                        const allPill = document.querySelector('.cat-pill[data-cat="all"]');
-                        if (allPill) {
-                            allPill.classList.remove('bg-white/5', 'text-gray-300', 'font-medium');
-                            allPill.classList.add('bg-[#2dd4bf]', 'text-slate-900', 'font-bold');
-                        }
-                        window.currentActiveCategory = 'all';
+                        
                         const sInput = document.getElementById('searchInput');
                         const cSearch = document.getElementById('clearSearch');
                         if (sInput) sInput.value = ''; 
@@ -478,6 +519,7 @@
                         if (routeSelect) routeSelect.value = 'GPS_MODE';
                         populatePiers();
                         renderSchedule();
+                        renderRecentRoutes(); // Renders without highlights
                     }
                     if (btnText) btnText.textContent = t('Nearest Pier');
                 }, () => {
@@ -552,9 +594,7 @@
             routeSelect.innerHTML = '';
             let matchedCount = 0;
 
-            const activeCat = window.currentActiveCategory || 'all';
-
-            if (currentGpsPierName && query === '' && activeCat === 'all') {
+            if (currentGpsPierName && query === '') {
                 const option = document.createElement('option');
                 option.value = 'GPS_MODE'; 
                 option.textContent = `📍 ${t('Departing from')} ${t(currentGpsPierName)}`;
@@ -562,7 +602,6 @@
             }
 
             for (const [key, route] of Object.entries(scheduleData)) {
-                if (activeCat !== 'all' && route.category !== activeCat) continue;
                 if (query !== '') {
                     const pierNames = Object.values(route.piers || {});
                     const translatedPiers = pierNames.map(p => t(p));
@@ -594,7 +633,7 @@
             if (routeKey === 'GPS_MODE') {
                 const opt = document.createElement('option'); 
                 opt.value = 'ALL_DEST'; 
-                opt.textContent = `🗺️ ${t('All Destinations')}`;
+                opt.textContent = `🗺️️ ${t('All Destinations')}`;
                 pierSelect.appendChild(opt); 
                 return;
             }
@@ -751,12 +790,12 @@
                 let vesselBadge = '';
                 if (dep.hasMixedVessels || routeKey === 'GPS_MODE') {
                     if (dep.vesselType === 'fast') {
-                        vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">⚡ ${t('Fast Ferry')}</span>`;
+                        vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border-sky-500/30 border">⚡ ${t('Fast Ferry')}</span>`;
                     } else {
-                        vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">⛴️ ${t('Ordinary Ferry')}${dep.cargo ? ' 📦' : ''}</span>`;
+                        vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border-amber-500/30 border">⛴️ ${t('Ordinary Ferry')}${dep.cargo ? ' 📦' : ''}</span>`;
                     }
                 } else if (dep.cargo) {
-                    vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-500/20 text-gray-300 border border-gray-500/30">📦 ${t('Cargo OK')}</span>`;
+                    vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-500/20 text-gray-300 border-gray-500/30 border">📦 ${t('Cargo OK')}</span>`;
                 }
 
                 let displayFare = '';
