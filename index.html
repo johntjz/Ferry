@@ -1,11 +1,10 @@
-<!-- VERSION: 2026-10-06 20:25:00 HKT - Complete UI Streamline & Fatal Crash Fix -->
+<!-- VERSION: 2026-10-06 20:30:00 HKT - Vessel Badge, Pricing Logic & UX Purge -->
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pulse HK Ferry</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -14,12 +13,8 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#f0fdfa',
-                            100: '#ccfbf1',
-                            400: '#2dd4bf',
-                            500: '#14b8a6',
-                            600: '#0d9488',
-                            900: '#134e4a',
+                            50: '#f0fdfa', 100: '#ccfbf1', 400: '#2dd4bf',
+                            500: '#14b8a6', 600: '#0d9488', 900: '#134e4a',
                         }
                     }
                 }
@@ -40,19 +35,15 @@
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-        .fade-in {
-            animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+        .fade-in { animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 
-    <!-- Global Ferry Core Registry (Hardened with safety checks) -->
     <script>
         window.PulseFerry = {
             scheduleData: {},
@@ -85,12 +76,8 @@
             },
             generateDirectional: function(p1, p2, outbound, inbound, travelMins) {
                 const trips = [];
-                outbound.forEach(tm => {
-                    trips.push({ stops: [{ p: p1, t: tm }, { p: p2, t: this.addMins(tm, travelMins) }], duration: travelMins });
-                });
-                inbound.forEach(tm => {
-                    trips.push({ stops: [{ p: p2, t: tm }, { p: p1, t: this.addMins(tm, travelMins) }], duration: travelMins });
-                });
+                outbound.forEach(tm => trips.push({ stops: [{ p: p1, t: tm }, { p: p2, t: this.addMins(tm, travelMins) }], duration: travelMins }));
+                inbound.forEach(tm => trips.push({ stops: [{ p: p2, t: tm }, { p: p1, t: this.addMins(tm, travelMins) }], duration: travelMins }));
                 return trips;
             },
             registerRoute: function(key, data) {
@@ -118,7 +105,6 @@
         };
     </script>
 
-    <!-- Modular Route Files -->
     <script src="routes/islands-major.js"></script>
     <script src="routes/lamma-routes.js"></script>
     <script src="routes/harbour-routes.js"></script>
@@ -127,14 +113,12 @@
 </head>
 <body class="min-h-screen flex flex-col items-center p-2 sm:p-6 text-gray-100">
 
-    <!-- Top Navigation / Brand Bar -->
     <header class="w-full max-w-4xl bg-[#1e293b] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col mb-4 ring-1 ring-white/10">
         
-        <!-- Live System Status Bar -->
         <div class="bg-[#0f172a] px-3 py-2 flex justify-between items-center border-b border-white/5 text-[10px] sm:text-xs font-medium text-gray-400">
             <div class="flex items-center space-x-2">
                 <span id="liveClock" class="font-mono text-gray-300 font-semibold tracking-wide">--:--:--</span>
-                <span class="text-[9px] bg-white/10 text-white/50 px-1.5 py-0.5 rounded shadow-inner tracking-wider">Build: 2026-10-06 20:25</span>
+                <span class="text-[9px] bg-white/10 text-white/50 px-1.5 py-0.5 rounded shadow-inner tracking-wider">Build: 2026-10-06 20:30</span>
             </div>
             <select id="langSelect" class="bg-white/5 text-white border border-white/10 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf]">
                 <option value="en">EN</option>
@@ -143,9 +127,7 @@
             </select>
         </div>
 
-        <!-- Control Header (Optimized for Mobile) -->
         <div class="p-3 sm:p-5 space-y-3">
-            
             <div class="flex items-center justify-between gap-2">
                 <h1 class="text-lg sm:text-xl font-bold text-white tracking-tight" data-i18n="Pulse HK Ferry">Pulse HK Ferry</h1>
                 <div class="flex items-center space-x-1.5">
@@ -153,11 +135,9 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         <span id="gpsBtnText" data-i18n="Nearest Pier">Nearest Pier</span>
                     </button>
-                    <!-- Fare Tables and Timetable modals successfully removed to streamline UX -->
                 </div>
             </div>
 
-            <!-- Quick Filter Categories & Search Bar -->
             <div class="space-y-2.5 pt-1">
                 <div class="relative w-full">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -169,20 +149,15 @@
                     </button>
                 </div>
 
-                <!-- Category Pills -->
                 <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 hide-scrollbar text-[10px] sm:text-xs" id="categoryContainer">
                     <button class="cat-pill px-2.5 py-1 rounded-lg bg-[#2dd4bf] text-slate-900 font-bold shadow transition shrink-0" data-cat="all" data-i18n="All Routes">All Routes</button>
                     <button class="cat-pill px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="islands" data-i18n="Outlying Islands">Outlying Islands</button>
                     <button class="cat-pill px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="harbour" data-i18n="Victoria Harbour">Victoria Harbour</button>
                     <button class="cat-pill px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="aberdeen" data-i18n="Aberdeen & Lamma">Aberdeen & Lamma</button>
                     <button class="cat-pill px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="saikung" data-i18n="Sai Kung & Wong Shek">Sai Kung & Wong Shek</button>
-                    <button class="cat-pill px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="tolo" data-i18n="Tolo Harbour & North">Tolo Harbour & North</button>
-                    <button class="cat-pill px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="lantau" data-i18n="Lantau West & Tuen Mun">Lantau West & Tuen Mun</button>
-                    <button class="cat-pill px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-medium transition shrink-0" data-cat="macau" data-i18n="Macau Cross-Boundary">Macau Cross-Boundary</button>
                 </div>
             </div>
 
-            <!-- Route & Departure Pier Selectors -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                 <div class="space-y-1">
                     <label for="routeSelect" class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide flex justify-between">
@@ -190,8 +165,7 @@
                         <span id="routeCountBadge" class="text-[#2dd4bf]">0 Routes</span>
                     </label>
                     <div class="relative">
-                        <select id="routeSelect" class="w-full appearance-none bg-[#0f172a] border border-white/10 text-white rounded-lg px-2.5 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf] focus:border-transparent transition shadow-inner text-xs sm:text-sm font-semibold truncate">
-                        </select>
+                        <select id="routeSelect" class="w-full appearance-none bg-[#0f172a] border border-white/10 text-white rounded-lg px-2.5 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf] focus:border-transparent transition shadow-inner text-xs sm:text-sm font-semibold truncate"></select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
                             <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
@@ -207,8 +181,7 @@
                         </button>
                     </div>
                     <div class="relative">
-                        <select id="pierSelect" class="w-full appearance-none bg-[#0f172a] border border-white/10 text-white rounded-lg px-2.5 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf] focus:border-transparent transition shadow-inner text-xs sm:text-sm font-semibold truncate">
-                        </select>
+                        <select id="pierSelect" class="w-full appearance-none bg-[#0f172a] border border-white/10 text-white rounded-lg px-2.5 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf] focus:border-transparent transition shadow-inner text-xs sm:text-sm font-semibold truncate"></select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
                             <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
@@ -218,12 +191,9 @@
         </div>
     </header>
 
-    <!-- Sunday & Statutory HK Public Holiday Banner -->
     <div id="holidayBanner" class="w-full max-w-4xl mb-4 hidden fade-in">
         <div class="bg-amber-500/15 border border-amber-500/30 rounded-xl p-3 flex items-start space-x-2.5 text-amber-200 shadow-sm">
-            <svg class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-            </svg>
+            <svg class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             <div class="text-[11px] sm:text-xs">
                 <span class="font-bold text-amber-300" id="holidayTitle" data-i18n="Holiday Fare Notice:">Holiday Fare Notice:</span>
                 <span id="holidayMessage" data-i18n="Sunday & HK Public Holiday fare rates apply today.">Sunday & HK Public Holiday fare rates apply today.</span>
@@ -231,7 +201,6 @@
         </div>
     </div>
 
-    <!-- Schedule Cards List View Container -->
     <main id="scheduleContainer" class="w-full max-w-4xl space-y-3 pb-12">
         <div class="text-center text-gray-500 py-10 bg-[#1e293b] rounded-xl border border-white/5">
             <div class="w-6 h-6 border-2 border-[#2dd4bf] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
@@ -240,7 +209,6 @@
     </main>
 
     <script>
-        // Extremely trimmed Translation Dictionary without Timetable/Modal entries
         const i18n = {
             'en': {},
             'zh-TW': {
@@ -262,7 +230,6 @@
                 'Rough Sea Conditions Warning': '海面大浪警告', 'High winds detected (Gusts up to': '偵測到強風 (陣風高達',
                 'km/h). Ferry services may experience delays, heavy rocking, or sudden suspensions. Check with operators.': '公里/小時)。渡輪服務可能會延誤、劇烈搖晃或突然暫停。請向營運商查詢。',
                 'Breezy Sea Conditions': '海面有風', 'Moderate winds detected. Ferries are operating normally but expect a bumpier ride than usual.': '偵測到中等風力。渡輪正常運作，但航程可能較平常顛簸。',
-                // Standard Route Translations mappings...
                 'Central ➔ Cheung Chau': '中環 ➔ 長洲', 'Central ➔ Mui Wo': '中環 ➔ 梅窩', 'Central ➔ Peng Chau': '中環 ➔ 坪洲',
                 'Central ➔ Lamma Island (Yung Shue Wan)': '中環 ➔ 南丫島(榕樹灣)', 'Central ➔ Lamma Island (Sok Kwu Wan)': '中環 ➔ 南丫島(索罟灣)',
                 'Central ➔ Discovery Bay': '中環 ➔ 愉景灣', 'Inter-Islands: Peng Chau ➔ Mui Wo ➔ Chi Ma Wan ➔ Cheung Chau': '橫水渡: 坪洲➔梅窩➔芝麻灣➔長洲',
@@ -302,7 +269,6 @@
                 'Rough Sea Conditions Warning': '海面大浪警告', 'High winds detected (Gusts up to': '侦测到强风 (阵风高达',
                 'km/h). Ferry services may experience delays, heavy rocking, or sudden suspensions. Check with operators.': '公里/小时)。渡轮服务可能会延误、剧烈摇晃或突然暂停。请向营运商查询。',
                 'Breezy Sea Conditions': '海面有风', 'Moderate winds detected. Ferries are operating normally but expect a bumpier ride than usual.': '侦测到中等风力。渡轮正常运作，但航程可能较平常颠簸。',
-                // Standard Route Translations mapping...
                 'Central ➔ Cheung Chau': '中环 ➔ 长洲', 'Central ➔ Mui Wo': '中环 ➔ 梅窝', 'Central ➔ Peng Chau': '中环 ➔ 坪洲',
                 'Central ➔ Lamma Island (Yung Shue Wan)': '中环 ➔ 南丫岛(榕树湾)', 'Central ➔ Lamma Island (Sok Kwu Wan)': '中环 ➔ 南丫岛(索罟湾)',
                 'Central ➔ Discovery Bay': '中环 ➔ 愉景湾', 'Inter-Islands: Peng Chau ➔ Mui Wo ➔ Chi Ma Wan ➔ Cheung Chau': '横水渡: 坪洲➔梅窝➔芝麻湾➔长洲',
@@ -325,14 +291,12 @@
             }
         };
 
-        // UI Core State
         let currentLang = localStorage.getItem('pulseFerryLang') || 'en';
         let currentGpsPierName = null;
         let isHolidayPricingToday = false;
         let globalWeatherWarningHtml = '';
-        let scheduleData = {}; // Safely initialized on DOM Load
+        let scheduleData = {};
 
-        // GPS Coordinates Database for major piers
         const pierCoordinates = {
             'Central Pier 2': {lat: 22.28738, lng: 114.15767}, 'Central Pier 3': {lat: 22.28723, lng: 114.15831},
             'Central Pier 4': {lat: 22.28704, lng: 114.15897}, 'Central Pier 5': {lat: 22.28682, lng: 114.15975},
@@ -345,12 +309,7 @@
             'Aberdeen Promenade Pier': {lat: 22.2472, lng: 114.1557}, 'Aberdeen Landing': {lat: 22.2472, lng: 114.1557},
             'Yung Shue Wan': {lat: 22.2268, lng: 114.1120}, 'Sok Kwu Wan': {lat: 22.2045, lng: 114.1302},
             'Cheung Chau': {lat: 22.2081, lng: 114.0287}, 'Mui Wo': {lat: 22.2646, lng: 114.0016},
-            'Peng Chau': {lat: 22.2836, lng: 114.0378}, 'Discovery Bay': {lat: 22.2965, lng: 114.0205},
-            'Park Island Ferry Pier': {lat: 22.3486, lng: 114.0620}, 'Tsuen Wan Pier': {lat: 22.3664, lng: 114.1087},
-            'Tuen Mun Ferry Pier': {lat: 22.3698, lng: 113.9610}, 'Tung Chung Development Pier': {lat: 22.2941, lng: 113.9405},
-            'Tai O Pier': {lat: 22.2541, lng: 113.8617}, 'Sai Kung Public Pier': {lat: 22.3815, lng: 114.2743},
-            'Wong Shek Pier': {lat: 22.4332, lng: 114.3361}, 'Ma Liu Shui Landing 3': {lat: 22.4165, lng: 114.2120},
-            'Macau Outer Harbour Ferry Terminal': {lat: 22.1966, lng: 113.5559}, 'Macau Taipa Ferry Terminal': {lat: 22.1625, lng: 113.5786}
+            'Peng Chau': {lat: 22.2836, lng: 114.0378}, 'Discovery Bay': {lat: 22.2965, lng: 114.0205}
         };
 
         const HK_PUBLIC_HOLIDAYS = {
@@ -358,11 +317,8 @@
             "2027-01-01": "New Year's Day", "2027-02-06": "Lunar New Year's Day"
         };
 
-        // --- Core Application Logic ---
         function initApp() {
-            // Safe Initialization
             scheduleData = window.PulseFerry?.scheduleData || {};
-            
             const langSelect = document.getElementById('langSelect');
             if (langSelect) langSelect.value = currentLang;
             
@@ -373,11 +329,9 @@
             populateRoutes();
             updateLiveClock();
 
-            // Set timers
             setInterval(updateLiveClock, 1000);
             setInterval(renderSchedule, 15000);
 
-            // Setup Listeners Safely
             if (langSelect) {
                 langSelect.addEventListener('change', (e) => {
                     currentLang = e.target.value;
@@ -454,25 +408,14 @@
                 });
             });
 
-            // Initial Render
             populatePiers();
             renderSchedule();
         }
 
-        // Translations utility
         function t(text) {
             if (!text) return '';
             if (currentLang === 'en') return text;
             return (i18n[currentLang] && i18n[currentLang][text]) ? i18n[currentLang][text] : text;
-        }
-
-        function t_fare(fareStr) {
-            if (currentLang === 'en') return fareStr;
-            let translated = fareStr;
-            ['(Ord)', '(Fast)', '(Single Ticket)', '(Roundtrip)'].forEach(term => {
-                translated = translated.replace(term, t(term));
-            });
-            return translated;
         }
 
         function applyTranslations() {
@@ -480,7 +423,6 @@
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = t(el.getAttribute('data-i18n-placeholder')));
         }
 
-        // Distance & GPS
         function getDistance(lat1, lon1, lat2, lon2) {
             const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -546,7 +488,6 @@
             }
         }
 
-        // Live Clock & Status checks
         function updateLiveClock() {
             const now = new Date();
             const liveClockEl = document.getElementById('liveClock');
@@ -599,10 +540,9 @@
                         </div>`;
                 }
                 renderSchedule();
-            } catch(e) { } // Fail gracefully
+            } catch(e) {}
         }
 
-        // Data Population
         function populateRoutes() {
             const searchInput = document.getElementById('searchInput');
             const routeSelect = document.getElementById('routeSelect');
@@ -669,16 +609,13 @@
             }
         }
 
-        // Departure Extraction (Hardened)
         function parseTimeToDate(timeStr) {
-            if (!timeStr || typeof timeStr !== 'string') return new Date(); // Safety fallback
+            if (!timeStr || typeof timeStr !== 'string') return new Date();
             const parts = timeStr.split(':');
             if (parts.length < 2) return new Date();
             
             const now = new Date();
-            const hours = Number(parts[0]);
-            const minutes = Number(parts[1]);
-            let targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+            let targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), Number(parts[0]), Number(parts[1]), 0);
             
             if (now.getTime() - targetDate.getTime() > 12 * 60 * 60 * 1000) targetDate.setDate(targetDate.getDate() + 1);
             else if (targetDate.getTime() - now.getTime() > 20 * 60 * 60 * 1000) targetDate.setDate(targetDate.getDate() - 1);
@@ -689,6 +626,8 @@
         function extractDeparturesForRoute(route, pierKey, now, isWeekend) {
             const deps = [];
             if (!route || !route.trips || !Array.isArray(route.trips)) return deps;
+
+            const hasMixedVessels = route.trips.some(t => t.vesselType === 'fast') && route.trips.some(t => t.vesselType === 'ordinary');
 
             route.trips.forEach(trip => {
                 if (trip.weekdayOnly && isWeekend) return;
@@ -723,9 +662,10 @@
                             etaDestination: finalStop.t,
                             countdownMins: diffMinutes,
                             travelDurationMins: (arrMins - depMins + 1440) % 1440,
-                            vesselType: trip.vesselType || '', 
+                            vesselType: trip.vesselType || 'ordinary', 
                             cargo: trip.cargo || false,
-                            routeFares: route.fares || null
+                            routeFares: route.fares || null,
+                            hasMixedVessels: hasMixedVessels
                         });
                     }
                 }
@@ -733,7 +673,6 @@
             return deps;
         }
 
-        // Render UI
         function renderSchedule() {
             const routeSelect = document.getElementById('routeSelect');
             const pierSelect = document.getElementById('pierSelect');
@@ -808,13 +747,41 @@
                 if (dep.nextStop !== dep.destination) {
                     nextStopHtml = `<span class="text-[10px] text-gray-400 ml-1 mt-0.5">${t('Next Stop:')} <strong class="text-gray-200 font-semibold">${t(dep.nextStop)} (${dep.nextStopTime})</strong></span>`;
                 }
-                
+
+                let vesselBadge = '';
+                if (dep.hasMixedVessels || routeKey === 'GPS_MODE') {
+                    if (dep.vesselType === 'fast') {
+                        vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border-sky-500/30 border">⚡ ${t('Fast Ferry')}</span>`;
+                    } else {
+                        vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border-amber-500/30 border">⛴️ ${t('Ordinary Ferry')}${dep.cargo ? ' 📦' : ''}</span>`;
+                    }
+                } else if (dep.cargo) {
+                    vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-500/20 text-gray-300 border-gray-500/30 border">📦 ${t('Cargo OK')}</span>`;
+                }
+
                 let displayFare = '';
                 if (dep.routeFares) {
                     let activeFare = isHolidayPricingToday ? dep.routeFares.adultHoliday : dep.routeFares.adultWeekday;
                     if (activeFare !== undefined && activeFare !== null) {
                         let currency = dep.routeFares.currency === 'HKD' ? 'HK$' : (dep.routeFares.currency || 'HK$');
-                        displayFare = typeof activeFare === 'string' ? t_fare(activeFare) : `${currency}${Number(activeFare).toFixed(1)}`;
+                        
+                        if (typeof activeFare === 'string') {
+                            if (activeFare.includes('/')) {
+                                const parts = activeFare.split('/');
+                                let matched = activeFare;
+                                if (dep.vesselType === 'fast') {
+                                    matched = parts.find(p => p.toLowerCase().includes('fast')) || activeFare;
+                                } else {
+                                    matched = parts.find(p => p.toLowerCase().includes('ord') || p.toLowerCase().includes('slow')) || parts[0];
+                                }
+                                displayFare = matched.replace(/\(fast\)|\(ord\)|\(ordinary\)/ig, '').trim();
+                            } else {
+                                displayFare = activeFare.replace(/\(fast\)|\(ord\)|\(ordinary\)/ig, '').trim();
+                            }
+                            if (/^[\d.]+$/.test(displayFare)) displayFare = currency + displayFare;
+                        } else {
+                            displayFare = `${currency}${Number(activeFare).toFixed(1)}`;
+                        }
                     }
                 }
 
@@ -828,9 +795,7 @@
                                 </div>
                                 <div class="mt-1 flex items-center space-x-2 flex-wrap gap-y-1">
                                     <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-800 text-teal-300 border border-teal-500/30 uppercase">${t(dep.operator)}</span>
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded ${dep.vesselType === 'fast' ? 'bg-sky-500/20 text-sky-300 border-sky-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'} border">
-                                        ${dep.vesselType === 'fast' ? '⚡ ' + t('Fast Ferry') : '⛴️ ' + t('Ordinary Ferry') + (dep.cargo ? ' 📦' : '')}
-                                    </span>
+                                    ${vesselBadge}
                                     ${nextStopHtml}
                                 </div>
                             </div>
@@ -863,7 +828,6 @@
             scheduleContainer.innerHTML = newContentHtml;
         }
 
-        // Fire Initialization Safely
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
