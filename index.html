@@ -1,4 +1,4 @@
-<!-- VERSION: 2026-10-06 20:30:00 HKT - Vessel Badge, Pricing Logic & UX Purge -->
+<!-- VERSION: 2026-10-06 20:40:00 HKT - Cache Bust & Final UI Hardening -->
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -105,6 +105,7 @@
         };
     </script>
 
+    <!-- Modular Route Files (Ensure these files are updated with 2026 pricing) -->
     <script src="routes/islands-major.js"></script>
     <script src="routes/lamma-routes.js"></script>
     <script src="routes/harbour-routes.js"></script>
@@ -118,7 +119,7 @@
         <div class="bg-[#0f172a] px-3 py-2 flex justify-between items-center border-b border-white/5 text-[10px] sm:text-xs font-medium text-gray-400">
             <div class="flex items-center space-x-2">
                 <span id="liveClock" class="font-mono text-gray-300 font-semibold tracking-wide">--:--:--</span>
-                <span class="text-[9px] bg-white/10 text-white/50 px-1.5 py-0.5 rounded shadow-inner tracking-wider">Build: 2026-10-06 20:30</span>
+                <span class="text-[9px] bg-white/10 text-white/50 px-1.5 py-0.5 rounded shadow-inner tracking-wider">Build: 2026-10-06 20:40</span>
             </div>
             <select id="langSelect" class="bg-white/5 text-white border border-white/10 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf]">
                 <option value="en">EN</option>
@@ -309,7 +310,12 @@
             'Aberdeen Promenade Pier': {lat: 22.2472, lng: 114.1557}, 'Aberdeen Landing': {lat: 22.2472, lng: 114.1557},
             'Yung Shue Wan': {lat: 22.2268, lng: 114.1120}, 'Sok Kwu Wan': {lat: 22.2045, lng: 114.1302},
             'Cheung Chau': {lat: 22.2081, lng: 114.0287}, 'Mui Wo': {lat: 22.2646, lng: 114.0016},
-            'Peng Chau': {lat: 22.2836, lng: 114.0378}, 'Discovery Bay': {lat: 22.2965, lng: 114.0205}
+            'Peng Chau': {lat: 22.2836, lng: 114.0378}, 'Discovery Bay': {lat: 22.2965, lng: 114.0205},
+            'Park Island Ferry Pier': {lat: 22.3486, lng: 114.0620}, 'Tsuen Wan Pier': {lat: 22.3664, lng: 114.1087},
+            'Tuen Mun Ferry Pier': {lat: 22.3698, lng: 113.9610}, 'Tung Chung Development Pier': {lat: 22.2941, lng: 113.9405},
+            'Tai O Pier': {lat: 22.2541, lng: 113.8617}, 'Sai Kung Public Pier': {lat: 22.3815, lng: 114.2743},
+            'Wong Shek Pier': {lat: 22.4332, lng: 114.3361}, 'Ma Liu Shui Landing 3': {lat: 22.4165, lng: 114.2120},
+            'Macau Outer Harbour Ferry Terminal': {lat: 22.1966, lng: 113.5559}, 'Macau Taipa Ferry Terminal': {lat: 22.1625, lng: 113.5786}
         };
 
         const HK_PUBLIC_HOLIDAYS = {
@@ -627,7 +633,10 @@
             const deps = [];
             if (!route || !route.trips || !Array.isArray(route.trips)) return deps;
 
-            const hasMixedVessels = route.trips.some(t => t.vesselType === 'fast') && route.trips.some(t => t.vesselType === 'ordinary');
+            // Accurate Mixed Vessel Check
+            const hasFast = route.trips.some(t => t.vesselType === 'fast');
+            const hasOrd = route.trips.some(t => t.vesselType === 'ordinary' || !t.vesselType);
+            const hasMixedVessels = hasFast && hasOrd;
 
             route.trips.forEach(trip => {
                 if (trip.weekdayOnly && isWeekend) return;
