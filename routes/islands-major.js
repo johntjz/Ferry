@@ -191,8 +191,8 @@ window.PulseFerry.registerRoute("inter-islands", {
     operator: "Sun Ferry",
     piers: { "PC": "Peng Chau", "MW": "Mui Wo", "CMW": "Chi Ma Wan", "CC": "Cheung Chau" },
     fares: { 
-        adultWeekday: "HK$15.20", 
-        adultHoliday: "HK$15.20" 
+        adultWeekday: "HK$16.30", 
+        adultHoliday: "HK$23.90" 
     },
     trips: [
         { stops: [{ p: "PC", t: "05:40" }, { p: "MW", t: "06:00" }, { p: "CMW", t: "06:15" }, { p: "CC", t: "06:35" }] },
