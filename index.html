@@ -1,4 +1,4 @@
-<!-- VERSION: 2026-10-07 17:25:40 HKT - Hybrid Live API Engine Patch (Cloudflare Proxy) -->
+<!-- VERSION: 2026-10-07 17:31:01 HKT - Hybrid Live API Engine Patch (Waterfall Proxy & Footer Version) -->
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -105,11 +105,11 @@
         };
     </script>
 
-    <script src="routes/islands-major.js?v=202610071040"></script>
-    <script src="routes/lamma-routes.js?v=202610071040"></script>
-    <script src="routes/harbour-routes.js?v=202610071040"></script>
-    <script src="routes/kaito-routes.js?v=202610071040"></script>
-    <script src="routes/regional-macau.js?v=202610071040"></script>
+    <script src="routes/islands-major.js?v=202610071731"></script>
+    <script src="routes/lamma-routes.js?v=202610071731"></script>
+    <script src="routes/harbour-routes.js?v=202610071731"></script>
+    <script src="routes/kaito-routes.js?v=202610071731"></script>
+    <script src="routes/regional-macau.js?v=202610071731"></script>
 </head>
 <body class="min-h-screen flex flex-col items-center p-2 sm:p-6 text-gray-100">
 
@@ -206,12 +206,19 @@
         </div>
     </div>
 
-    <main id="scheduleContainer" class="w-full max-w-4xl space-y-3 pb-12">
+    <main id="scheduleContainer" class="w-full max-w-4xl space-y-3 pb-6">
         <div class="text-center text-gray-500 py-10 bg-[#1e293b] rounded-xl border border-white/5">
             <div class="w-6 h-6 border-2 border-[#2dd4bf] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
             <span class="text-xs" data-i18n="Loading departure schedules...">Loading departure schedules...</span>
         </div>
     </main>
+
+    <!-- Version Control Footer -->
+    <footer class="w-full max-w-4xl text-center pb-8 mt-2">
+        <div class="text-[10px] text-gray-500 font-mono">
+            Pulse HK Ferry v2.0 | Build: 2026-10-07 17:31:01 HKT
+        </div>
+    </footer>
 
     <script>
         const i18n = {
@@ -411,19 +418,50 @@
             }
         }
 
-        // Fetch using the local Cloudflare API endpoint
+        // Waterfall Strategy: Local Cloudflare Proxy -> AllOrigins -> CodeTabs
         async function fetchLiveETAs() {
-            try {
-                fetch('/api/eta?operator=hkkf', { cache: 'no-store' })
-                    .then(res => { if(!res.ok) throw new Error("API Offline"); return res.json(); })
-                    .then(data => { liveETAs.hkkf = data; apiStatus.hkkf = 'ok'; updateStatusUI(); renderSchedule(); })
-                    .catch(e => { apiStatus.hkkf = 'error'; updateStatusUI(); renderSchedule(); });
+            const hkkfUrl = encodeURIComponent('https://www.hkkfeta.com/opendata/eta/');
+            const sunUrl = encodeURIComponent('https://www.sunferry.com.hk/eta/');
 
-                fetch('/api/eta?operator=sun', { cache: 'no-store' })
-                    .then(res => { if(!res.ok) throw new Error("API Offline"); return res.json(); })
-                    .then(data => { liveETAs.sun = data; apiStatus.sun = 'ok'; updateStatusUI(); renderSchedule(); })
-                    .catch(e => { apiStatus.sun = 'error'; updateStatusUI(); renderSchedule(); });
-            } catch (e) {}
+            const fetchWithFallback = async (operator, rawUrl) => {
+                const endpoints = [
+                    `/api/eta?operator=${operator}`, 
+                    `https://api.allorigins.win/raw?url=${rawUrl}`,
+                    `https://api.codetabs.com/v1/proxy?quest=${decodeURIComponent(rawUrl)}`
+                ];
+
+                for (let url of endpoints) {
+                    try {
+                        const res = await fetch(url, { cache: 'no-store' });
+                        if (res.ok) {
+                            const data = await res.json();
+                            return data; 
+                        }
+                    } catch (e) {
+                        console.warn(`Fetch failed for ${url}:`, e);
+                    }
+                }
+                throw new Error("All endpoints failed");
+            };
+
+            try {
+                const hkkfData = await fetchWithFallback('hkkf', hkkfUrl);
+                liveETAs.hkkf = hkkfData; 
+                apiStatus.hkkf = 'ok';
+            } catch (e) {
+                apiStatus.hkkf = 'error';
+            }
+
+            try {
+                const sunData = await fetchWithFallback('sun', sunUrl);
+                liveETAs.sun = sunData; 
+                apiStatus.sun = 'ok';
+            } catch (e) {
+                apiStatus.sun = 'error';
+            }
+
+            updateStatusUI(); 
+            renderSchedule();
         }
 
         async function fetchWeatherDisruptions() {
@@ -942,3 +980,4 @@
     </script>
 </body>
 </html>
+
