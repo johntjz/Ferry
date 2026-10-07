@@ -1,0 +1,42 @@
+export async function onRequest(context) {
+    const { request } = context;
+    const url = new URL(request.url);
+    const operator = url.searchParams.get('operator');
+
+    let targetUrl = '';
+    if (operator === 'hkkf') {
+        targetUrl = 'https://www.hkkfeta.com/opendata/eta/';
+    } else if (operator === 'sun') {
+        targetUrl = 'https://www.sunferry.com.hk/eta/';
+    } else {
+        return new Response(JSON.stringify({ error: 'Invalid operator' }), { 
+            status: 400,
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        });
+    }
+
+    try {
+        // Fetch from the Ferry API server-side to bypass browser CORS
+        const response = await fetch(targetUrl, {
+            headers: {
+                'User-Agent': 'Pulse-HK-Ferry-Proxy/1.0',
+                'Accept': 'application/json'
+            }
+        });
+        
+        const data = await response.text();
+
+        // Return the data to your frontend with the correct CORS headers
+        return new Response(data, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        });
+    } catch (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        });
+    }
+}
