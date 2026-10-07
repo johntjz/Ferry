@@ -1,4 +1,4 @@
-<!-- VERSION: 2026-10-07 17:31:01 HKT - Hybrid Live API Engine Patch (Waterfall Proxy & Footer Version) -->
+<!-- VERSION: 2026-10-07 18:37:00 HKT - Hybrid Live API Engine Patch (Parallel Race & Timeout) -->
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -105,11 +105,11 @@
         };
     </script>
 
-    <script src="routes/islands-major.js?v=202610071731"></script>
-    <script src="routes/lamma-routes.js?v=202610071731"></script>
-    <script src="routes/harbour-routes.js?v=202610071731"></script>
-    <script src="routes/kaito-routes.js?v=202610071731"></script>
-    <script src="routes/regional-macau.js?v=202610071731"></script>
+    <script src="routes/islands-major.js?v=202610071837"></script>
+    <script src="routes/lamma-routes.js?v=202610071837"></script>
+    <script src="routes/harbour-routes.js?v=202610071837"></script>
+    <script src="routes/kaito-routes.js?v=202610071837"></script>
+    <script src="routes/regional-macau.js?v=202610071837"></script>
 </head>
 <body class="min-h-screen flex flex-col items-center p-2 sm:p-6 text-gray-100">
 
@@ -216,7 +216,7 @@
     <!-- Version Control Footer -->
     <footer class="w-full max-w-4xl text-center pb-8 mt-2">
         <div class="text-[10px] text-gray-500 font-mono">
-            Pulse HK Ferry v2.0 | Build: 2026-10-07 17:31:01 HKT
+            Pulse HK Ferry v2.0 | Build: 2026-10-07 18:37:00 HKT
         </div>
     </footer>
 
@@ -418,50 +418,49 @@
             }
         }
 
-        // Waterfall Strategy: Local Cloudflare Proxy -> AllOrigins -> CodeTabs
         async function fetchLiveETAs() {
             const hkkfUrl = encodeURIComponent('https://www.hkkfeta.com/opendata/eta/');
             const sunUrl = encodeURIComponent('https://www.sunferry.com.hk/eta/');
 
-            const fetchWithFallback = async (operator, rawUrl) => {
+            // Network race with a strict 4-second timeout
+            const fetchWithRace = async (operator, rawUrl) => {
                 const endpoints = [
                     `/api/eta?operator=${operator}`, 
                     `https://api.allorigins.win/raw?url=${rawUrl}`,
                     `https://api.codetabs.com/v1/proxy?quest=${decodeURIComponent(rawUrl)}`
                 ];
 
-                for (let url of endpoints) {
+                // Promise.any fires all requests simultaneously and resolves on the FIRST success
+                return Promise.any(endpoints.map(async (url) => {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout
+
                     try {
-                        const res = await fetch(url, { cache: 'no-store' });
-                        if (res.ok) {
-                            const data = await res.json();
-                            return data; 
-                        }
+                        const res = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+                        clearTimeout(timeoutId);
+                        if (!res.ok) throw new Error(`HTTP ${res.status} on ${url}`);
+                        return await res.json();
                     } catch (e) {
-                        console.warn(`Fetch failed for ${url}:`, e);
+                        clearTimeout(timeoutId);
+                        throw e; // Promise.any ignores errors until ALL endpoints fail
                     }
-                }
-                throw new Error("All endpoints failed");
+                }));
             };
 
-            try {
-                const hkkfData = await fetchWithFallback('hkkf', hkkfUrl);
-                liveETAs.hkkf = hkkfData; 
-                apiStatus.hkkf = 'ok';
-            } catch (e) {
-                apiStatus.hkkf = 'error';
-            }
-
-            try {
-                const sunData = await fetchWithFallback('sun', sunUrl);
-                liveETAs.sun = sunData; 
-                apiStatus.sun = 'ok';
-            } catch (e) {
-                apiStatus.sun = 'error';
-            }
-
-            updateStatusUI(); 
-            renderSchedule();
+            // Fetch both ferry operators at the same time to prevent blocking
+            Promise.allSettled([
+                fetchWithRace('hkkf', hkkfUrl)
+                    .then(data => { liveETAs.hkkf = data; apiStatus.hkkf = 'ok'; })
+                    .catch(() => { apiStatus.hkkf = 'error'; }),
+                    
+                fetchWithRace('sun', sunUrl)
+                    .then(data => { liveETAs.sun = data; apiStatus.sun = 'ok'; })
+                    .catch(() => { apiStatus.sun = 'error'; })
+            ]).then(() => {
+                // Guaranteed to run within 4 seconds
+                updateStatusUI(); 
+                renderSchedule();
+            });
         }
 
         async function fetchWeatherDisruptions() {
@@ -980,4 +979,3 @@
     </script>
 </body>
 </html>
-
