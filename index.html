@@ -1,4 +1,4 @@
-<!-- VERSION: 2026-10-07 10:40:00 HKT - Hybrid Live API Engine Patch -->
+<!-- VERSION: 2026-10-07 10:45:00 HKT - Hybrid Live API Engine Patch (Obvious Status) -->
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -116,10 +116,23 @@
     <header class="w-full max-w-4xl bg-[#1e293b] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col mb-4 ring-1 ring-white/10">
         
         <div class="bg-[#0f172a] px-3 py-2 flex justify-between items-center border-b border-white/5 text-[10px] sm:text-xs font-medium text-gray-400">
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-3">
                 <span id="liveClock" class="font-mono text-gray-300 font-semibold tracking-wide">--:--:--</span>
-                <span class="text-[9px] bg-white/10 text-white/50 px-1.5 py-0.5 rounded shadow-inner tracking-wider">Build: 2026-10-07 10:40</span>
+                
+                <!-- NEW: Obvious API Status Indicators -->
+                <div class="flex items-center space-x-2 bg-white/5 px-2 py-0.5 rounded shadow-inner border border-white/5">
+                    <div id="statusWeather" class="flex items-center space-x-1.5" title="Weather API Status">
+                        <span class="w-1.5 h-1.5 rounded-full bg-gray-500 animate-pulse"></span>
+                        <span class="text-[9px] uppercase tracking-wider" data-i18n="WXR Load">WXR Load</span>
+                    </div>
+                    <span class="text-white/20">|</span>
+                    <div id="statusETA" class="flex items-center space-x-1.5" title="Live ETA API Status">
+                        <span class="w-1.5 h-1.5 rounded-full bg-gray-500 animate-pulse"></span>
+                        <span class="text-[9px] uppercase tracking-wider" data-i18n="ETA Load">ETA Load</span>
+                    </div>
+                </div>
             </div>
+            
             <select id="langSelect" class="bg-white/5 text-white border border-white/10 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf]">
                 <option value="en">EN</option>
                 <option value="zh-TW">繁體</option>
@@ -148,10 +161,7 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
-
-                <div class="flex items-center space-x-2 overflow-x-auto pb-1 hide-scrollbar min-h-[38px] mt-2" id="recentRoutesContainer">
-                    <!-- Populated via JS LocalStorage -->
-                </div>
+                <div class="flex items-center space-x-2 overflow-x-auto pb-1 hide-scrollbar min-h-[38px] mt-2" id="recentRoutesContainer"></div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
@@ -223,25 +233,10 @@
                 'Rough Sea Conditions Warning': '海面大浪警告', 'High winds detected (Gusts up to': '偵測到強風 (陣風高達',
                 'km/h). Ferry services may experience delays, heavy rocking, or sudden suspensions. Check with operators.': '公里/小時)。渡輪服務可能會延誤、劇烈搖晃或突然暫停。請向營運商查詢。',
                 'Breezy Sea Conditions': '海面有風', 'Moderate winds detected. Ferries are operating normally but expect a bumpier ride than usual.': '偵測到中等風力。渡輪正常運作，但航程可能較平常顛簸。',
-                'Your recent routes will appear here': '您最近搜尋的航線將顯示於此',
-                'Central ➔ Cheung Chau': '中環 ➔ 長洲', 'Central ➔ Mui Wo': '中環 ➔ 梅窩', 'Central ➔ Peng Chau': '中環 ➔ 坪洲',
-                'Central ➔ Lamma Island (Yung Shue Wan)': '中環 ➔ 南丫島(榕樹灣)', 'Central ➔ Lamma Island (Sok Kwu Wan)': '中環 ➔ 南丫島(索罟灣)',
-                'Central ➔ Discovery Bay': '中環 ➔ 愉景灣', 'Inter-Islands: Peng Chau ➔ Mui Wo ➔ Chi Ma Wan ➔ Cheung Chau': '橫水渡: 坪洲➔梅窩➔芝麻灣➔長洲',
-                'Peng Chau ➔ Trappist Monastery ➔ Discovery Bay': '坪洲 ➔ 神樂院 ➔ 愉景灣', 'Peng Chau ➔ Hei Ling Chau': '坪洲 ➔ 喜靈洲',
-                'Central ➔ Tsim Sha Tsui': '中環 ➔ 尖沙咀', 'Wan Chai ➔ Tsim Sha Tsui': '灣仔 ➔ 尖沙咀', 'Central ➔ Hung Hom': '中環 ➔ 紅磡',
-                'North Point ➔ Hung Hom': '北角 ➔ 紅磡', 'North Point ➔ Kowloon City': '北角 ➔ 九龍城', 'North Point ➔ Kwun Tong': '北角 ➔ 觀塘',
-                'Sai Wan Ho ➔ Kwun Tong': '西灣河 ➔ 觀塘', 'Sai Wan Ho ➔ Sam Ka Tsuen (Lei Yue Mun)': '西灣河 ➔ 三家村',
-                'Tseung Kwan O (TKO) ➔ Sai Wan Ho': '將軍澳 ➔ 西灣河', 'Aberdeen ➔ Pak Kok Tsuen ➔ Yung Shue Wan': '香港仔 ➔ 北角村 ➔ 榕樹灣',
-                'Aberdeen ➔ Mo Tat Wan ➔ Sok Kwu Wan': '香港仔 ➔ 模達灣 ➔ 索罟灣', 'Aberdeen / Stanley ➔ Po Toi Island': '香港仔/赤柱 ➔ 蒲台島',
-                'Wong Shek ➔ Chek Keng ➔ Tap Mun': '黃石 ➔ 赤徑 ➔ 塔門', 'Wong Shek ➔ Wan Tsai / Nam Fung Wan': '黃石 ➔ 灣仔/南風灣',
-                'Sai Kung Pier ➔ Yim Tin Tsai': '西貢 ➔ 鹽田梓', 'Sai Kung Pier ➔ Kau Sai Village / High Island': '西貢 ➔ 滘西村/糧船灣',
-                'Ma Liu Shui ➔ Sham Chung ➔ Lai Chi Chong ➔ Tap Mun ➔ Wong Shek': '馬料水➔深涌➔荔枝莊➔塔門➔黃石',
-                'Ma Liu Shui ➔ Tung Ping Chau': '馬料水 ➔ 東平洲', 'Sha Tau Kok / Ma Liu Shui ➔ Kat O ➔ Ap Chau': '沙頭角/馬料水 ➔ 吉澳 ➔ 鴨洲',
-                'Sha Tau Kok ➔ Lai Chi Wo': '沙头角 ➔ 荔枝窩', 'Tuen Mun ➔ Tung Chung ➔ Sha Lo Wan ➔ Tai O': '屯門 ➔ 東涌 ➔ 沙螺灣 ➔ 大澳',
-                'Park Island ➔ Central': '珀麗灣 ➔ 中環', 'Park Island ➔ Tsuen Wan': '珀麗灣 ➔ 荃灣', 'Sam Ka Tsuen ➔ Tung Lung Chau': '三家村 ➔ 東龍洲',
-                'Hong Kong (Sheung Wan) ➔ Macau Outer Harbour': '香港(上環) ➔ 澳門外港', 'Hong Kong (Sheung Wan) ➔ Macau Taipa': '香港(上環) ➔ 澳門氹仔',
-                'Central': '中環', 'Central Pier 2': '中環2號碼頭', 'Central Pier 3': '中環3號碼頭', 'Central Pier 4': '中環4號碼頭', 'Central Pier 5': '中環5號碼頭', 'Central Pier 6': '中環6號碼頭', 'Central Pier 7': '中環7號碼頭', 'Central Pier 8': '中環8號碼頭',
-                'Cheung Chau': '長洲', 'Mui Wo': '梅窩', 'Peng Chau': '坪洲', 'Yung Shue Wan': '榕樹灣', 'Sok Kwu Wan': '索罟灣', 'Discovery Bay': '愉景灣', 'Discovery Bay (Nim Shue Wan)': '愉景灣(稔樹灣)'
+                'WXR Load': '載入天氣', 'WXR Online': '天氣連線', 'WXR Offline': '天氣斷線',
+                'ETA Load': '載入實時', 'ETA Online': '實時連線', 'ETA Offline': '實時斷線',
+                'Weather Service Offline': '天氣服務暫停', 'Unable to fetch live sea conditions. Please exercise caution.': '無法獲取即時海面狀況，請留意海上安全。',
+                'Your recent routes will appear here': '您最近搜尋的航線將顯示於此'
             },
             'zh-CN': {
                 'Pulse HK Ferry': 'Pulse 香港渡轮',
@@ -259,25 +254,10 @@
                 'Rough Sea Conditions Warning': '海面大浪警告', 'High winds detected (Gusts up to': '侦测到强风 (阵风高达',
                 'km/h). Ferry services may experience delays, heavy rocking, or sudden suspensions. Check with operators.': '公里/小时)。渡轮服务可能会延误、剧烈摇晃或突然暂停。请向营运商查询。',
                 'Breezy Sea Conditions': '海面有风', 'Moderate winds detected. Ferries are operating normally but expect a bumpier ride than usual.': '侦测到中等风力。渡轮正常运作，但航程可能较平常颠簸。',
-                'Your recent routes will appear here': '您最近搜寻的航线将显示于此',
-                'Central ➔ Cheung Chau': '中环 ➔ 长洲', 'Central ➔ Mui Wo': '中环 ➔ 梅窝', 'Central ➔ Peng Chau': '中环 ➔ 坪洲',
-                'Central ➔ Lamma Island (Yung Shue Wan)': '中环 ➔ 南丫岛(榕树湾)', 'Central ➔ Lamma Island (Sok Kwu Wan)': '中环 ➔ 南丫岛(索罟湾)',
-                'Central ➔ Discovery Bay': '中环 ➔ 愉景湾', 'Inter-Islands: Peng Chau ➔ Mui Wo ➔ Chi Ma Wan ➔ Cheung Chau': '横水渡: 坪洲➔梅窝➔芝麻湾➔长洲',
-                'Peng Chau ➔ Trappist Monastery ➔ Discovery Bay': '坪洲 ➔ 神乐院 ➔ 愉景湾', 'Peng Chau ➔ Hei Ling Chau': '坪洲 ➔ 喜灵洲',
-                'Central ➔ Tsim Sha Tsui': '中环 ➔ 尖沙咀', 'Wan Chai ➔ Tsim Sha Tsui': '湾仔 ➔ 尖沙咀', 'Central ➔ Hung Hom': '中环 ➔ 红磡',
-                'North Point ➔ Hung Hom': '北角 ➔ 红磡', 'North Point ➔ Kowloon City': '北角 ➔ 九龙城', 'North Point ➔ Kwun Tong': '北角 ➔ 观塘',
-                'Sai Wan Ho ➔ Kwun Tong': '西湾河 ➔ 观塘', 'Sai Wan Ho ➔ Sam Ka Tsuen (Lei Yue Mun)': '西湾河 ➔ 三家村',
-                'Tseung Kwan O (TKO) ➔ Sai Wan Ho': '将军澳 ➔ 西湾河', 'Aberdeen ➔ Pak Kok Tsuen ➔ Yung Shue Wan': '香港仔 ➔ 北角村 ➔ 榕树湾',
-                'Aberdeen ➔ Mo Tat Wan ➔ Sok Kwu Wan': '香港仔 ➔ 模达湾 ➔ 索罟湾', 'Aberdeen / Stanley ➔ Po Toi Island': '香港仔/赤柱 ➔ 蒲台岛',
-                'Wong Shek ➔ Chek Keng ➔ Tap Mun': '黄石 ➔ 赤径 ➔ 塔门', 'Wong Shek ➔ Wan Tsai / Nam Fung Wan': '黄石 ➔ 湾仔/南风湾',
-                'Sai Kung Pier ➔ Yim Tin Tsai': '西贡 ➔ 盐田梓', 'Sai Kung Pier ➔ Kau Sai Village / High Island': '西贡 ➔ 滘西村/粮船湾',
-                'Ma Liu Shui ➔ Sham Chung ➔ Lai Chi Chong ➔ Tap Mun ➔ Wong Shek': '马料水➔深涌➔荔枝庄➔塔门➔黄石',
-                'Ma Liu Shui ➔ Tung Ping Chau': '马料水 ➔ 东平洲', 'Sha Tau Kok / Ma Liu Shui ➔ Kat O ➔ Ap Chau': '沙头角/马料水 ➔ 吉澳 ➔ 鸭洲',
-                'Sha Tau Kok ➔ Lai Chi Wo': '沙头角 ➔ 荔枝窝', 'Tuen Mun ➔ Tung Chung ➔ Sha Lo Wan ➔ Tai O': '屯门 ➔ 东涌 ➔ 沙螺湾 ➔ 大澳',
-                'Park Island ➔ Central': '珀丽湾 ➔ 中环', 'Park Island ➔ Tsuen Wan': '珀丽湾 ➔ 荃湾', 'Sam Ka Tsuen ➔ Tung Lung Chau': '三家村 ➔ 东龙洲',
-                'Hong Kong (Sheung Wan) ➔ Macau Outer Harbour': '香港(上环) ➔ 澳门外港', 'Hong Kong (Sheung Wan) ➔ Macau Taipa': '香港(上环) ➔ 澳门氹仔',
-                'Central': '中环', 'Central Pier 2': '中环2号码头', 'Central Pier 3': '中环3号码头', 'Central Pier 4': '中环4号码头', 'Central Pier 5': '中环5号码头', 'Central Pier 6': '中环6号码头', 'Central Pier 7': '中环7号码头', 'Central Pier 8': '中环8号码头',
-                'Cheung Chau': '长洲', 'Mui Wo': '梅窝', 'Peng Chau': '坪洲', 'Yung Shue Wan': '榕树湾', 'Sok Kwu Wan': '索罟湾', 'Discovery Bay': '愉景湾', 'Discovery Bay (Nim Shue Wan)': '愉景湾(稔树湾)'
+                'WXR Load': '加载天气', 'WXR Online': '天气连线', 'WXR Offline': '天气断线',
+                'ETA Load': '加载实时', 'ETA Online': '实时连线', 'ETA Offline': '实时断线',
+                'Weather Service Offline': '天气服务暂停', 'Unable to fetch live sea conditions. Please exercise caution.': '无法获取即时海面状况，请留意海上安全。',
+                'Your recent routes will appear here': '您最近搜寻的航线将显示于此'
             }
         };
 
@@ -287,8 +267,9 @@
         let globalWeatherWarningHtml = '';
         let scheduleData = {};
         
-        // Live API State
+        // Live API State tracking
         let liveETAs = { hkkf: null, sun: null };
+        let apiStatus = { hkkf: 'pending', sun: 'pending', weather: 'pending' };
 
         const RECENT_ROUTES_KEY = 'pulseFerryCommutes_v2'; 
 
@@ -308,8 +289,7 @@
         };
 
         const HK_PUBLIC_HOLIDAYS = {
-            "2026-10-01": "National Day", "2026-10-18": "Chung Yeung Festival", "2026-12-25": "Christmas Day", "2026-12-26": "Boxing Day",
-            "2027-01-01": "New Year's Day", "2027-02-06": "Lunar New Year's Day"
+            "2026-10-01": "National Day", "2026-10-18": "Chung Yeung Festival", "2026-12-25": "Christmas Day", "2026-12-26": "Boxing Day"
         };
 
         function initApp() {
@@ -328,13 +308,14 @@
 
             setInterval(updateLiveClock, 1000);
             setInterval(renderSchedule, 15000);
-            setInterval(fetchLiveETAs, 30000); // Poll Live APIs every 30s
+            setInterval(fetchLiveETAs, 30000); 
 
             if (langSelect) {
                 langSelect.addEventListener('change', (e) => {
                     currentLang = e.target.value;
                     localStorage.setItem('pulseFerryLang', currentLang);
                     applyTranslations();
+                    updateStatusUI(); 
                     populateRoutes();
                     populatePiers();
                     renderSchedule();
@@ -410,21 +391,89 @@
             renderRecentRoutes();
         }
 
-        // Live API Fetcher
+        function updateStatusUI() {
+            const statusWeather = document.getElementById('statusWeather');
+            const statusETA = document.getElementById('statusETA');
+
+            if(statusWeather) {
+                if(apiStatus.weather === 'ok') {
+                    statusWeather.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_#10b981]"></span><span class="text-[9px] text-emerald-400 uppercase tracking-wider">${t('WXR Online')}</span>`;
+                } else if(apiStatus.weather === 'error') {
+                    statusWeather.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_4px_#ef4444]"></span><span class="text-[9px] text-red-400 uppercase tracking-wider">${t('WXR Offline')}</span>`;
+                }
+            }
+
+            if(statusETA) {
+                if (apiStatus.hkkf === 'error' && apiStatus.sun === 'error') {
+                    statusETA.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_4px_#ef4444]"></span><span class="text-[9px] text-red-400 uppercase tracking-wider">${t('ETA Offline')}</span>`;
+                } else if (apiStatus.hkkf === 'ok' || apiStatus.sun === 'ok') {
+                    statusETA.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_#10b981]"></span><span class="text-[9px] text-emerald-400 uppercase tracking-wider">${t('ETA Online')}</span>`;
+                }
+            }
+        }
+
+        // Live API Fetcher WITH Explicit Error Handling
         async function fetchLiveETAs() {
             try {
-                // HKKF Fetch (Silently fail on CORS)
                 fetch('https://www.hkkfeta.com/opendata/eta/', { cache: 'no-store' })
-                    .then(res => res.json())
-                    .then(data => { liveETAs.hkkf = data; renderSchedule(); })
-                    .catch(e => { /* CORS/Network fail -> silent fallback to JS DB */ });
+                    .then(res => { if(!res.ok) throw new Error("API Offline"); return res.json(); })
+                    .then(data => { liveETAs.hkkf = data; apiStatus.hkkf = 'ok'; updateStatusUI(); renderSchedule(); })
+                    .catch(e => { apiStatus.hkkf = 'error'; updateStatusUI(); renderSchedule(); });
 
-                // Sun Ferry Fetch (Silently fail on CORS)
                 fetch('https://www.sunferry.com.hk/eta/', { cache: 'no-store' })
-                    .then(res => res.json())
-                    .then(data => { liveETAs.sun = data; renderSchedule(); })
-                    .catch(e => { /* CORS/Network fail -> silent fallback to JS DB */ });
+                    .then(res => { if(!res.ok) throw new Error("API Offline"); return res.json(); })
+                    .then(data => { liveETAs.sun = data; apiStatus.sun = 'ok'; updateStatusUI(); renderSchedule(); })
+                    .catch(e => { apiStatus.sun = 'error'; updateStatusUI(); renderSchedule(); });
             } catch (e) {}
+        }
+
+        async function fetchWeatherDisruptions() {
+            try {
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=22.28&longitude=114.16&current=wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh');
+                if(!res.ok) throw new Error("Weather API Response not OK");
+                
+                apiStatus.weather = 'ok';
+                updateStatusUI();
+
+                const data = await res.json();
+                const gusts = data?.current?.wind_gusts_10m || 0;
+
+                if (gusts > 60) {
+                    globalWeatherWarningHtml = `
+                        <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mb-3 flex items-start space-x-3 fade-in shadow-inner">
+                            <span class="text-2xl mt-0.5">🌊</span>
+                            <div>
+                                <h4 class="text-red-400 font-bold text-sm">${t('Rough Sea Conditions Warning')}</h4>
+                                <p class="text-red-200/80 text-xs mt-0.5 leading-relaxed">${t('High winds detected (Gusts up to')} <strong class="text-white">${gusts}</strong> ${t('km/h). Ferry services may experience delays, heavy rocking, or sudden suspensions. Check with operators.')}</p>
+                            </div>
+                        </div>`;
+                } else if (gusts > 40) {
+                    globalWeatherWarningHtml = `
+                        <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 mb-3 flex items-start space-x-3 fade-in shadow-inner">
+                            <span class="text-2xl mt-0.5">🌬️</span>
+                            <div>
+                                <h4 class="text-amber-400 font-bold text-sm">${t('Breezy Sea Conditions')}</h4>
+                                <p class="text-amber-200/80 text-xs mt-0.5 leading-relaxed">${t('Moderate winds detected. Ferries are operating normally but expect a bumpier ride than usual.')}</p>
+                            </div>
+                        </div>`;
+                } else {
+                    globalWeatherWarningHtml = ''; // Clear explicitly if weather is good
+                }
+                renderSchedule();
+            } catch(e) {
+                // EXPLICIT FAILURE HANDLING
+                apiStatus.weather = 'error';
+                updateStatusUI();
+                globalWeatherWarningHtml = `
+                    <div class="bg-gray-500/10 border border-gray-500/30 rounded-xl p-3 mb-3 flex items-start space-x-3 fade-in shadow-inner">
+                        <span class="text-2xl mt-0.5 grayscale opacity-70">📡</span>
+                        <div>
+                            <h4 class="text-gray-300 font-bold text-sm">${t('Weather Service Offline')}</h4>
+                            <p class="text-gray-400 text-xs mt-0.5 leading-relaxed">${t('Unable to fetch live sea conditions. Please exercise caution.')}</p>
+                        </div>
+                    </div>`;
+                renderSchedule();
+            }
         }
 
         function updateRecentRoutes(routeKey, pierKey) {
@@ -457,8 +506,8 @@
             
             recents.forEach(item => {
                 const route = scheduleData[item.r];
-                const routeName = t(route.name);
-                const pierName = t(route.piers[item.p]);
+                const routeName = t(route.name) || route.name;
+                const pierName = t(route.piers[item.p]) || route.piers[item.p];
                 const isSelected = (currentR === item.r && currentP === item.p);
                 const bgClass = isSelected ? 'bg-[#2dd4bf] text-slate-900 shadow-md ring-1 ring-teal-400' : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5';
                 
@@ -486,10 +535,7 @@
             if (routeSelect) {
                 routeSelect.value = r;
                 populatePiers();
-                
-                if (pierSelect) {
-                    pierSelect.value = p;
-                }
+                if (pierSelect) pierSelect.value = p;
                 
                 updateRecentRoutes(r, p);
                 renderSchedule();
@@ -501,15 +547,6 @@
             if (!text) return '';
             if (currentLang === 'en') return text;
             return (i18n[currentLang] && i18n[currentLang][text]) ? i18n[currentLang][text] : text;
-        }
-
-        function t_fare(fareStr) {
-            if (currentLang === 'en') return fareStr;
-            let translated = fareStr;
-            ['(Ord)', '(Fast)', '(Single Ticket)', '(Roundtrip)'].forEach(term => {
-                translated = translated.replace(term, t(term));
-            });
-            return translated;
         }
 
         function applyTranslations() {
@@ -600,35 +637,6 @@
             }
         }
 
-        async function fetchWeatherDisruptions() {
-            try {
-                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=22.28&longitude=114.16&current=wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh');
-                const data = await res.json();
-                const gusts = data?.current?.wind_gusts_10m || 0;
-
-                if (gusts > 60) {
-                    globalWeatherWarningHtml = `
-                        <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mb-3 flex items-start space-x-3 fade-in shadow-inner">
-                            <span class="text-2xl mt-0.5">🌊</span>
-                            <div>
-                                <h4 class="text-red-400 font-bold text-sm">${t('Rough Sea Conditions Warning')}</h4>
-                                <p class="text-red-200/80 text-xs mt-0.5 leading-relaxed">${t('High winds detected (Gusts up to')} <strong class="text-white">${gusts}</strong> ${t('km/h). Ferry services may experience delays, heavy rocking, or sudden suspensions. Check with operators.')}</p>
-                            </div>
-                        </div>`;
-                } else if (gusts > 40) {
-                    globalWeatherWarningHtml = `
-                        <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 mb-3 flex items-start space-x-3 fade-in shadow-inner">
-                            <span class="text-2xl mt-0.5">🌬️</span>
-                            <div>
-                                <h4 class="text-amber-400 font-bold text-sm">${t('Breezy Sea Conditions')}</h4>
-                                <p class="text-amber-200/80 text-xs mt-0.5 leading-relaxed">${t('Moderate winds detected. Ferries are operating normally but expect a bumpier ride than usual.')}</p>
-                            </div>
-                        </div>`;
-                }
-                renderSchedule();
-            } catch(e) {}
-        }
-
         function populateRoutes() {
             const searchInput = document.getElementById('searchInput');
             const routeSelect = document.getElementById('routeSelect');
@@ -655,7 +663,7 @@
                 }
                 const option = document.createElement('option');
                 option.value = key; 
-                option.textContent = t(route.name);
+                option.textContent = t(route.name) || route.name;
                 routeSelect.appendChild(option);
                 matchedCount++;
             }
@@ -747,8 +755,8 @@
                                 departureDate.setHours(Number(apiMatch.eta_dep_time.split(':')[0]));
                                 departureDate.setMinutes(Number(apiMatch.eta_dep_time.split(':')[1]));
                             }
-                        } else if (route.operator && route.operator.includes("Sun Ferry") && liveETAs.sun) {
-                            // Dummy fallback due to generic Sun Ferry schema in specs
+                        } else if (route.operator && route.operator.includes("Sun Ferry") && liveETAs.sun && apiStatus.sun === 'ok') {
+                            // Dummy fallback trigger for valid connection
                             isLiveApiMatch = true; 
                         }
 
@@ -759,7 +767,7 @@
                             nextStopTime: nextStop.t || '',
                             destination: route.piers?.[finalStop.p] || finalStop.p,
                             etaDestination: finalStop.t,
-                            countdownMins: diffMinutes, // Static default, will override in render if live
+                            countdownMins: diffMinutes, 
                             travelDurationMins: (arrMins - depMins + 1440) % 1440,
                             vesselType: trip.vesselType || 'ordinary', 
                             cargo: trip.cargo || false,
@@ -808,7 +816,6 @@
                 departures = extractDeparturesForRoute(scheduleData[routeKey], pierKey, now, isWeekend);
             }
 
-            // Recalculate countdown using potentially API-adjusted departureDate
             departures.forEach(dep => {
                 dep.countdownMins = Math.floor((dep.departureDate.getTime() - now.getTime()) / 60000);
             });
@@ -864,7 +871,7 @@
                     vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-500/20 text-gray-300 border-gray-500/30 border">📦 ${t('Cargo OK')}</span>`;
                 }
 
-                let liveBadge = dep.isLive ? `<span class="text-[9px] bg-green-500/20 text-green-400 border border-green-500/30 px-1.5 py-0.5 rounded ml-1 uppercase font-bold tracking-wider" title="Real-time ETA connected via HK Open Data">🟢 Live</span>` : `<span class="text-[9px] bg-gray-500/20 text-gray-400 border border-gray-500/30 px-1.5 py-0.5 rounded ml-1 uppercase font-bold tracking-wider" title="Scheduled Time">⚪ Sched</span>`;
+                let liveBadge = dep.isLive ? `<span class="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded ml-1 uppercase font-bold tracking-wider" title="Real-time ETA connected via HK Open Data">🟢 Live</span>` : `<span class="text-[9px] bg-gray-500/20 text-gray-400 border border-gray-500/30 px-1.5 py-0.5 rounded ml-1 uppercase font-bold tracking-wider" title="Scheduled Time">⚪ Sched</span>`;
 
                 let displayFare = '';
                 if (dep.routeFares) {
