@@ -1,4 +1,4 @@
-<!-- VERSION: 2026-10-08 10:29:00 HKT - 100% Offline Static Engine + Weather Telemetry -->
+<!-- VERSION: 2026-10-08 10:46:00 HKT - 100% Offline Static Engine + Weather Telemetry -->
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -205,7 +205,7 @@
     <!-- Developer & WXR Telemetry Footer -->
     <footer class="w-full max-w-4xl mx-auto mt-8 border-t border-white/10 pt-4 pb-6 flex flex-col items-center justify-center text-[10px] sm:text-xs font-mono text-gray-500 space-y-2">
         <div class="flex items-center space-x-3">
-            <span class="tracking-wider">Build: 2026-10-08 10:29</span>
+            <span class="tracking-wider">Build: 2026-10-08 10:46</span>
             <div id="apiStatusWxr" class="bg-gray-800 text-gray-400 border border-gray-700 px-2 py-0.5 rounded">⚫ WXR API</div>
         </div>
         <div id="wxrTelemetry" class="text-gray-600 hidden flex items-center space-x-3">
@@ -234,7 +234,8 @@
                 'Choppiness': '顛簸度', 'Choppy Ride': '大浪顛簸', 'Rough Seas': '海面極大浪',
                 'TYPHOON SUSPENSION': '颱風停航警告',
                 'All ferry services are currently suspended due to Tropical Cyclone Warning Signal. Please check official operator websites for resumption announcements.': '由於天文台已發出熱帶氣旋警告信號，所有渡輪服務現已暫停。請留意營辦商復航公佈。',
-                'Your recent routes will appear here': '您最近搜尋的航線將顯示於此'
+                'Your recent routes will appear here': '您最近搜尋的航線將顯示於此',
+                'See a wrong time? Report timetable change': '發現時間有誤？回報航班更改'
             },
             'zh-CN': {
                 'Pulse HK Ferry': 'Pulse 香港渡轮',
@@ -253,7 +254,8 @@
                 'Choppiness': '颠簸度', 'Choppy Ride': '大浪颠簸', 'Rough Seas': '海面极大浪',
                 'TYPHOON SUSPENSION': '台风停航警告',
                 'All ferry services are currently suspended due to Tropical Cyclone Warning Signal. Please check official operator websites for resumption announcements.': '由于天文台已发出热带气旋警告信号，所有渡轮服务现已暂停。请留意营办商复航公布。',
-                'Your recent routes will appear here': '您最近搜寻的航线将显示于此'
+                'Your recent routes will appear here': '您最近搜寻的航线将显示于此',
+                'See a wrong time? Report timetable change': '发现时间有误？回报航班更改'
             }
         };
 
@@ -383,6 +385,17 @@
             renderSchedule();
             renderRecentRoutes();
         }
+
+        window.reportInaccurateData = function(routeKey, pierKey) {
+            const route = scheduleData[routeKey];
+            const routeName = route ? t(route.name) : routeKey;
+            const pierName = route && route.piers ? t(route.piers[pierKey]) : pierKey;
+            
+            const subject = encodeURIComponent(`Ferry Timetable Update Needed: ${routeName}`);
+            const body = encodeURIComponent(`Hi developer,\n\nI am at the pier and noticed an inaccurate timetable for the following route:\n\nRoute: ${routeName}\nDeparting From: ${pierName}\n\n(Please type the correct time or attach a photo of the pier schedule here)\n\nThanks!`);
+            
+            window.location.href = `mailto:mtrtimehk@gmail.com?subject=${subject}&body=${body}`;
+        };
 
         async function fetchWeatherAndTyphoonStatus() {
             const wxrBadge = document.getElementById('apiStatusWxr');
@@ -930,6 +943,17 @@
                     </div>
                 `;
             });
+
+            // Add the Report Inaccuracy Button at the bottom of the list
+            newContentHtml += `
+                <div class="mt-6 flex justify-center fade-in" style="animation-delay: 0.5s">
+                    <button onclick="reportInaccurateData('${routeKey}', '${pierKey}')" class="flex items-center space-x-2 text-gray-500 hover:text-gray-300 transition text-[10px] sm:text-xs font-medium px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-full border border-white/5 shadow-inner">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <span data-i18n="See a wrong time? Report timetable change">${t('See a wrong time? Report timetable change')}</span>
+                    </button>
+                </div>
+            `;
+
             scheduleContainer.innerHTML = newContentHtml;
         }
 
