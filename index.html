@@ -1,4 +1,4 @@
-<!-- VERSION: 2026-10-08 10:46:00 HKT - 100% Offline Static Engine + Weather Telemetry -->
+<!-- VERSION: 2026-10-08 10:52:00 HKT - 100% Offline Static Engine + Weather Telemetry -->
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -205,7 +205,7 @@
     <!-- Developer & WXR Telemetry Footer -->
     <footer class="w-full max-w-4xl mx-auto mt-8 border-t border-white/10 pt-4 pb-6 flex flex-col items-center justify-center text-[10px] sm:text-xs font-mono text-gray-500 space-y-2">
         <div class="flex items-center space-x-3">
-            <span class="tracking-wider">Build: 2026-10-08 10:46</span>
+            <span class="tracking-wider">Build: 2026-10-08 10:52</span>
             <div id="apiStatusWxr" class="bg-gray-800 text-gray-400 border border-gray-700 px-2 py-0.5 rounded">⚫ WXR API</div>
         </div>
         <div id="wxrTelemetry" class="text-gray-600 hidden flex items-center space-x-3">
@@ -385,17 +385,6 @@
             renderSchedule();
             renderRecentRoutes();
         }
-
-        window.reportInaccurateData = function(routeKey, pierKey) {
-            const route = scheduleData[routeKey];
-            const routeName = route ? t(route.name) : routeKey;
-            const pierName = route && route.piers ? t(route.piers[pierKey]) : pierKey;
-            
-            const subject = encodeURIComponent(`Ferry Timetable Update Needed: ${routeName}`);
-            const body = encodeURIComponent(`Hi developer,\n\nI am at the pier and noticed an inaccurate timetable for the following route:\n\nRoute: ${routeName}\nDeparting From: ${pierName}\n\n(Please type the correct time or attach a photo of the pier schedule here)\n\nThanks!`);
-            
-            window.location.href = `mailto:mtrtimehk@gmail.com?subject=${subject}&body=${body}`;
-        };
 
         async function fetchWeatherAndTyphoonStatus() {
             const wxrBadge = document.getElementById('apiStatusWxr');
@@ -944,13 +933,28 @@
                 `;
             });
 
-            // Add the Report Inaccuracy Button at the bottom of the list
+            // Generate the dynamically populated mailto string
+            let rName = routeKey;
+            let pName = pierKey;
+            if (routeKey === 'GPS_MODE') {
+                rName = 'GPS Search';
+                pName = currentGpsPierName ? t(currentGpsPierName) : 'Nearest Pier';
+            } else if (scheduleData[routeKey]) {
+                rName = t(scheduleData[routeKey].name);
+                pName = scheduleData[routeKey].piers ? t(scheduleData[routeKey].piers[pierKey]) : pierKey;
+            }
+
+            const mailSubject = encodeURIComponent(`Ferry Timetable Update Needed: ${rName}`);
+            const mailBody = encodeURIComponent(`Hi developer,\n\nI am at the pier and noticed an inaccurate timetable for the following route:\n\nRoute: ${rName}\nDeparting From: ${pName}\n\n(Please type the correct time or attach a photo of the pier schedule here)\n\nThanks!`);
+            const mailtoLink = `mailto:mtrtimehk@gmail.com?subject=${mailSubject}&body=${mailBody}`;
+
+            // Add the Report Inaccuracy Button at the bottom of the list using an <a> tag
             newContentHtml += `
                 <div class="mt-6 flex justify-center fade-in" style="animation-delay: 0.5s">
-                    <button onclick="reportInaccurateData('${routeKey}', '${pierKey}')" class="flex items-center space-x-2 text-gray-500 hover:text-gray-300 transition text-[10px] sm:text-xs font-medium px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-full border border-white/5 shadow-inner">
+                    <a href="${mailtoLink}" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2 text-gray-500 hover:text-gray-300 transition text-[10px] sm:text-xs font-medium px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-full border border-white/5 shadow-inner cursor-pointer">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                         <span data-i18n="See a wrong time? Report timetable change">${t('See a wrong time? Report timetable change')}</span>
-                    </button>
+                    </a>
                 </div>
             `;
 
