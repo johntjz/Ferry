@@ -1,4 +1,4 @@
-<!-- VERSION: 2026-10-07 19:20:00 HKT - 100% Offline Static Engine + Weather Telemetry -->
+<!-- VERSION: 2026-10-08 10:14:00 HKT - 100% Offline Static Engine + Weather Telemetry -->
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -111,7 +111,7 @@
     <script src="routes/kaito-routes.js?v=202610071920"></script>
     <script src="routes/regional-macau.js?v=202610071920"></script>
 </head>
-<body class="min-h-screen flex flex-col items-center p-2 sm:p-6 text-gray-100 relative pb-24">
+<body class="min-h-screen flex flex-col items-center p-2 sm:p-6 text-gray-100 relative">
 
     <header class="w-full max-w-4xl bg-[#1e293b] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col mb-4 ring-1 ring-white/10">
         
@@ -195,7 +195,7 @@
         </div>
     </div>
 
-    <main id="scheduleContainer" class="w-full max-w-4xl space-y-3 relative z-10">
+    <main id="scheduleContainer" class="w-full max-w-4xl space-y-3 relative z-10 flex-1">
         <div class="text-center text-gray-500 py-10 bg-[#1e293b] rounded-xl border border-white/5">
             <div class="w-6 h-6 border-2 border-[#2dd4bf] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
             <span class="text-xs" data-i18n="Loading departure schedules...">Loading departure schedules...</span>
@@ -203,10 +203,14 @@
     </main>
 
     <!-- Developer & WXR Telemetry Footer -->
-    <footer class="fixed bottom-0 left-0 w-full backdrop-blur-md bg-[#0b1120]/90 border-t border-white/10 p-2 sm:p-3 z-50 flex justify-between items-center text-[10px] sm:text-xs font-mono">
-        <span class="text-gray-500 tracking-wider">Build: 2026-10-07 19:20</span>
-        <div class="flex items-center space-x-2">
-            <div id="apiStatusWxr" class="bg-gray-800 text-gray-400 border border-gray-700 px-2 py-0.5 rounded">⚫ WXR OFFLINE</div>
+    <footer class="w-full max-w-4xl mx-auto mt-8 border-t border-white/10 pt-4 pb-6 flex flex-col items-center justify-center text-[10px] sm:text-xs font-mono text-gray-500 space-y-2">
+        <div class="flex items-center space-x-3">
+            <span class="tracking-wider">Build: 2026-10-08 10:14</span>
+            <div id="apiStatusWxr" class="bg-gray-800 text-gray-400 border border-gray-700 px-2 py-0.5 rounded">⚫ WXR API</div>
+        </div>
+        <div id="wxrTelemetry" class="text-gray-600 hidden flex items-center space-x-3">
+            <span>Wind: <strong id="windData" class="text-gray-400">-- km/h</strong></span>
+            <span>Tide: <strong class="text-gray-400">Normal</strong></span>
         </div>
     </footer>
 
@@ -225,8 +229,8 @@
                 'No more scheduled departures from this pier today.': '今日此碼頭已沒有更多航班。', 'Departed': '已開出', 'Boarding Now': '正在登船',
                 'In': '還有', 'h': '小時', 'm': '分鐘', 'mins': '分鐘', 'Arrive': '抵達', 'to': '往', 'Next Stop:': '下一站：',
                 'Fast Ferry': '快速', 'Ordinary Ferry': '普通', 'Cargo OK': '載貨',
-                'Whole row to yourself': '可獨佔整排座位', 'Seats available': '有充裕座位', 'Elbow to elbow': '非常擁擠 (可能需企位)',
-                'Quick unload on arrival': '到埗快速下船', 'Moderate queue to exit': '下船需稍作排隊', 'Giant queue to exit': '下船將有長長人龍',
+                '85% Seats available': '85% 座位空缺', '45% Seats available': '45% 座位空缺', '15% Seats available': '15% 座位空缺',
+                '1 min unload queue': '下船需時 1 分鐘', '2 min unload queue': '下船需時 2 分鐘', '5 min unload queue': '下船需時 5 分鐘',
                 'Choppy Ride': '大浪顛簸', 'Rough Seas': '海面極大浪',
                 'TYPHOON SUSPENSION': '颱風停航警告',
                 'All ferry services are currently suspended due to Tropical Cyclone Warning Signal. Please check official operator websites for resumption announcements.': '由於天文台已發出熱帶氣旋警告信號，所有渡輪服務現已暫停。請留意營辦商復航公佈。',
@@ -244,8 +248,8 @@
                 'No more scheduled departures from this pier today.': '今日此码头已没有更多航班。', 'Departed': '已开出', 'Boarding Now': '正在登船',
                 'In': '还有', 'h': '小时', 'm': '分钟', 'mins': '分钟', 'Arrive': '抵达', 'to': '往', 'Next Stop:': '下一站：',
                 'Fast Ferry': '快速', 'Ordinary Ferry': '普通', 'Cargo OK': '载货',
-                'Whole row to yourself': '整排座位任坐', 'Seats available': '有充裕座位', 'Elbow to elbow': '非常拥挤 (可能需站立)',
-                'Quick unload on arrival': '到埗快速下船', 'Moderate queue to exit': '下船需稍作排队', 'Giant queue to exit': '下船将有长长人龙',
+                '85% Seats available': '85% 座位空缺', '45% Seats available': '45% 座位空缺', '15% Seats available': '15% 座位空缺',
+                '1 min unload queue': '下船需时 1 分钟', '2 min unload queue': '下船需时 2 分钟', '5 min unload queue': '下船需时 5 分钟',
                 'Choppy Ride': '大浪颠簸', 'Rough Seas': '海面极大浪',
                 'TYPHOON SUSPENSION': '台风停航警告',
                 'All ferry services are currently suspended due to Tropical Cyclone Warning Signal. Please check official operator websites for resumption announcements.': '由于天文台已发出热带气旋警告信号，所有渡轮服务现已暂停。请留意营办商复航公布。',
@@ -397,14 +401,20 @@
                 currentWindGustsKmh = windData?.current?.wind_gusts_10m || 0;
 
                 if (wxrBadge) {
-                    wxrBadge.innerHTML = '🟢 WXR ONLINE';
+                    wxrBadge.innerHTML = '🟢 WXR API';
                     wxrBadge.className = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded shadow-inner';
                 }
+
+                const windDataEl = document.getElementById('windData');
+                if (windDataEl) windDataEl.textContent = `${currentWindGustsKmh} km/h`;
+                
+                const wxrTelemetry = document.getElementById('wxrTelemetry');
+                if (wxrTelemetry) wxrTelemetry.classList.remove('hidden');
                 
                 renderSchedule();
             } catch(e) {
                 if (wxrBadge) {
-                    wxrBadge.innerHTML = '🔴 WXR OFFLINE';
+                    wxrBadge.innerHTML = '🔴 WXR API';
                     wxrBadge.className = 'bg-red-500/10 text-red-400 border border-red-500/30 px-2 py-0.5 rounded shadow-inner';
                 }
             }
@@ -788,10 +798,10 @@
                 const isPeak = (!isWeekend && ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19))) || (isWeekend && (hour >= 14 && hour <= 18));
                 const isMid = hour >= 10 && hour <= 16;
                 
-                const seatText = isPeak ? 'Elbow to elbow' : (isMid ? 'Seats available' : 'Whole row to yourself');
-                const seatEmoji = isPeak ? '🧍' : '💺';
-                const queueText = isPeak ? 'Giant queue to exit' : (isMid ? 'Moderate queue to exit' : 'Quick unload on arrival');
-                const queueEmoji = isPeak ? '🐌' : '🚶‍♂️';
+                const seatText = isPeak ? '15% Seats available' : (isMid ? '45% Seats available' : '85% Seats available');
+                const seatEmoji = '💺';
+                const queueText = isPeak ? '5 min unload queue' : (isMid ? '2 min unload queue' : '1 min unload queue');
+                const queueEmoji = '🚶‍♂️';
 
                 // Sea Comfort Logic Injection
                 let seaComfortHtml = '';
