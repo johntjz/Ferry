@@ -1,4 +1,4 @@
-<!-- VERSION: 2026-10-08 10:14:00 HKT - 100% Offline Static Engine + Weather Telemetry -->
+<!-- VERSION: 2026-10-08 10:25:00 HKT - 100% Offline Static Engine + Weather Telemetry -->
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -205,7 +205,7 @@
     <!-- Developer & WXR Telemetry Footer -->
     <footer class="w-full max-w-4xl mx-auto mt-8 border-t border-white/10 pt-4 pb-6 flex flex-col items-center justify-center text-[10px] sm:text-xs font-mono text-gray-500 space-y-2">
         <div class="flex items-center space-x-3">
-            <span class="tracking-wider">Build: 2026-10-08 10:14</span>
+            <span class="tracking-wider">Build: 2026-10-08 10:25</span>
             <div id="apiStatusWxr" class="bg-gray-800 text-gray-400 border border-gray-700 px-2 py-0.5 rounded">⚫ WXR API</div>
         </div>
         <div id="wxrTelemetry" class="text-gray-600 hidden flex items-center space-x-3">
@@ -231,7 +231,7 @@
                 'Fast Ferry': '快速', 'Ordinary Ferry': '普通', 'Cargo OK': '載貨',
                 '85% Seats available': '85% 座位空缺', '45% Seats available': '45% 座位空缺', '15% Seats available': '15% 座位空缺',
                 '1 min unload queue': '下船需時 1 分鐘', '2 min unload queue': '下船需時 2 分鐘', '5 min unload queue': '下船需時 5 分鐘',
-                'Choppy Ride': '大浪顛簸', 'Rough Seas': '海面極大浪',
+                'Choppiness': '顛簸度', 'Choppy Ride': '大浪顛簸', 'Rough Seas': '海面極大浪',
                 'TYPHOON SUSPENSION': '颱風停航警告',
                 'All ferry services are currently suspended due to Tropical Cyclone Warning Signal. Please check official operator websites for resumption announcements.': '由於天文台已發出熱帶氣旋警告信號，所有渡輪服務現已暫停。請留意營辦商復航公佈。',
                 'Your recent routes will appear here': '您最近搜尋的航線將顯示於此'
@@ -246,11 +246,11 @@
                 'Sunday Service Notice:': '星期日服务提示：', 'HK Public Holiday': '香港公众假期', 'Loading departure schedules...': '正在加载航班时间表...',
                 'No ferry route selected.': '未有选择渡轮航线。',
                 'No more scheduled departures from this pier today.': '今日此码头已没有更多航班。', 'Departed': '已开出', 'Boarding Now': '正在登船',
-                'In': '还有', 'h': '小时', 'm': '分钟', 'mins': '分钟', 'Arrive': '抵达', 'to': '往', 'Next Stop:': '下一站：',
+                'In': '还有', '小时': '小时', 'm': '分钟', 'mins': '分钟', 'Arrive': '抵达', 'to': '往', 'Next Stop:': '下一站：',
                 'Fast Ferry': '快速', 'Ordinary Ferry': '普通', 'Cargo OK': '载货',
                 '85% Seats available': '85% 座位空缺', '45% Seats available': '45% 座位空缺', '15% Seats available': '15% 座位空缺',
                 '1 min unload queue': '下船需时 1 分钟', '2 min unload queue': '下船需时 2 分钟', '5 min unload queue': '下船需时 5 分钟',
-                'Choppy Ride': '大浪颠簸', 'Rough Seas': '海面极大浪',
+                'Choppiness': '颠簸度', 'Choppy Ride': '大浪颠簸', 'Rough Seas': '海面极大浪',
                 'TYPHOON SUSPENSION': '台风停航警告',
                 'All ferry services are currently suspended due to Tropical Cyclone Warning Signal. Please check official operator websites for resumption announcements.': '由于天文台已发出热带气旋警告信号，所有渡轮服务现已暂停。请留意营办商复航公布。',
                 'Your recent routes will appear here': '您最近搜寻的航线将显示于此'
@@ -261,6 +261,7 @@
         let currentGpsPierName = null;
         let isHolidayPricingToday = false;
         let currentWindGustsKmh = 0;
+        let currentWindSpeedKmh = 0;
         let isTyphoonSuspended = false;
         let typhoonSignalName = "";
         let scheduleData = {};
@@ -395,9 +396,11 @@
                     typhoonSignalName = hkoData.WTC8 ? "Signal No. 8" : (hkoData.WTC9 ? "Signal No. 9" : "Signal No. 10");
                 }
 
-                // 2. Fetch Open-Meteo for Wind Gusts (Sea Choppiness)
-                const windRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=22.28&longitude=114.16&current=wind_gusts_10m');
+                // 2. Fetch Open-Meteo for Wind Speed AND Gusts
+                const windRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=22.28&longitude=114.16&current=wind_speed_10m,wind_gusts_10m');
                 const windData = await windRes.json();
+                
+                currentWindSpeedKmh = windData?.current?.wind_speed_10m || 0;
                 currentWindGustsKmh = windData?.current?.wind_gusts_10m || 0;
 
                 if (wxrBadge) {
@@ -406,7 +409,9 @@
                 }
 
                 const windDataEl = document.getElementById('windData');
-                if (windDataEl) windDataEl.textContent = `${currentWindGustsKmh} km/h`;
+                if (windDataEl) {
+                    windDataEl.textContent = `${currentWindSpeedKmh} km/h (Gusts: ${currentWindGustsKmh} km/h)`;
+                }
                 
                 const wxrTelemetry = document.getElementById('wxrTelemetry');
                 if (wxrTelemetry) wxrTelemetry.classList.remove('hidden');
@@ -697,6 +702,7 @@
                         const arrMins = window.PulseFerry.timeToMins(finalStop.t);
 
                         deps.push({
+                            routeId: route.id, 
                             departureTime: currentStop.t,
                             departureDate: departureDate,
                             nextStop: route.piers?.[nextStop.p] || nextStop.p,
@@ -757,10 +763,12 @@
                         }
                     }
                     if (matchingPierKey) {
+                        r.id = rKey;
                         departures.push(...extractDeparturesForRoute(r, matchingPierKey, now, isWeekend));
                     }
                 }
             } else if (scheduleData[routeKey]) {
+                scheduleData[routeKey].id = routeKey;
                 departures = extractDeparturesForRoute(scheduleData[routeKey], pierKey, now, isWeekend);
             }
 
@@ -803,19 +811,38 @@
                 const queueText = isPeak ? '5 min unload queue' : (isMid ? '2 min unload queue' : '1 min unload queue');
                 const queueEmoji = '🚶‍♂️';
 
-                // Sea Comfort Logic Injection
+                // GEOGRAPHIC EXPOSURE MODIFIER FOR CHOPPINESS %
+                let routeFactor = 1.0;
+                let rId = dep.routeId || routeKey || '';
+                // Harbor routes are protected; Outlying islands/Macau face open sea swells.
+                if (rId.includes('harbour') || rId.includes('kaito')) {
+                    routeFactor = 0.3; // Very shielded
+                } else if (rId.includes('islands') || rId.includes('macau') || rId.includes('lamma')) {
+                    routeFactor = 1.25; // Highly exposed to ocean swell
+                }
+
+                const effectiveWindGusts = currentWindGustsKmh * routeFactor;
+                // Base 100% Choppy off an extreme gust (e.g. 70 km/h)
+                const choppinessPercent = Math.min(100, Math.round((effectiveWindGusts / 70) * 100));
+
                 let seaComfortHtml = '';
-                if (currentWindGustsKmh > 50) {
+                if (choppinessPercent >= 60) {
                     seaComfortHtml = `
                     <div class="flex-1 w-full bg-red-500/10 border border-red-500/30 rounded-lg p-2.5 flex items-center space-x-2.5 shadow-inner">
                         <span class="text-xl leading-none">🤢</span>
-                        <span class="text-xs font-bold text-red-400">${t('Rough Seas')}</span>
+                        <span class="text-xs font-bold text-red-400">${choppinessPercent}% ${t('Rough Seas')}</span>
                     </div>`;
-                } else if (currentWindGustsKmh > 35) {
+                } else if (choppinessPercent >= 30) {
                     seaComfortHtml = `
                     <div class="flex-1 w-full bg-amber-500/10 border border-amber-500/30 rounded-lg p-2.5 flex items-center space-x-2.5 shadow-inner">
                         <span class="text-xl leading-none">🌊</span>
-                        <span class="text-xs font-semibold text-amber-300">${t('Choppy Ride')}</span>
+                        <span class="text-xs font-semibold text-amber-300">${choppinessPercent}% ${t('Choppy Ride')}</span>
+                    </div>`;
+                } else {
+                    seaComfortHtml = `
+                    <div class="flex-1 w-full bg-blue-500/10 border border-blue-500/30 rounded-lg p-2.5 flex items-center space-x-2.5 shadow-inner">
+                        <span class="text-xl leading-none">😌</span>
+                        <span class="text-xs font-semibold text-blue-300">${choppinessPercent}% ${t('Choppiness')}</span>
                     </div>`;
                 }
 
