@@ -66,6 +66,42 @@
     align-items: center; justify-content: center; background: none; border: none;
     color: white; font-size: 1.05rem; font-weight: 800; cursor: pointer; padding: 0; z-index: 2;
   }
+
+  /* --- NEW: App Switcher Bar --- */
+  .app-switcher {
+    background: var(--bg-white);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    height: 44px;
+    flex-shrink: 0;
+    z-index: 1000;
+  }
+  .app-switcher-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text-sub);
+    font-size: 0.9rem;
+    font-weight: 700;
+    border-right: 1px solid var(--border-color);
+    transition: background 0.2s, color 0.2s;
+    border-bottom: 2px solid transparent;
+  }
+  .app-switcher-item:last-child {
+    border-right: none;
+  }
+  .app-switcher-item.active {
+    color: var(--theme-color);
+    border-bottom: 2px solid var(--theme-color);
+    background: rgba(13, 148, 136, 0.05); /* Soft teal background */
+  }
+  .app-switcher-item:active:not(.active) {
+    background: var(--bg-light);
+  }
+  /* ------------------------------ */
+
   .view-container {
     flex: 1; overflow-y: auto; overflow-x: hidden; position: relative;
     display: none; flex-direction: column; background: var(--bg-light);
@@ -208,6 +244,13 @@
   <h1 id="headerTitle">Pulse HK</h1>
   <button class="text-size-btn" onclick="toggleTextSize()">aA</button>
 </header>
+
+<!-- Transit Suite App Switcher -->
+<div class="app-switcher">
+  <a href="https://bus-f4c.pages.dev/" class="app-switcher-item">🚌 Bus</a>
+  <a href="https://mtr-4uo.pages.dev/" class="app-switcher-item">🚇 MTR</a>
+  <div class="app-switcher-item active">⛴️ Ferry</div>
+</div>
 
 <!-- Nearby View -->
 <main id="view-main" class="view-container active">
@@ -953,6 +996,24 @@ let timerInterval = null;
 let isSyncing = false;
 let gpsWatcherId = null;
 const requestCache = new Map();
+
+// --- ADDED TEXT RESIZE FUNCTION ---
+function toggleTextSize() {
+    let textSizeState = parseInt(localStorage.getItem('ferry_hk_text_size_state') || '0');
+    textSizeState = (textSizeState + 1) % 3;
+    localStorage.setItem('ferry_hk_text_size_state', textSizeState.toString());
+    document.documentElement.classList.remove('text-sm', 'text-xs');
+    if (textSizeState === 1) document.documentElement.classList.add('text-sm');
+    if (textSizeState === 2) document.documentElement.classList.add('text-xs');
+}
+
+// Check and apply text size on load
+(function applySavedTextSize() {
+    let savedState = parseInt(localStorage.getItem('ferry_hk_text_size_state') || '0');
+    if (savedState === 1) document.documentElement.classList.add('text-sm');
+    if (savedState === 2) document.documentElement.classList.add('text-xs');
+})();
+// -----------------------------------
 
 function calculateDistanceKm(lat1, lon1, lat2, lon2) {
   if (lat1 === 0 || lat2 === 0) return Infinity;
