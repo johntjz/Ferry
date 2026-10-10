@@ -546,7 +546,7 @@ function checkHolidayAndSundayStatus() {
     const now = new Date();
     const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
-    // FIXED: Explicitly access via window to prevent reference errors
+    // Explicitly access via window to prevent reference errors
     const holidayName = window.HK_PUBLIC_HOLIDAYS ? window.HK_PUBLIC_HOLIDAYS[dateStr] : null;
     
     isHolidayPricingToday = (now.getDay() === 0 || !!holidayName); // 0 corresponds to Sunday
@@ -924,7 +924,6 @@ async function initApp() {
     await locateNearestStopPromise();
     startTimer();
   } catch (err) {
-    // FIXED: Render the exact error message so you can debug missing files.
     document.getElementById('mainRouteList').innerHTML = `<div class="text-center" style="color:#ef4444; padding:20px;"><b>Error building network.</b><br><br><span style="font-size:0.85rem; color:var(--text-sub);">${err.message}</span></div>`;
     console.error(err);
   }
@@ -1280,7 +1279,12 @@ function generateExpandedETAsHtml(arrs, groupKey) {
 
         let displayFare = '';
         if (arr.fares) {
-            let activeFare = isHolidayPricingToday ? arr.fares.adultHoliday : arr.fares.adultWeekday; // Holiday check respects Sundays
+            // FIXED: Dynamically check if THIS specific trip falls on a Sunday or Public Holiday
+            const depDateStr = `${arr.departureDate.getFullYear()}-${String(arr.departureDate.getMonth() + 1).padStart(2, '0')}-${String(arr.departureDate.getDate()).padStart(2, '0')}`;
+            const isDepHoliday = (arr.departureDate.getDay() === 0 || (window.HK_PUBLIC_HOLIDAYS && !!window.HK_PUBLIC_HOLIDAYS[depDateStr]));
+            
+            let activeFare = isDepHoliday ? arr.fares.adultHoliday : arr.fares.adultWeekday;
+            
             if (activeFare) {
                 let currency = arr.fares.currency === 'HKD' ? 'HK$' : (arr.fares.currency || 'HK$');
                 if (typeof activeFare === 'string') {
