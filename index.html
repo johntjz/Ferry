@@ -1,969 +1,1614 @@
-<!-- VERSION: 2026-10-08 10:55:00 HKT - 100% Offline Static Engine + Weather Telemetry -->
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pulse HK Ferry</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0fdfa', 100: '#ccfbf1', 400: '#2dd4bf',
-                            500: '#14b8a6', 600: '#0d9488', 900: '#134e4a',
-                        }
-                    }
-                }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+<title>Pulse HK - Ferry Network</title>
+
+<!-- Leaflet CSS via CDN -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+<style>
+  /* ==========================================
+     CSS ZONE 1: VARIABLES & RESET
+     ========================================== */
+  :root {
+    --theme-color: #0d9488; /* Teal 600 */
+    --theme-hover: #14b8a6;
+    --bg-light: #0b1120;
+    --bg-white: #0f172a;
+    --text-main: #f8fafc;
+    --text-sub: #94a3b8;
+    --border-color: #1e293b;
+    --accent-blue: #0ea5e9;
+    --accent-green: #10b981;
+    --accent-orange: #f59e0b;
+    --accent-red: #ef4444;
+  }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+  
+  /* 3-Tier Text Scaling */
+  html { font-size: 16px; transition: font-size 0.2s ease-in-out; }
+  html.text-sm { font-size: 14px; } 
+  html.text-xs { font-size: 12px; } 
+
+  body {
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    color-scheme: dark;
+  }
+
+  /* ==========================================
+     CSS ZONE 2: LAYOUT & VIEWS
+     ========================================== */
+  .header {
+    background-color: var(--theme-color); color: white; padding: 0 12px;
+    display: flex; justify-content: center; align-items: center; position: relative;
+    z-index: 1001; height: 55px; flex-shrink: 0;
+  }
+  .header h1 {
+    font-size: 1.15rem; font-weight: 700; margin: 0; text-align: center;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding-left: 50px; padding-right: 50px; width: 100%; box-sizing: border-box;
+  }
+  .back-btn {
+    position: absolute; left: 4px; top: 0; bottom: 0; width: 44px; display: none;
+    align-items: center; justify-content: center; background: none; border: none;
+    color: white; font-size: 2.2rem; font-weight: bold; cursor: pointer; padding: 0; z-index: 2; line-height: 1;
+  }
+  .text-size-btn {
+    position: absolute; right: 4px; top: 0; bottom: 0; width: 44px; display: flex;
+    align-items: center; justify-content: center; background: none; border: none;
+    color: white; font-size: 1.05rem; font-weight: 800; cursor: pointer; padding: 0; z-index: 2;
+  }
+  .view-container {
+    flex: 1; overflow-y: auto; overflow-x: hidden; position: relative;
+    display: none; flex-direction: column; background: var(--bg-light);
+  }
+  .view-container.active { display: flex; }
+
+  /* ==========================================
+     CSS ZONE 3: COMPONENTS (Tabs, Lists, ETAs)
+     ========================================== */
+  .bottom-tabs {
+    background-color: var(--bg-white); border-top: 1px solid var(--border-color);
+    display: flex; justify-content: space-around; align-items: center;
+    height: 65px; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); z-index: 1001;
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--text-sub); flex: 1; height: 100%; cursor: pointer; font-size: 0.75rem; gap: 4px; transition: color 0.2s;
+  }
+  .tab.active { color: var(--theme-color); font-weight: 700; }
+  .tab-icon { font-size: 1.5rem; margin-bottom: 2px; }
+
+  .location-header {
+    background: var(--bg-white); padding: 16px; border-bottom: 1px solid var(--border-color);
+    display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;
+  }
+  .location-text { font-size: 1.1rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+  .refresh-timer { font-size: 1.05rem; color: var(--theme-color); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  .detail-live-bar {
+    background: var(--bg-white); padding: 8px 16px; border-bottom: 1px solid var(--border-color);
+    display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;
+    color: var(--text-sub); font-weight: 700; flex-shrink: 0;
+  }
+  .live-dot-pulse {
+    color: var(--accent-blue); display: inline-flex; align-items: center; gap: 6px; font-weight: 800;
+  }
+
+  .route-list-item {
+    display: flex; padding: 16px; border-bottom: 1px solid var(--border-color);
+    align-items: center; gap: 16px; cursor: pointer; background: var(--bg-light); transition: background 0.2s;
+  }
+  .route-list-item.inactive-route { opacity: 0.85; }
+  .route-list-item:active { background: var(--bg-white); }
+  
+  .route-no-col {
+    min-width: 60px; height: 48px; border-radius: 8px; font-size: 0.95rem; font-weight: 900;
+    text-align: center; color: white; letter-spacing: 0.5px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+  }
+  .route-info-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+  .route-dest { font-size: 1.1rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
+  .route-sub { font-size: 0.8rem; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .route-eta-col { text-align: right; min-width: 80px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; }
+  .eta-time { font-size: 1.6rem; font-weight: 900; color: var(--accent-green); font-variant-numeric: tabular-nums; line-height: 1; }
+  
+  .eta-expanded-container { display: none; flex-direction: column; gap: 0; background: var(--bg-white); border-bottom: 1px solid var(--border-color); }
+  .eta-expanded-container.active { display: flex; }
+  .eta-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px dashed var(--border-color); }
+  .eta-row:last-child { border-bottom: none; }
+  .eta-row-left { display: flex; flex-direction: column; gap: 6px; font-size: 1rem; color: var(--text-main); font-weight: 700; }
+  .eta-row-sub { font-size: 0.85rem; color: var(--text-sub); font-weight: 600; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .eta-row-time { font-size: 1.8rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+
+  /* ==========================================
+     CSS ZONE 4: SEARCH, MAPS & UTILS
+     ========================================== */
+  .search-box-container { padding: 16px; background: var(--bg-white); border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 14px; position: sticky; top: 0; z-index: 10;}
+  .search-input {
+    width: 100%; padding: 16px; border: 2px solid var(--border-color); border-radius: 12px;
+    font-size: 1.2rem; outline: none; text-align: center; background: var(--bg-light); color: var(--text-main); font-weight: 700;
+  }
+  .search-input:focus { border-color: var(--theme-color); }
+  .region-filters { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; padding-bottom: 4px; }
+  .region-filters::-webkit-scrollbar { display: none; }
+  .region-btn { flex: 0 0 auto; padding: 12px 18px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-light); color: var(--text-sub); font-size: 0.9rem; font-weight: 800; cursor: pointer; text-transform: uppercase; }
+  .region-btn.active { background: var(--theme-color); color: white; border-color: var(--theme-color); }
+
+  #map-container { height: 35vh; width: 100%; background: #111; flex-shrink: 0; border-bottom: 1px solid var(--border-color); transition: height 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); }
+  #stop-list-container { flex: 1; overflow-y: auto; position: relative; background: var(--bg-light); }
+  
+  .stop-item { position: relative; padding: 20px 16px 20px 50px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
+  .stop-line { position: absolute; left: 28px; top: 0; bottom: 0; width: 4px; z-index: 1; }
+  .stop-item:first-child .stop-line { top: 32px; }
+  .stop-item:last-child .stop-line { bottom: auto; height: 32px; }
+  .stop-dot { position: absolute; left: 20px; top: 22px; width: 20px; height: 20px; border-radius: 50%; background: #aaa; border: 4px solid var(--bg-light); z-index: 2; }
+  .stop-item.active-stop .stop-dot { box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.3); }
+  .stop-name { font-size: 1.1rem; font-weight: 600; color: var(--text-main); }
+  .nearest-tag { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; background: rgba(14,165,233,0.2); color: var(--accent-blue); border: 1px solid rgba(14,165,233,0.4); vertical-align: middle; text-transform: uppercase; }
+  
+  #global-map-container { flex: 1; width: 100%; background: #111; z-index: 1; position: relative; }
+  
+  .map-floating-filters {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 1000;
+    display: flex; gap: 6px; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(12px);
+    padding: 4px; border-radius: 24px; border: 1px solid var(--border-color); box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  }
+  .map-filter-btn {
+    padding: 7px 14px; border-radius: 18px; border: none; background: transparent;
+    color: var(--text-sub); font-size: 0.8rem; font-weight: 800; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .map-filter-btn.active { background: var(--theme-color); color: white; }
+
+  .map-bottom-sheet { position: absolute; bottom: 0; left: 0; right: 0; background: var(--bg-white); border-top-left-radius: 20px; border-top-right-radius: 20px; max-height: 70vh; overflow-y: auto; z-index: 1000; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.8, 0.2, 1); box-shadow: 0 -4px 20px rgba(0,0,0,0.6); display: flex; flex-direction: column; }
+  .map-bottom-sheet.active { transform: translateY(0); }
+  .sheet-header { padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--bg-white); z-index: 2; }
+  .sheet-title { font-size: 1.25rem; font-weight: 800; }
+  .sheet-close { font-size: 1.5rem; font-weight: bold; color: var(--text-sub); cursor: pointer; background: none; border: none; }
+  
+  .text-center { text-align: center; padding: 40px 20px; color: var(--text-sub); font-size: 1.15rem; }
+  .init-loader { padding: 80px 20px; text-align: center; }
+  
+  .occ-pill { padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .occ-neutral { background: rgba(148, 163, 184, 0.15); color: var(--text-sub); border: 1px solid rgba(148, 163, 184, 0.3); }
+
+  .add-fav-btn { margin: 24px; padding: 20px; background: var(--bg-white); border: 2px dashed var(--border-color); border-radius: 16px; text-align: center; color: var(--accent-blue); font-size: 1.15rem; font-weight: 800; cursor: pointer; transition: background 0.2s; }
+  .add-fav-btn:active { background: #1e293b; }
+  .del-fav-btn { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; border-radius: 8px; width: 44px; height: 44px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0; }
+
+  .fav-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; justify-content: center; align-items: flex-end; }
+  .fav-modal-content { background: var(--bg-light); width: 100%; height: 90vh; border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; flex-direction: column; overflow: hidden; }
+  .fav-modal-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-white); border-bottom: 1px solid var(--border-color); }
+  .fav-modal-header h3 { font-size: 1.25rem; font-weight: 800; margin: 0; color: var(--text-main); }
+  .fav-modal-close { background: none; border: none; color: var(--text-sub); font-size: 1.8rem; font-weight: bold; cursor: pointer; }
+  .fav-modal-search { padding: 16px; background: var(--bg-white); border-bottom: 1px solid var(--border-color); }
+  .fav-modal-search input { width: 100%; padding: 16px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 1.2rem; background: var(--bg-light); color: var(--text-main); font-weight: 700; text-align: center; }
+  .fav-modal-search input:focus { border-color: var(--theme-color); outline: none; }
+  .fav-modal-results { flex: 1; overflow-y: auto; background: var(--bg-light); }
+
+  /* Map Tile Inversion */
+  .dark-tiles { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+  .custom-user-icon div { width: 100% !important; height: 100% !important; background: #0ea5e9 !important; border-radius: 50% !important; border: 3px solid white !important; box-shadow: 0 0 12px rgba(0,0,0,0.8) !important; }
+  
+  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+</style>
+
+<!-- Static Schedule Engine Initialization -->
+<script>
+    window.PulseFerry = {
+        scheduleData: {},
+        timeToMins: function(tm) {
+            if (!tm || typeof tm !== 'string') return 0;
+            const parts = tm.split(':');
+            return parts.length >= 2 ? Number(parts[0]) * 60 + Number(parts[1]) : 0;
+        },
+        minsToTime: function(m) {
+            if (isNaN(m)) return "00:00";
+            const h = Math.floor(m / 60) % 24;
+            const min = m % 60;
+            return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+        },
+        addMins: function(tm, mins) {
+            return this.minsToTime(this.timeToMins(tm) + mins);
+        },
+        generateFrequent: function(p1, p2, startTime, endTime, headwayMins, travelMins) {
+            const trips = [];
+            let current = this.timeToMins(startTime);
+            const end = this.timeToMins(endTime);
+            while (current <= end) {
+                const timeStr = this.minsToTime(current);
+                const arrivalStr = this.addMins(timeStr, travelMins);
+                trips.push({ stops: [{ p: p1, t: timeStr }, { p: p2, t: arrivalStr }], duration: travelMins });
+                trips.push({ stops: [{ p: p2, t: timeStr }, { p: p1, t: arrivalStr }], duration: travelMins });
+                current += headwayMins;
             }
-        }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0b1120;
-            color: #f8fafc;
-            -webkit-font-smoothing: antialiased;
-        }
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
-
-        .fade-in { animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
-
-    <script>
-        window.PulseFerry = {
-            scheduleData: {},
-            timeToMins: function(tm) {
-                if (!tm || typeof tm !== 'string') return 0;
-                const parts = tm.split(':');
-                return parts.length >= 2 ? Number(parts[0]) * 60 + Number(parts[1]) : 0;
-            },
-            minsToTime: function(m) {
-                if (isNaN(m)) return "00:00";
-                const h = Math.floor(m / 60) % 24;
-                const min = m % 60;
-                return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
-            },
-            addMins: function(tm, mins) {
-                return this.minsToTime(this.timeToMins(tm) + mins);
-            },
-            generateFrequent: function(p1, p2, startTime, endTime, headwayMins, travelMins) {
-                const trips = [];
-                let current = this.timeToMins(startTime);
-                const end = this.timeToMins(endTime);
-                while (current <= end) {
-                    const timeStr = this.minsToTime(current);
-                    const arrivalStr = this.addMins(timeStr, travelMins);
-                    trips.push({ stops: [{ p: p1, t: timeStr }, { p: p2, t: arrivalStr }], duration: travelMins });
-                    trips.push({ stops: [{ p: p2, t: timeStr }, { p: p1, t: arrivalStr }], duration: travelMins });
-                    current += headwayMins;
-                }
-                return trips;
-            },
-            generateDirectional: function(p1, p2, outbound, inbound, travelMins) {
-                const trips = [];
-                outbound.forEach(tm => trips.push({ stops: [{ p: p1, t: tm }, { p: p2, t: this.addMins(tm, travelMins) }], duration: travelMins }));
-                inbound.forEach(tm => trips.push({ stops: [{ p: p2, t: tm }, { p: p1, t: this.addMins(tm, travelMins) }], duration: travelMins }));
-                return trips;
-            },
-            registerRoute: function(key, data) {
-                if (data.trips && !Array.isArray(data.trips)) {
-                    let normalizedTrips = [];
-                    for (const [dirKey, departures] of Object.entries(data.trips)) {
-                        const [p1, p2] = dirKey.split("-");
-                        departures.forEach(dep => {
-                            const duration = dep.duration || 45;
-                            const arrivalTime = this.addMins(dep.t, duration);
-                            normalizedTrips.push({
-                                weekdayOnly: dep.weekdayOnly || false,
-                                weekendOnly: dep.weekendOnly || false,
-                                vesselType: dep.type || "standard",
-                                duration: duration,
-                                cargo: dep.cargo || false,
-                                stops: [{ p: p1, t: dep.t }, { p: p2, t: arrivalTime }]
-                            });
+            return trips;
+        },
+        generateDirectional: function(p1, p2, outbound, inbound, travelMins) {
+            const trips = [];
+            outbound.forEach(tm => trips.push({ stops: [{ p: p1, t: tm }, { p: p2, t: this.addMins(tm, travelMins) }], duration: travelMins }));
+            inbound.forEach(tm => trips.push({ stops: [{ p: p2, t: tm }, { p: p1, t: this.addMins(tm, travelMins) }], duration: travelMins }));
+            return trips;
+        },
+        registerRoute: function(key, data) {
+            if (data.trips && !Array.isArray(data.trips)) {
+                let normalizedTrips = [];
+                for (const [dirKey, departures] of Object.entries(data.trips)) {
+                    const [p1, p2] = dirKey.split("-");
+                    departures.forEach(dep => {
+                        const duration = dep.duration || 45;
+                        const arrivalTime = this.addMins(dep.t, duration);
+                        normalizedTrips.push({
+                            weekdayOnly: dep.weekdayOnly || false,
+                            weekendOnly: dep.weekendOnly || false,
+                            vesselType: dep.type || "standard",
+                            duration: duration,
+                            cargo: dep.cargo || false,
+                            stops: [{ p: p1, t: dep.t }, { p: p2, t: arrivalTime }]
                         });
-                    }
-                    data.trips = normalizedTrips;
+                    });
                 }
-                this.scheduleData[key] = data;
+                data.trips = normalizedTrips;
             }
-        };
-    </script>
+            this.scheduleData[key] = data;
+        }
+    };
+</script>
 
-    <script src="routes/islands-major.js?v=202610071920"></script>
-    <script src="routes/lamma-routes.js?v=202610071920"></script>
-    <script src="routes/harbour-routes.js?v=202610071920"></script>
-    <script src="routes/kaito-routes.js?v=202610071920"></script>
-    <script src="routes/regional-macau.js?v=202610071920"></script>
+<!-- Load External Routes -->
+<script src="routes/islands-major.js?v=202610071920"></script>
+<script src="routes/lamma-routes.js?v=202610071920"></script>
+<script src="routes/harbour-routes.js?v=202610071920"></script>
+<script src="routes/kaito-routes.js?v=202610071920"></script>
+<script src="routes/regional-macau.js?v=202610071920"></script>
+
 </head>
-<body class="min-h-screen flex flex-col items-center p-2 sm:p-6 text-gray-100 relative">
+<body>
 
-    <header class="w-full max-w-4xl bg-[#1e293b] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col mb-4 ring-1 ring-white/10">
-        
-        <div class="bg-[#0f172a] px-3 py-2 flex justify-between items-center border-b border-white/5 text-[10px] sm:text-xs font-medium text-gray-400">
-            <div class="flex items-center space-x-2">
-                <span id="liveClock" class="font-mono text-gray-300 font-semibold tracking-wide">--:--:--</span>
-            </div>
-            <select id="langSelect" class="bg-white/5 text-white border border-white/10 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf]">
-                <option value="en">EN</option>
-                <option value="zh-TW">繁體</option>
-                <option value="zh-CN">简体</option>
-            </select>
-        </div>
+<header class="header">
+  <button class="back-btn" id="backBtn" onclick="navigateBack()">‹</button>
+  <h1 id="headerTitle">Pulse HK</h1>
+  <button class="text-size-btn" onclick="toggleTextSize()">aA</button>
+</header>
 
-        <div class="p-3 sm:p-5 space-y-3">
-            <div class="flex items-center justify-between gap-2">
-                <h1 class="text-lg sm:text-xl font-bold text-white tracking-tight" data-i18n="Pulse HK Ferry">Pulse HK Ferry</h1>
-                <div class="flex items-center space-x-1.5">
-                    <button id="gpsBtn" class="flex items-center space-x-1 text-[11px] sm:text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-2.5 py-1.5 rounded-lg border border-emerald-500/30 transition font-medium whitespace-nowrap">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        <span id="gpsBtnText" data-i18n="Nearest Pier">Nearest Pier</span>
-                    </button>
-                </div>
-            </div>
+<!-- Nearby View -->
+<main id="view-main" class="view-container active">
+  <div class="location-header">
+    <div class="location-text" id="mainLocationText"><span style="font-size: 1.4rem;">📍</span> Locating nearest pier...</div>
+    <div class="refresh-timer" id="refreshTimerMain">--</div>
+  </div>
+  
+  <div style="padding: 12px 16px; font-size: 0.85rem; font-weight: 800; color: var(--text-sub); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--bg-white);" id="wxrTelemetry">
+     <!-- Telemetry badges inserted here -->
+     <span style="font-size:0.8rem; color:var(--text-sub); padding:4px 8px; border:1px solid var(--border-color); border-radius:12px;">WXR Loading...</span>
+  </div>
+  
+  <div id="mainRouteList">
+      <div class="init-loader">
+          <div style="font-size:1.2rem; color:var(--text-main); font-weight: 700;">Connecting to Ferry Network...</div>
+      </div>
+  </div>
+</main>
 
-            <div class="space-y-2.5 pt-1">
-                <div class="relative w-full">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </div>
-                    <input type="text" id="searchInput" data-i18n-placeholder="Search route or pier..." placeholder="Search route or pier..." class="w-full bg-[#0f172a] text-xs sm:text-sm text-white pl-8 pr-8 py-2 rounded-xl border border-white/10 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf] focus:border-transparent transition shadow-inner placeholder-gray-500">
-                    <button id="clearSearch" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </div>
+<!-- Route (Search) View -->
+<main id="view-search" class="view-container">
+  <div class="search-box-container">
+   <div class="region-filters">
+        <button class="region-btn active" id="filter-ALL" onclick="setRegionFilter('ALL')">All Routes</button>
+        <button class="region-btn" id="filter-harbour" onclick="setRegionFilter('harbour')">Harbour</button>
+        <button class="region-btn" id="filter-islands" onclick="setRegionFilter('islands')">Islands</button>
+        <button class="region-btn" id="filter-lamma" onclick="setRegionFilter('lamma')">Lamma</button>
+        <button class="region-btn" id="filter-kaito" onclick="setRegionFilter('kaito')">Kaito</button>
+        <button class="region-btn" id="filter-macau" onclick="setRegionFilter('macau')">Macau / Reg</button>
+    </div>
+    <input type="text" id="searchInput" class="search-input" placeholder="Search Route (e.g. Central, Star Ferry)" oninput="renderSearchResults()" autocomplete="off">
+  </div>
+  <div id="searchResults" style="flex:1; overflow-y:auto;"></div>
+</main>
 
-                <div class="flex items-center space-x-2 overflow-x-auto pb-1 hide-scrollbar min-h-[38px] mt-2" id="recentRoutesContainer">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                <div class="space-y-1">
-                    <label for="routeSelect" class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide flex justify-between">
-                        <span data-i18n="Ferry Route">Ferry Route</span>
-                        <span id="routeCountBadge" class="text-[#2dd4bf]">0 Routes</span>
-                    </label>
-                    <div class="relative">
-                        <select id="routeSelect" class="w-full appearance-none bg-[#0f172a] border border-white/10 text-white rounded-lg px-2.5 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf] focus:border-transparent transition shadow-inner text-xs sm:text-sm font-semibold truncate"></select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-1">
-                    <div class="flex justify-between items-center">
-                        <label for="pierSelect" class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide" data-i18n="Departure Pier">Departure Pier</label>
-                        <button id="swapDirectionBtn" title="Swap direction" class="text-[10px] text-[#2dd4bf] hover:underline font-semibold flex items-center space-x-1">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-                            <span data-i18n="Swap Direction">Swap</span>
-                        </button>
-                    </div>
-                    <div class="relative">
-                        <select id="pierSelect" class="w-full appearance-none bg-[#0f172a] border border-white/10 text-white rounded-lg px-2.5 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf] focus:border-transparent transition shadow-inner text-xs sm:text-sm font-semibold truncate"></select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <div id="holidayBanner" class="w-full max-w-4xl mb-4 hidden fade-in">
-        <div class="bg-amber-500/15 border border-amber-500/30 rounded-xl p-3 flex items-start space-x-2.5 text-amber-200 shadow-sm">
-            <svg class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-            <div class="text-[11px] sm:text-xs">
-                <span class="font-bold text-amber-300" id="holidayTitle" data-i18n="Holiday Fare Notice:">Holiday Fare Notice:</span>
-                <span id="holidayMessage" data-i18n="Sunday & HK Public Holiday fare rates apply today.">Sunday & HK Public Holiday fare rates apply today.</span>
-            </div>
+<!-- Map View -->
+<main id="view-map" class="view-container">
+    <div id="global-map-container">
+        <!-- Floating filter bar over the map -->
+        <div class="map-floating-filters">
+            <button class="map-filter-btn active" id="mapFilter-ALL" onclick="setMapFilter('ALL')">All Piers</button>
+            <button class="map-filter-btn" id="mapFilter-harbour" onclick="setMapFilter('harbour')">Harbour</button>
+            <button class="map-filter-btn" id="mapFilter-islands" onclick="setMapFilter('islands')">Islands</button>
         </div>
     </div>
-
-    <main id="scheduleContainer" class="w-full max-w-4xl space-y-3 relative z-10 flex-1">
-        <div class="text-center text-gray-500 py-10 bg-[#1e293b] rounded-xl border border-white/5">
-            <div class="w-6 h-6 border-2 border-[#2dd4bf] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-            <span class="text-xs" data-i18n="Loading departure schedules...">Loading departure schedules...</span>
+    <div id="map-bottom-sheet" class="map-bottom-sheet">
+        <div class="sheet-header">
+            <div class="sheet-title" id="sheet-title">Pier Name</div>
+            <button class="sheet-close" onclick="closeMapSheet()">✕</button>
         </div>
-    </main>
+        <div id="sheet-route-list"></div>
+    </div>
+</main>
 
-    <!-- Developer & WXR Telemetry Footer -->
-    <footer class="w-full max-w-4xl mx-auto mt-8 border-t border-white/10 pt-4 pb-6 flex flex-col items-center justify-center text-[10px] sm:text-xs font-mono text-gray-500 space-y-2">
-        <div class="flex items-center space-x-3">
-            <span class="tracking-wider">Build: 2026-10-08 10:55</span>
-            <div id="apiStatusWxr" class="bg-gray-800 text-gray-400 border border-gray-700 px-2 py-0.5 rounded">⚫ WXR API</div>
+<!-- Favorites View -->
+<main id="view-fav" class="view-container">
+  <div class="location-header" style="justify-content:center;">
+      <div class="location-text">Favorite Routes</div>
+  </div>
+  <div id="favList" style="flex:1; overflow-y:auto;"></div>
+</main>
+
+<!-- Route Detail View -->
+<main id="view-detail" class="view-container">
+  <div id="map-container"></div>
+  <div class="detail-live-bar" id="detailLiveBar">
+    <span class="live-dot-pulse">● TIMETABLE</span>
+    <span id="detailLastUpdated">Loading timetables...</span>
+  </div>
+  <div id="stop-list-container"></div>
+</main>
+
+<!-- Bottom Tabs -->
+<nav class="bottom-tabs">
+  <div class="tab active" onclick="switchTab('main')" id="tab-main"><span class="tab-icon">📍</span><span>Nearby</span></div>
+  <div class="tab" onclick="switchTab('search')" id="tab-search"><span class="tab-icon">⛴️</span><span>Routes</span></div>
+  <div class="tab" onclick="switchTab('map')" id="tab-map"><span class="tab-icon">🗺️</span><span>Map</span></div>
+  <div class="tab" onclick="switchTab('fav')" id="tab-fav"><span class="tab-icon">⭐</span><span>Favorites</span></div>
+</nav>
+
+<!-- Favorite Add Modal -->
+<div id="fav-modal" class="fav-modal-overlay">
+    <div class="fav-modal-content">
+        <div class="fav-modal-header">
+            <h3>Add New Favorite Route</h3>
+            <button class="fav-modal-close" onclick="closeFavModal()">✕</button>
         </div>
-        <div id="wxrTelemetry" class="text-gray-600 hidden flex items-center space-x-3">
-            <span>Wind: <strong id="windData" class="text-gray-400">-- km/h</strong></span>
-            <span>Tide: <strong class="text-gray-400">Normal</strong></span>
+        <div class="fav-modal-search">
+            <input type="text" id="favSearchInput" placeholder="Search route..." oninput="renderFavSearch()" autocomplete="off">
         </div>
-    </footer>
+        <div id="favSearchResults" class="fav-modal-results"></div>
+    </div>
+</div>
 
-    <script>
-        const i18n = {
-            'en': {},
-            'zh-TW': {
-                'Pulse HK Ferry': 'Pulse 香港渡輪',
-                'Nearest Pier': '最近碼頭', 'Locating...': '定位中...', 'Location disabled or unavailable': '無法取得位置',
-                'Search route or pier...': '搜尋航線或碼頭...',
-                'Ferry Route': '渡輪航線', 'Routes': '條航線', 'Route': '條航線', 'No routes match your search / filter': '沒有符合條件的航線',
-                'Departure Pier': '出發碼頭', 'Swap Direction': '切換方向', 'Swap': '切換', 'Depart from': '由',
-                'All Destinations': '所有目的地', 'Holiday Fare Notice:': '假日票價提示：', 'Sunday & HK Public Holiday fare rates apply today.': '今日適用星期日及公眾假期票價。',
-                'Sunday Service Notice:': '星期日服務提示：', 'HK Public Holiday': '香港公眾假期', 'Loading departure schedules...': '正在載入航班時間表...',
-                'No ferry route selected.': '未有選擇渡輪航線。',
-                'No more scheduled departures from this pier today.': '今日此碼頭已沒有更多航班。', 'Departed': '已開出', 'Boarding Now': '正在登船',
-                'In': '還有', 'h': '小時', 'm': '分鐘', 'mins': '分鐘', 'Arrive': '抵達', 'to': '往', 'Next Stop:': '下一站：',
-                'Fast Ferry': '快速', 'Ordinary Ferry': '普通', 'Cargo OK': '載貨',
-                '85% Seats available': '85% 座位空缺', '45% Seats available': '45% 座位空缺', '15% Seats available': '15% 座位空缺',
-                '1 min unload queue': '下船需時 1 分鐘', '2 min unload queue': '下船需時 2 分鐘', '5 min unload queue': '下船需時 5 分鐘',
-                'Choppiness': '顛簸度', 'Choppy Ride': '大浪顛簸', 'Rough Seas': '海面極大浪',
-                'TYPHOON SUSPENSION': '颱風停航警告',
-                'All ferry services are currently suspended due to Tropical Cyclone Warning Signal. Please check official operator websites for resumption announcements.': '由於天文台已發出熱帶氣旋警告信號，所有渡輪服務現已暫停。請留意營辦商復航公佈。',
-                'Your recent routes will appear here': '您最近搜尋的航線將顯示於此',
-                'See a wrong time? Report timetable change': '發現時間有誤？回報航班更改'
-            },
-            'zh-CN': {
-                'Pulse HK Ferry': 'Pulse 香港渡轮',
-                'Nearest Pier': '最近码头', 'Locating...': '定位中...', 'Location disabled or unavailable': '无法获取位置',
-                'Search route or pier...': '搜索航线或码头...', 
-                'Ferry Route': '渡轮航线', 'Routes': '条航线', 'Route': '条航线', 'No routes match your search / filter': '没有符合条件的航线',
-                'Departure Pier': '出发码头', 'Swap Direction': '切换方向', 'Swap': '切换', 'Depart from': '由',
-                'All Destinations': '所有目的地', 'Holiday Fare Notice:': '假日票价提示：', 'Sunday & HK Public Holiday fare rates apply today.': '今日适用星期日及公众假期票价。',
-                'Sunday Service Notice:': '星期日服务提示：', 'HK Public Holiday': '香港公众假期', 'Loading departure schedules...': '正在加载航班时间表...',
-                'No ferry route selected.': '未有选择渡轮航线。',
-                'No more scheduled departures from this pier today.': '今日此码头已没有更多航班。', 'Departed': '已开出', 'Boarding Now': '正在登船',
-                'In': '还有', 'h': '小时', 'm': '分钟', 'mins': '分钟', 'Arrive': '抵达', 'to': '往', 'Next Stop:': '下一站：',
-                'Fast Ferry': '快速', 'Ordinary Ferry': '普通', 'Cargo OK': '载货',
-                '85% Seats available': '85% 座位空缺', '45% Seats available': '45% 座位空缺', '15% Seats available': '15% 座位空缺',
-                '1 min unload queue': '下船需时 1 分钟', '2 min unload queue': '下船需时 2 分钟', '5 min unload queue': '下船需时 5 分钟',
-                'Choppiness': '颠簸度', 'Choppy Ride': '大浪颠簸', 'Rough Seas': '海面极大浪',
-                'TYPHOON SUSPENSION': '台风停航警告',
-                'All ferry services are currently suspended due to Tropical Cyclone Warning Signal. Please check official operator websites for resumption announcements.': '由于天文台已发出热带气旋警告信号，所有渡轮服务现已暂停。请留意营办商复航公布。',
-                'Your recent routes will appear here': '您最近搜寻的航线将显示于此',
-                'See a wrong time? Report timetable change': '发现时间有误？回报航班更改'
-            }
-        };
+<!-- Leaflet JS via CDN -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-        let currentLang = localStorage.getItem('pulseFerryLang') || 'en';
-        let currentGpsPierName = null;
-        let isHolidayPricingToday = false;
-        let currentWindGustsKmh = 0;
-        let currentWindSpeedKmh = 0;
-        let isTyphoonSuspended = false;
-        let typhoonSignalName = "";
-        let scheduleData = {};
+<script>
+// ==========================================
+// ZONE 1: STATIC DATA & GLOBAL STATE
+// ==========================================
+
+const pierCoordinates = {
+    'Central Pier 2': {lat: 22.28738, lng: 114.15767}, 'Central Pier 3': {lat: 22.28723, lng: 114.15831},
+    'Central Pier 4': {lat: 22.28704, lng: 114.15897}, 'Central Pier 5': {lat: 22.28682, lng: 114.15975},
+    'Central Pier 6': {lat: 22.28666, lng: 114.16053}, 'Central Pier 7': {lat: 22.28646, lng: 114.16130},
+    'Central Pier 8': {lat: 22.28612, lng: 114.16215}, 'HK Macau Ferry Terminal (Sheung Wan)': {lat: 22.2882, lng: 114.1517},
+    'Tsim Sha Tsui Star Ferry Pier': {lat: 22.2936, lng: 114.1693}, 'Wan Chai Ferry Pier': {lat: 22.2831, lng: 114.1755},
+    'Hung Hom Ferry Pier': {lat: 22.3000, lng: 114.1885}, 'North Point Ferry Pier': {lat: 22.2936, lng: 114.2005},
+    'Kowloon City Ferry Pier': {lat: 22.3168, lng: 114.1950}, 'Kwun Tong Ferry Pier': {lat: 22.3087, lng: 114.2205},
+    'Sai Wan Ho Pier': {lat: 22.2847, lng: 114.2217}, 'Sam Ka Tsuen Pier': {lat: 22.2906, lng: 114.2383},
+    'Aberdeen Promenade Pier': {lat: 22.2472, lng: 114.1557}, 'Aberdeen Landing': {lat: 22.2472, lng: 114.1557},
+    'Yung Shue Wan': {lat: 22.2268, lng: 114.1120}, 'Sok Kwu Wan': {lat: 22.2045, lng: 114.1302},
+    'Cheung Chau': {lat: 22.2081, lng: 114.0287}, 'Mui Wo': {lat: 22.2646, lng: 114.0016},
+    'Peng Chau': {lat: 22.2836, lng: 114.0378}, 'Discovery Bay': {lat: 22.2965, lng: 114.0205}
+};
+
+const HK_PUBLIC_HOLIDAYS = {
+    "2026-10-01": "National Day", "2026-10-18": "Chung Yeung Festival", "2026-12-25": "Christmas Day", "2026-12-26": "Boxing Day",
+    "2027-01-01": "New Year's Day", "2027-02-06": "Lunar New Year's Day"
+};
+
+let ALL_PIERS = []; 
+let ALL_ROUTES = []; 
+let routeStopsCache = {};
+let favRoutes = JSON.parse(localStorage.getItem('ferry_fav_routes_v1') || '[]');
+
+let isHolidayPricingToday = false;
+let currentWindGustsKmh = 0;
+let currentWindSpeedKmh = 0;
+let isTyphoonSuspended = false;
+let typhoonSignalName = "";
+
+let currentView = 'main';
+let previousView = 'main';
+let lastKnownPos = null;
+let currentNearestStopKey = null;
+let activeRegionFilter = 'ALL';
+let activeMapFilter = 'ALL';
+let mainExpandedGroupKey = null;
+let sheetExpandedGroupKey = null;
+
+// Map & Detail State
+let detailRouteGroup = null;
+let detailExpandedStopIdx = -1;
+let detailOpenToken = 0;
+let mapInstance = null; 
+let globalMapInstance = null; 
+let mapRouteLayer = null;
+let mapMarkers = [];
+let globalMarkers = [];
+let userMarkerDetail = null;
+let userMarkerGlobal = null;
+
+// Timers
+const REFRESH_INTERVAL = 15;
+let countdown = REFRESH_INTERVAL;
+let timerInterval = null;
+let isSyncing = false;
+let gpsWatcherId = null;
+const requestCache = new Map();
+
+// Initialize Text Size
+let textSizeState = parseInt(localStorage.getItem('pulse_hk_text_size_state') || '0');
+if (textSizeState === 1) document.documentElement.classList.add('text-sm');
+if (textSizeState === 2) document.documentElement.classList.add('text-xs');
+
+function toggleTextSize() {
+    textSizeState = (textSizeState + 1) % 3;
+    localStorage.setItem('pulse_hk_text_size_state', textSizeState.toString());
+    document.documentElement.classList.remove('text-sm', 'text-xs');
+    if (textSizeState === 1) document.documentElement.classList.add('text-sm');
+    if (textSizeState === 2) document.documentElement.classList.add('text-xs');
+}
+
+
+// ==========================================
+// ZONE 2: ALGORITHMS & DATA BUILDERS
+// ==========================================
+
+function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+  if (lat1 === 0 || lat2 === 0) return Infinity;
+  const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function findNearestStopIdx(stops, pos) {
+    let best = -1, bestD = Infinity;
+    stops.forEach((s, i) => {
+        const d = calculateDistanceKm(pos.lat, pos.lon, parseFloat(s.latitude), parseFloat(s.longitude));
+        if (d < bestD) { bestD = d; best = i; }
+    });
+    return best;
+}
+
+function parseTimeToDate(timeStr) {
+    if (!timeStr || typeof timeStr !== 'string') return new Date();
+    const parts = timeStr.split(':');
+    if (parts.length < 2) return new Date();
+    
+    const now = new Date();
+    let targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), Number(parts[0]), Number(parts[1]), 0);
+    
+    if (now.getTime() - targetDate.getTime() > 12 * 60 * 60 * 1000) targetDate.setDate(targetDate.getDate() + 1);
+    else if (targetDate.getTime() - now.getTime() > 20 * 60 * 60 * 1000) targetDate.setDate(targetDate.getDate() - 1);
+    
+    return targetDate;
+}
+
+function buildInternalData() {
+    ALL_ROUTES = [];
+    const uniquePiers = new Map();
+    routeStopsCache = {};
+    
+    for (const [key, data] of Object.entries(window.PulseFerry.scheduleData || {})) {
+        const cat = data.category || 'harbour';
+        let colorHex = '#0d9488'; // teal
+        if (cat === 'islands') colorHex = '#0ea5e9'; // blue
+        else if (cat === 'macau') colorHex = '#a855f7'; // purple
+        else if (cat === 'lamma') colorHex = '#84cc16'; // lime
+        else if (cat === 'kaito') colorHex = '#f59e0b'; // amber
         
-        const RECENT_ROUTES_KEY = 'pulseFerryCommutes_v2'; 
-
-        const pierCoordinates = {
-            'Central Pier 2': {lat: 22.28738, lng: 114.15767}, 'Central Pier 3': {lat: 22.28723, lng: 114.15831},
-            'Central Pier 4': {lat: 22.28704, lng: 114.15897}, 'Central Pier 5': {lat: 22.28682, lng: 114.15975},
-            'Central Pier 6': {lat: 22.28666, lng: 114.16053}, 'Central Pier 7': {lat: 22.28646, lng: 114.16130},
-            'Central Pier 8': {lat: 22.28612, lng: 114.16215}, 'HK Macau Ferry Terminal (Sheung Wan)': {lat: 22.2882, lng: 114.1517},
-            'Tsim Sha Tsui Star Ferry Pier': {lat: 22.2936, lng: 114.1693}, 'Wan Chai Ferry Pier': {lat: 22.2831, lng: 114.1755},
-            'Hung Hom Ferry Pier': {lat: 22.3000, lng: 114.1885}, 'North Point Ferry Pier': {lat: 22.2936, lng: 114.2005},
-            'Kowloon City Ferry Pier': {lat: 22.3168, lng: 114.1950}, 'Kwun Tong Ferry Pier': {lat: 22.3087, lng: 114.2205},
-            'Sai Wan Ho Pier': {lat: 22.2847, lng: 114.2217}, 'Sam Ka Tsuen Pier': {lat: 22.2906, lng: 114.2383},
-            'Aberdeen Promenade Pier': {lat: 22.2472, lng: 114.1557}, 'Aberdeen Landing': {lat: 22.2472, lng: 114.1557},
-            'Yung Shue Wan': {lat: 22.2268, lng: 114.1120}, 'Sok Kwu Wan': {lat: 22.2045, lng: 114.1302},
-            'Cheung Chau': {lat: 22.2081, lng: 114.0287}, 'Mui Wo': {lat: 22.2646, lng: 114.0016},
-            'Peng Chau': {lat: 22.2836, lng: 114.0378}, 'Discovery Bay': {lat: 22.2965, lng: 114.0205}
+        const routeObj = {
+            key: key,
+            routeNo: data.name,
+            dest_e: data.name,
+            company: data.operator,
+            network: cat,
+            colorHex: colorHex,
+            fares: data.fares,
+            piers: data.piers,
+            trips: data.trips
         };
-
-        const HK_PUBLIC_HOLIDAYS = {
-            "2026-10-01": "National Day", "2026-10-18": "Chung Yeung Festival", "2026-12-25": "Christmas Day", "2026-12-26": "Boxing Day",
-            "2027-01-01": "New Year's Day", "2027-02-06": "Lunar New Year's Day"
-        };
-
-        function initApp() {
-            scheduleData = window.PulseFerry?.scheduleData || {};
-            const langSelect = document.getElementById('langSelect');
-            if (langSelect) langSelect.value = currentLang;
-            
-            applyTranslations();
-            checkHolidayAndSundayStatus();
-            fetchWeatherAndTyphoonStatus();
-            
-            populateRoutes();
-            renderRecentRoutes();
-            updateLiveClock();
-
-            setInterval(updateLiveClock, 1000);
-            setInterval(renderSchedule, 15000);
-
-            if (langSelect) {
-                langSelect.addEventListener('change', (e) => {
-                    currentLang = e.target.value;
-                    localStorage.setItem('pulseFerryLang', currentLang);
-                    applyTranslations();
-                    populateRoutes();
-                    populatePiers();
-                    renderSchedule();
-                    renderRecentRoutes();
-                });
-            }
-
-            const gpsBtn = document.getElementById('gpsBtn');
-            if (gpsBtn) gpsBtn.addEventListener('click', handleGPSClick);
-
-            const routeSelect = document.getElementById('routeSelect');
-            const pierSelect = document.getElementById('pierSelect');
-
-            if (routeSelect) {
-                routeSelect.addEventListener('change', () => { 
-                    if (routeSelect.value !== 'GPS_MODE') currentGpsPierName = null; 
-                    populatePiers(); 
-                    if (routeSelect.value !== 'GPS_MODE' && routeSelect.value !== '') {
-                        updateRecentRoutes(routeSelect.value, pierSelect ? pierSelect.value : '');
-                    }
-                    renderSchedule(); 
-                    renderRecentRoutes();
-                });
-            }
-
-            if (pierSelect) {
-                pierSelect.addEventListener('change', () => {
-                    if (routeSelect.value !== 'GPS_MODE' && routeSelect.value !== '') {
-                        updateRecentRoutes(routeSelect.value, pierSelect.value);
-                    }
-                    renderSchedule();
-                    renderRecentRoutes();
-                });
-            }
-
-            const swapBtn = document.getElementById('swapDirectionBtn');
-            if (swapBtn) {
-                swapBtn.addEventListener('click', () => { 
-                    if (pierSelect && pierSelect.options.length > 1) {
-                        pierSelect.selectedIndex = (pierSelect.selectedIndex + 1) % pierSelect.options.length; 
-                        if (routeSelect.value !== 'GPS_MODE' && routeSelect.value !== '') {
-                            updateRecentRoutes(routeSelect.value, pierSelect.value);
-                        }
-                        renderSchedule(); 
-                        renderRecentRoutes();
-                    }
-                });
-            }
-
-            const searchInput = document.getElementById('searchInput');
-            const clearSearchBtn = document.getElementById('clearSearch');
-            
-            if (searchInput && clearSearchBtn) {
-                searchInput.addEventListener('input', () => { 
-                    currentGpsPierName = null; 
-                    clearSearchBtn.classList.toggle('hidden', searchInput.value === ''); 
-                    populateRoutes(); 
-                    populatePiers(); 
-                    renderSchedule(); 
-                });
-                clearSearchBtn.addEventListener('click', () => { 
-                    currentGpsPierName = null; 
-                    searchInput.value = ''; 
-                    clearSearchBtn.classList.add('hidden'); 
-                    populateRoutes(); 
-                    populatePiers(); 
-                    renderSchedule(); 
-                });
-            }
-
-            populatePiers();
-            renderSchedule();
-            renderRecentRoutes();
-        }
-
-        async function fetchWeatherAndTyphoonStatus() {
-            const wxrBadge = document.getElementById('apiStatusWxr');
-            try {
-                // 1. Fetch HKO Warnings for Typhoon 8, 9, 10
-                const hkoRes = await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=en');
-                const hkoData = await hkoRes.json();
+        ALL_ROUTES.push(routeObj);
+        
+        const stops = [];
+        let seq = 1;
+        if (data.piers) {
+            for (const [pKey, pName] of Object.entries(data.piers)) {
+                const coords = pierCoordinates[pName] || {lat: 22.28, lng: 114.16}; // Fallback
                 
-                if (hkoData.WTC8 || hkoData.WTC9 || hkoData.WTC10) {
-                    isTyphoonSuspended = true;
-                    typhoonSignalName = hkoData.WTC8 ? "Signal No. 8" : (hkoData.WTC9 ? "Signal No. 9" : "Signal No. 10");
-                }
-
-                // 2. Fetch Open-Meteo for Wind Speed AND Gusts
-                const windRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=22.28&longitude=114.16&current=wind_speed_10m,wind_gusts_10m');
-                const windData = await windRes.json();
+                stops.push({
+                    stopKey: pName,
+                    stopName_e: pName,
+                    latitude: coords.lat,
+                    longitude: coords.lng,
+                    seq: seq++
+                });
                 
-                currentWindSpeedKmh = windData?.current?.wind_speed_10m || 0;
-                currentWindGustsKmh = windData?.current?.wind_gusts_10m || 0;
-
-                if (wxrBadge) {
-                    wxrBadge.innerHTML = '🟢 WXR API';
-                    wxrBadge.className = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded shadow-inner';
-                }
-
-                const windDataEl = document.getElementById('windData');
-                if (windDataEl) {
-                    windDataEl.textContent = `${currentWindSpeedKmh} km/h (Gusts: ${currentWindGustsKmh} km/h)`;
-                }
-                
-                const wxrTelemetry = document.getElementById('wxrTelemetry');
-                if (wxrTelemetry) wxrTelemetry.classList.remove('hidden');
-                
-                renderSchedule();
-            } catch(e) {
-                if (wxrBadge) {
-                    wxrBadge.innerHTML = '🔴 WXR API';
-                    wxrBadge.className = 'bg-red-500/10 text-red-400 border border-red-500/30 px-2 py-0.5 rounded shadow-inner';
-                }
-            }
-        }
-
-        function updateRecentRoutes(routeKey, pierKey) {
-            if (!routeKey || routeKey === 'GPS_MODE' || !pierKey) return;
-            let recents = JSON.parse(localStorage.getItem(RECENT_ROUTES_KEY) || '[]');
-            recents = recents.filter(item => !(item.r === routeKey && item.p === pierKey));
-            recents.unshift({r: routeKey, p: pierKey});
-            if (recents.length > 4) recents.pop(); 
-            localStorage.setItem(RECENT_ROUTES_KEY, JSON.stringify(recents));
-        }
-
-        function renderRecentRoutes() {
-            const container = document.getElementById('recentRoutesContainer');
-            if (!container) return;
-            
-            let recents = JSON.parse(localStorage.getItem(RECENT_ROUTES_KEY) || '[]');
-            recents = recents.filter(item => scheduleData[item.r] && scheduleData[item.r].piers && scheduleData[item.r].piers[item.p]);
-
-            if (recents.length === 0) {
-                container.innerHTML = `<span class="text-gray-500 italic px-2">${t('Your recent routes will appear here')}</span>`;
-                return;
-            }
-
-            const routeSelect = document.getElementById('routeSelect');
-            const pierSelect = document.getElementById('pierSelect');
-            const currentR = routeSelect ? routeSelect.value : '';
-            const currentP = pierSelect ? pierSelect.value : '';
-
-            let html = `<span class="text-gray-400 font-semibold px-1 shrink-0 flex items-center"><svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>`;
-            
-            recents.forEach(item => {
-                const route = scheduleData[item.r];
-                const routeName = t(route.name);
-                const pierName = t(route.piers[item.p]);
-                const isSelected = (currentR === item.r && currentP === item.p);
-                const bgClass = isSelected ? 'bg-[#2dd4bf] text-slate-900 shadow-md ring-1 ring-teal-400' : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5';
-                
-                html += `
-                <button class="px-2.5 py-1.5 rounded-lg transition shrink-0 flex flex-col items-start text-left ${bgClass}" onclick="selectRecentRoute('${item.r}', '${item.p}')">
-                    <span class="text-[10px] sm:text-[11px] font-bold leading-tight tracking-tight">${routeName}</span>
-                    <span class="text-[8px] sm:text-[9px] font-medium opacity-80 leading-tight mt-0.5">${t('Depart from')} ${pierName}</span>
-                </button>`;
-            });
-            container.innerHTML = html;
-        }
-
-        window.selectRecentRoute = function(r, p) {
-            const routeSelect = document.getElementById('routeSelect');
-            const pierSelect = document.getElementById('pierSelect');
-            const searchInput = document.getElementById('searchInput');
-            const clearSearchBtn = document.getElementById('clearSearch');
-            
-            if (searchInput) searchInput.value = ''; 
-            if (clearSearchBtn) clearSearchBtn.classList.add('hidden');
-            
-            currentGpsPierName = null; 
-            populateRoutes(); 
-            
-            if (routeSelect) {
-                routeSelect.value = r;
-                populatePiers();
-                if (pierSelect) pierSelect.value = p;
-                updateRecentRoutes(r, p);
-                renderSchedule();
-                renderRecentRoutes();
-            }
-        };
-
-        function t(text) {
-            if (!text) return '';
-            if (currentLang === 'en') return text;
-            return (i18n[currentLang] && i18n[currentLang][text]) ? i18n[currentLang][text] : text;
-        }
-
-        function t_fare(fareStr) {
-            if (currentLang === 'en') return fareStr;
-            let translated = fareStr;
-            ['(Ord)', '(Fast)', '(Single Ticket)', '(Roundtrip)'].forEach(term => {
-                translated = translated.replace(term, t(term));
-            });
-            return translated;
-        }
-
-        function applyTranslations() {
-            document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.getAttribute('data-i18n')));
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = t(el.getAttribute('data-i18n-placeholder')));
-        }
-
-        function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        }
-
-        function findNearestPierAndRoute(userLat, userLng) {
-            let closestPierId = null, closestRouteId = null, closestPierName = null, minDistance = Infinity;
-            for (const [routeKey, routeData] of Object.entries(scheduleData)) {
-                if(!routeData.piers) continue;
-                for (const [pierId, pierName] of Object.entries(routeData.piers)) {
-                    const coords = pierCoordinates[pierName];
-                    if (coords) {
-                        const dist = getDistance(userLat, userLng, coords.lat, coords.lng);
-                        if (dist < minDistance) {
-                            minDistance = dist;
-                            closestPierId = pierId;
-                            closestRouteId = routeKey;
-                            closestPierName = pierName;
-                        }
-                    }
-                }
-            }
-            return { routeId: closestRouteId, pierId: closestPierId, pierName: closestPierName };
-        }
-
-        function handleGPSClick() {
-            if ("geolocation" in navigator) {
-                const btnText = document.getElementById('gpsBtnText');
-                if (btnText) btnText.textContent = t('Locating...');
-                navigator.geolocation.getCurrentPosition((position) => {
-                    const nearest = findNearestPierAndRoute(position.coords.latitude, position.coords.longitude);
-                    if (nearest.pierName) {
-                        currentGpsPierName = nearest.pierName;
-                        const sInput = document.getElementById('searchInput');
-                        const cSearch = document.getElementById('clearSearch');
-                        if (sInput) sInput.value = ''; 
-                        if (cSearch) cSearch.classList.add('hidden');
-                        
-                        populateRoutes();
-                        const routeSelect = document.getElementById('routeSelect');
-                        if (routeSelect) routeSelect.value = 'GPS_MODE';
-                        populatePiers();
-                        renderSchedule();
-                        renderRecentRoutes(); 
-                    }
-                    if (btnText) btnText.textContent = t('Nearest Pier');
-                }, () => {
-                    alert(t('Location disabled or unavailable'));
-                    if (btnText) btnText.textContent = t('Nearest Pier');
-                }, { enableHighAccuracy: true });
-            }
-        }
-
-        function updateLiveClock() {
-            const now = new Date();
-            const liveClockEl = document.getElementById('liveClock');
-            if (liveClockEl) {
-                liveClockEl.textContent = now.toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-            }
-        }
-
-        function checkHolidayAndSundayStatus() {
-            const now = new Date();
-            const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-            const holidayName = HK_PUBLIC_HOLIDAYS[dateStr];
-            isHolidayPricingToday = (now.getDay() === 0 || !!holidayName);
-
-            const holidayBanner = document.getElementById('holidayBanner');
-            if (holidayBanner) {
-                if (isHolidayPricingToday) {
-                    holidayBanner.classList.remove('hidden');
-                    const hTitle = document.getElementById('holidayTitle');
-                    if (hTitle) hTitle.textContent = holidayName ? `${t('HK Public Holiday')} (${t(holidayName) || holidayName}):` : t('Sunday Service Notice:');
+                const globalKey = pName; 
+                if (!uniquePiers.has(globalKey)) {
+                    uniquePiers.set(globalKey, {
+                        stopKey: globalKey,
+                        stopName_e: pName,
+                        latitude: coords.lat,
+                        longitude: coords.lng,
+                        network: cat,
+                        routes: new Set([key])
+                    });
                 } else {
-                    holidayBanner.classList.add('hidden');
+                    uniquePiers.get(globalKey).routes.add(key);
                 }
             }
         }
+        routeStopsCache[key] = stops;
+    }
+    ALL_PIERS = Array.from(uniquePiers.values());
+}
 
-        function populateRoutes() {
-            const searchInput = document.getElementById('searchInput');
-            const routeSelect = document.getElementById('routeSelect');
-            if(!routeSelect) return;
-            
-            const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
-            const currentSelected = routeSelect.value;
-            routeSelect.innerHTML = '';
-            let matchedCount = 0;
 
-            if (currentGpsPierName && query === '') {
-                const option = document.createElement('option');
-                option.value = 'GPS_MODE'; 
-                option.textContent = `📍 ${t('Departing from')} ${t(currentGpsPierName)}`;
-                routeSelect.appendChild(option);
-            }
+// ==========================================
+// ZONE 3: API & ETAS
+// ==========================================
 
-            for (const [key, route] of Object.entries(scheduleData)) {
-                if (query !== '') {
-                    const pierNames = Object.values(route.piers || {});
-                    const translatedPiers = pierNames.map(p => t(p));
-                    const searchable = `${route.name || ''} ${t(route.name)} ${route.operator || ''} ${t(route.operator)} ${pierNames.join(' ')} ${translatedPiers.join(' ')}`.toLowerCase();
-                    if (!searchable.includes(query)) continue;
-                }
-                const option = document.createElement('option');
-                option.value = key; 
-                option.textContent = t(route.name);
-                routeSelect.appendChild(option);
-                matchedCount++;
-            }
+async function fetchJSONCached(url) {
+    if (requestCache.has(url)) return requestCache.get(url);
+    const promise = new Promise(async (resolve) => {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const response = await fetch(url, { cache: 'no-store', signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (!response.ok) resolve(null);
+            else resolve(await response.json());
+        } catch(e) { resolve(null); }
+    });
+    requestCache.set(url, promise);
+    setTimeout(() => requestCache.delete(url), 60000); 
+    return promise;
+}
 
-            const badge = document.getElementById('routeCountBadge');
-            if (badge) badge.textContent = `${matchedCount} ${matchedCount === 1 ? t('Route') : t('Routes')}`;
-            
-            if (currentSelected && [...routeSelect.options].some(o => o.value === currentSelected)) {
-                routeSelect.value = currentSelected;
-            }
+async function fetchWeatherAndTyphoonStatus() {
+    try {
+        const hkoRes = await fetchJSONCached('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=en');
+        if (hkoRes && (hkoRes.WTC8 || hkoRes.WTC9 || hkoRes.WTC10)) {
+            isTyphoonSuspended = true;
+            typhoonSignalName = hkoRes.WTC8 ? "Signal No. 8" : (hkoRes.WTC9 ? "Signal No. 9" : "Signal No. 10");
         }
-
-        function populatePiers() {
-            const routeSelect = document.getElementById('routeSelect');
-            const pierSelect = document.getElementById('pierSelect');
-            if(!pierSelect || !routeSelect) return;
-
-            pierSelect.innerHTML = '';
-            const routeKey = routeSelect.value;
-            if (routeKey === 'GPS_MODE') {
-                const opt = document.createElement('option'); 
-                opt.value = 'ALL_DEST'; 
-                opt.textContent = `🗺️ ${t('All Destinations')}`;
-                pierSelect.appendChild(opt); 
-                return;
-            }
-            if (!routeKey || !scheduleData[routeKey]) return;
-            
-            for (const [key, name] of Object.entries(scheduleData[routeKey].piers || {})) {
-                const option = document.createElement('option');
-                option.value = key; 
-                option.textContent = `${t('Depart from')} ${t(name)}`;
-                pierSelect.appendChild(option);
-            }
+        const windRes = await fetchJSONCached('https://api.open-meteo.com/v1/forecast?latitude=22.28&longitude=114.16&current=wind_speed_10m,wind_gusts_10m');
+        if (windRes && windRes.current) {
+            currentWindSpeedKmh = windRes.current.wind_speed_10m || 0;
+            currentWindGustsKmh = windRes.current.wind_gusts_10m || 0;
         }
+        document.getElementById('wxrTelemetry').innerHTML = `<span style="font-size:0.8rem; color:var(--accent-blue); padding:4px 8px; border:1px solid var(--border-color); border-radius:12px;">WXR Active • Wind: ${currentWindSpeedKmh}km/h</span>`;
+    } catch(e) { console.error(e); }
+}
 
-        function parseTimeToDate(timeStr) {
-            if (!timeStr || typeof timeStr !== 'string') return new Date();
-            const parts = timeStr.split(':');
-            if (parts.length < 2) return new Date();
+function checkHolidayAndSundayStatus() {
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const holidayName = HK_PUBLIC_HOLIDAYS[dateStr];
+    isHolidayPricingToday = (now.getDay() === 0 || !!holidayName);
+
+    const w = document.getElementById('wxrTelemetry');
+    if (isHolidayPricingToday && w) {
+        w.innerHTML += ` <span style="font-size:0.8rem; color:var(--accent-orange); padding:4px 8px; border:1px solid var(--border-color); border-radius:12px; margin-left:6px;">${holidayName ? 'Public Holiday' : 'Sunday'} Fare</span>`;
+    }
+}
+
+async function fetchFerryEtaRaw(group, stopKey) {
+    let matchingPierKey = null;
+    for (const [k, v] of Object.entries(group.piers)) {
+        if (v === stopKey) { matchingPierKey = k; break; }
+    }
+    if (!matchingPierKey) return [];
+
+    const now = new Date();
+    const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+    const deps = [];
+    const hasFast = group.trips.some(t => t.vesselType === 'fast');
+    const hasOrd = group.trips.some(t => t.vesselType === 'ordinary' || !t.vesselType);
+    const hasMixedVessels = hasFast && hasOrd;
+
+    group.trips.forEach(trip => {
+        if (trip.weekdayOnly && isWeekend) return;
+        if (trip.weekendOnly && !isWeekend) return;
+        
+        const stops = trip.stops;
+        if (!stops || stops.length === 0) return;
+        
+        const pierIndex = stops.findIndex(s => s.p === matchingPierKey);
+        if (pierIndex !== -1 && pierIndex < stops.length - 1) {
+            const currentStop = stops[pierIndex];
+            const nextStop = stops[pierIndex + 1];
+            const finalStop = stops[stops.length - 1];
+
+            const departureDate = parseTimeToDate(currentStop.t);
+            const diffMinutes = Math.floor((departureDate.getTime() - now.getTime()) / 60000);
             
-            const now = new Date();
-            let targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), Number(parts[0]), Number(parts[1]), 0);
-            
-            if (now.getTime() - targetDate.getTime() > 12 * 60 * 60 * 1000) targetDate.setDate(targetDate.getDate() + 1);
-            else if (targetDate.getTime() - now.getTime() > 20 * 60 * 60 * 1000) targetDate.setDate(targetDate.getDate() - 1);
-            
-            return targetDate;
-        }
-
-        function extractDeparturesForRoute(route, pierKey, now, isWeekend) {
-            const deps = [];
-            if (!route || !route.trips || !Array.isArray(route.trips)) return deps;
-
-            const hasFast = route.trips.some(t => t.vesselType === 'fast');
-            const hasOrd = route.trips.some(t => t.vesselType === 'ordinary' || !t.vesselType);
-            const hasMixedVessels = hasFast && hasOrd;
-
-            route.trips.forEach(trip => {
-                if (trip.weekdayOnly && isWeekend) return;
-                if (trip.weekendOnly && !isWeekend) return;
-
-                const stops = trip.stops;
-                if (!stops || !Array.isArray(stops) || stops.length === 0) return;
+            if (diffMinutes >= -15 && diffMinutes < 1440) {
+                const depMins = window.PulseFerry.timeToMins(currentStop.t);
+                const arrMins = window.PulseFerry.timeToMins(finalStop.t);
                 
-                const pierIndex = stops.findIndex(s => s.p === pierKey);
+                deps.push({
+                    departureDate: departureDate,
+                    destName: group.piers[finalStop.p] || finalStop.p,
+                    etaDestTime: finalStop.t,
+                    mins: diffMinutes,
+                    sortTimeMs: diffMinutes * 60000,
+                    mainTimeText: diffMinutes <= 0 ? (diffMinutes < 0 ? 'Departed' : 'Boarding') : `${diffMinutes}m`,
+                    apiStr: currentStop.t,
+                    platText: group.company,
+                    vesselType: trip.vesselType || 'ordinary',
+                    cargo: trip.cargo || false,
+                    hasMixedVessels: hasMixedVessels,
+                    travelDurationMins: (arrMins - depMins + 1440) % 1440,
+                    fares: group.fares,
+                    isScheduled: true
+                });
+            }
+        }
+    });
 
-                if (pierIndex !== -1 && pierIndex < stops.length - 1) {
-                    const currentStop = stops[pierIndex];
-                    const nextStop = stops[pierIndex + 1];
-                    const finalStop = stops[stops.length - 1];
+    return deps.sort((a,b) => a.sortTimeMs - b.sortTimeMs);
+}
 
-                    if (!currentStop || !currentStop.t || !finalStop || !finalStop.t) return;
 
-                    const departureDate = parseTimeToDate(currentStop.t);
-                    const diffMinutes = Math.floor((departureDate.getTime() - now.getTime()) / 60000);
-                    
-                    if (diffMinutes >= -15 && diffMinutes < 1440) {
-                        const depMins = window.PulseFerry.timeToMins(currentStop.t);
-                        const arrMins = window.PulseFerry.timeToMins(finalStop.t);
+// ==========================================
+// ZONE 4: MAPS & CONTINUOUS GPS TRACKING
+// ==========================================
+function makeUserIcon() {
+    return L.divIcon({ className: 'custom-user-icon', html: '<div></div>', iconSize: [22, 22] });
+}
 
-                        deps.push({
-                            routeId: route.id, 
-                            departureTime: currentStop.t,
-                            departureDate: departureDate,
-                            nextStop: route.piers?.[nextStop.p] || nextStop.p,
-                            nextStopTime: nextStop.t || '',
-                            destination: route.piers?.[finalStop.p] || finalStop.p,
-                            etaDestination: finalStop.t,
-                            countdownMins: diffMinutes,
-                            travelDurationMins: (arrMins - depMins + 1440) % 1440,
-                            vesselType: trip.vesselType || 'ordinary', 
-                            cargo: trip.cargo || false,
-                            routeFares: route.fares || null,
-                            hasMixedVessels: hasMixedVessels
-                        });
-                    }
-                }
+function updateUserMarkers() {
+    if (!lastKnownPos) return;
+    const icon = makeUserIcon();
+    if (mapInstance) {
+        if (!userMarkerDetail) userMarkerDetail = L.marker([lastKnownPos.lat, lastKnownPos.lon], {icon, zIndexOffset: 1000}).addTo(mapInstance);
+        else userMarkerDetail.setLatLng([lastKnownPos.lat, lastKnownPos.lon]);
+    }
+    if (globalMapInstance) {
+        if (!userMarkerGlobal) userMarkerGlobal = L.marker([lastKnownPos.lat, lastKnownPos.lon], {icon, zIndexOffset: 1000}).addTo(globalMapInstance);
+        else userMarkerGlobal.setLatLng([lastKnownPos.lat, lastKnownPos.lon]);
+    }
+}
+
+function startGPSTracking() {
+    if (!navigator.geolocation || gpsWatcherId) return;
+    gpsWatcherId = navigator.geolocation.watchPosition((pos) => {
+        lastKnownPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        updateUserMarkers();
+    }, (err) => { console.warn('GPS Watch Error:', err); }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
+}
+
+function refreshGPS(timeoutMs = 4000) {
+    return new Promise((resolve) => {
+        if (!navigator.geolocation) { resolve(lastKnownPos); return; }
+        
+        const fallback = setTimeout(() => resolve(lastKnownPos), timeoutMs + 500);
+        
+        navigator.geolocation.getCurrentPosition((pos) => {
+            clearTimeout(fallback);
+            lastKnownPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+            updateUserMarkers();
+            resolve(lastKnownPos);
+        }, () => {
+            clearTimeout(fallback);
+            resolve(lastKnownPos);
+        }, { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 10000 });
+    });
+}
+
+function locateNearestStopPromise() {
+    return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+            document.getElementById('mainLocationText').innerText = 'GPS Not Supported';
+            renderMainNearby(); 
+            if (currentView === 'search') renderSearchResults();
+            resolve(false); 
+            return;
+        }
+        document.getElementById('mainLocationText').innerHTML = '<span style="font-size: 1.4rem;">📍</span> Locating...';
+        
+        const fallback = setTimeout(() => {
+            document.getElementById('mainLocationText').innerText = 'Location Failed';
+            renderMainNearby(); 
+            if (currentView === 'search') renderSearchResults();
+            resolve(false);
+        }, 5000);
+
+        navigator.geolocation.getCurrentPosition((pos) => {
+            clearTimeout(fallback);
+            lastKnownPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+            updateUserMarkers();
+            
+            let closest = null, minDistance = Infinity;
+            ALL_PIERS.forEach(s => {
+                const d = calculateDistanceKm(pos.coords.latitude, pos.coords.longitude, parseFloat(s.latitude), parseFloat(s.longitude));
+                if (d < minDistance) { minDistance = d; closest = s; }
             });
-            return deps;
+
+            if (closest) {
+                currentNearestStopKey = closest.stopKey;
+                const distNotice = minDistance > 3.0 ? ` (${minDistance.toFixed(1)}km)` : '';
+                document.getElementById('mainLocationText').innerHTML = `<span style="font-size: 1.4rem;">📍</span> ${closest.stopName_e}${distNotice}`;
+                renderMainNearby();
+                if (currentView === 'map' && globalMapInstance) renderGlobalMapStops();
+                if (currentView === 'search') renderSearchResults();
+            } else {
+                document.getElementById('mainLocationText').innerText = 'No nearby piers';
+                document.getElementById('mainRouteList').innerHTML = '<div class="text-center" style="padding-top:40px;">Try searching via the Routes tab.</div>';
+            }
+            startGPSTracking();
+            resolve(true);
+        }, () => {
+            clearTimeout(fallback);
+            document.getElementById('mainLocationText').innerText = 'Location Unavailable';
+            renderMainNearby(); 
+            if (currentView === 'search') renderSearchResults();
+            resolve(false);
+        }, { enableHighAccuracy: true, timeout: 4500, maximumAge: 10000 });
+    });
+}
+
+async function recenterMap(mapType) {
+    let pos = lastKnownPos;
+    if (!pos) pos = await refreshGPS(2000);
+    if (!pos) return;
+    
+    if (mapType === 'detail' && mapInstance) {
+        mapInstance.flyTo([pos.lat, pos.lon], 16, { animate: true, duration: 1 });
+    } else if (mapType === 'global' && globalMapInstance) {
+        globalMapInstance.flyTo([pos.lat, pos.lon], 16, { animate: true, duration: 1 });
+    }
+}
+
+L.Control.Recenter = L.Control.extend({
+    options: { position: 'bottomright' },
+    initialize: function(mapType) { this.mapType = mapType; },
+    onAdd: function(map) {
+        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+        container.style.backgroundColor = 'var(--bg-white)';
+        container.style.width = '34px';
+        container.style.height = '34px';
+        container.style.cursor = 'pointer';
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        container.style.justifyContent = 'center';
+        container.style.marginBottom = '10px';
+        container.style.boxShadow = '0 1px 5px rgba(0,0,0,0.65)';
+        container.style.borderRadius = '4px';
+        
+        container.innerHTML = `<svg style="width:20px;height:20px;fill:var(--accent-blue);" viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>`;
+        
+        L.DomEvent.disableClickPropagation(container);
+        container.onclick = function(e){
+            e.preventDefault();
+            recenterMap(this.mapType);
+        }.bind(this);
+        return container;
+    }
+});
+
+function initDetailMap() {
+    mapInstance = L.map('map-container', { zoomControl: false }).setView([22.28, 114.16], 12);
+    L.tileLayer('https://mapapi.geodata.gov.hk/gs/api/v1.0.0/xyz/basemap/wgs84/{z}/{x}/{y}.png', {
+        className: 'dark-tiles', attribution: '&copy; Hong Kong GeoData Store'
+    }).addTo(mapInstance);
+    L.tileLayer('https://mapapi.geodata.gov.hk/gs/api/v1.0.0/xyz/label/hk/en/wgs84/{z}/{x}/{y}.png', {
+        className: 'dark-tiles'
+    }).addTo(mapInstance);
+    L.control.zoom({ position: 'bottomright' }).addTo(mapInstance);
+    new L.Control.Recenter('detail').addTo(mapInstance);
+
+    let lastTapTime = 0;
+    document.getElementById('map-container').addEventListener('touchstart', function(e) {
+        if (e.touches.length > 1) return;
+        const now = Date.now();
+        if (now - lastTapTime < 400 && now - lastTapTime > 0) {
+            mapInstance.zoomIn();
+            if(e.cancelable) e.preventDefault();
+        }
+        lastTapTime = now;
+    }, { passive: false });
+}
+
+function initGlobalMap() {
+    const startLat = lastKnownPos ? lastKnownPos.lat : 22.28;
+    const startLon = lastKnownPos ? lastKnownPos.lon : 114.16;
+    const startZoom = lastKnownPos ? 13 : 11;
+
+    globalMapInstance = L.map('global-map-container', { zoomControl: false }).setView([startLat, startLon], startZoom);
+    
+    L.tileLayer('https://mapapi.geodata.gov.hk/gs/api/v1.0.0/xyz/basemap/wgs84/{z}/{x}/{y}.png', {
+        className: 'dark-tiles', attribution: '&copy; Hong Kong GeoData Store'
+    }).addTo(globalMapInstance);
+    L.tileLayer('https://mapapi.geodata.gov.hk/gs/api/v1.0.0/xyz/label/hk/en/wgs84/{z}/{x}/{y}.png', {
+        className: 'dark-tiles'
+    }).addTo(globalMapInstance);
+    
+    L.control.zoom({ position: 'bottomright' }).addTo(globalMapInstance);
+    new L.Control.Recenter('global').addTo(globalMapInstance);
+    
+    if (lastKnownPos) {
+        userMarkerGlobal = L.marker([lastKnownPos.lat, lastKnownPos.lon], {icon: makeUserIcon(), zIndexOffset: 1000}).addTo(globalMapInstance);
+    }
+
+    globalMapInstance.on('moveend', renderGlobalMapStops);
+    renderGlobalMapStops();
+
+    let lastTapTime = 0;
+    document.getElementById('global-map-container').addEventListener('touchstart', function(e) {
+        if (e.touches.length > 1) return;
+        const now = Date.now();
+        if (now - lastTapTime < 400 && now - lastTapTime > 0) {
+            globalMapInstance.zoomIn();
+            if(e.cancelable) e.preventDefault();
+        }
+        lastTapTime = now;
+    }, { passive: false });
+}
+
+function setMapFilter(filter) {
+    activeMapFilter = filter;
+    document.querySelectorAll('.map-filter-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById(`mapFilter-${filter}`);
+    if (btn) btn.classList.add('active');
+    renderGlobalMapStops();
+}
+
+function renderGlobalMapStops() {
+    if (!globalMapInstance) return;
+    
+    globalMarkers.forEach(m => globalMapInstance.removeLayer(m));
+    globalMarkers = [];
+
+    const bounds = globalMapInstance.getBounds();
+    let candidateStops = ALL_PIERS;
+    if (activeMapFilter !== 'ALL') {
+        candidateStops = candidateStops.filter(s => s.network === activeMapFilter);
+    }
+
+    let visibleStops = candidateStops.filter(s => {
+        const lat = parseFloat(s.latitude);
+        const lon = parseFloat(s.longitude);
+        return bounds.contains([lat, lon]);
+    });
+
+    visibleStops.forEach(s => {
+        const borderColor = 'var(--theme-color)';
+        const stopIcon = L.divIcon({
+            className: 'custom-stop-icon',
+            html: `<div style="width:16px;height:16px;background:white;border:4px solid ${borderColor};border-radius:50%; box-shadow: 0 0 6px rgba(0,0,0,0.6);"></div>`,
+            iconSize: [16, 16]
+        });
+
+        const marker = L.marker([parseFloat(s.latitude), parseFloat(s.longitude)], { icon: stopIcon }).addTo(globalMapInstance);
+        marker.on('click', () => {
+            globalMapInstance.setView(marker.getLatLng(), Math.max(globalMapInstance.getZoom(), 15), { animate: true });
+            openMapSheet(s);
+        });
+        globalMarkers.push(marker);
+    });
+}
+
+function drawRouteOnMap(group) {
+    if(!mapInstance) return;
+    if(mapRouteLayer) mapInstance.removeLayer(mapRouteLayer);
+    mapMarkers.forEach(m => mapInstance.removeLayer(m));
+    mapMarkers = [];
+    
+    const stops = routeStopsCache[group.key] || [];
+    if(stops.length === 0) return;
+    
+    const latlngs = stops.map(s => [parseFloat(s.latitude), parseFloat(s.longitude)]);
+    mapRouteLayer = L.polyline(latlngs, {color: group.colorHex, weight: 6, opacity: 0.9}).addTo(mapInstance);
+    const stopIcon = L.divIcon({ className: 'custom-stop-icon', html: '<div style="width:14px;height:14px;background:white;border:3px solid #333;border-radius:50%;"></div>', iconSize: [14, 14] });
+    
+    stops.forEach((s, idx) => {
+        const marker = L.marker([parseFloat(s.latitude), parseFloat(s.longitude)], {icon: stopIcon}).addTo(mapInstance);
+        marker.on('click', () => {
+            expandStop(idx);
+            document.getElementById(`stop-item-${idx}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        mapMarkers.push(marker);
+    });
+    
+    const bounds = mapRouteLayer.getBounds();
+    if(userMarkerDetail && lastKnownPos) { bounds.extend(userMarkerDetail.getLatLng()); }
+    mapInstance.fitBounds(bounds, { padding: [40, 40] });
+}
+
+
+// ==========================================
+// ZONE 5: CORE APP LOGIC & STATE MUTATION
+// ==========================================
+function updateDetailTimestamp() {
+    const el = document.getElementById('detailLastUpdated');
+    if (el) {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-HK', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+        el.innerText = `Updated ${timeStr}`;
+    }
+}
+
+async function initApp() {
+  try {
+    buildInternalData();
+    await fetchWeatherAndTyphoonStatus();
+    checkHolidayAndSundayStatus();
+    initDetailMap(); 
+    await locateNearestStopPromise();
+    startTimer();
+  } catch (err) {
+    document.getElementById('mainRouteList').innerHTML = '<div class="text-center" style="color:#ef4444;">Error building network.</div>';
+    console.error(err);
+  }
+}
+
+function getNearbyRoutes(maxDistanceKm = 3.5, targetNetwork = 'ALL') {
+    if (!lastKnownPos || ALL_PIERS.length === 0) return [];
+
+    let eligibleStops = ALL_PIERS;
+    if (targetNetwork !== 'ALL') {
+        eligibleStops = ALL_PIERS.filter(s => s.network === targetNetwork);
+    }
+    if (eligibleStops.length === 0) return [];
+
+    const stopsWithDist = eligibleStops.map(s => {
+        const dist = calculateDistanceKm(lastKnownPos.lat, lastKnownPos.lon, parseFloat(s.latitude), parseFloat(s.longitude));
+        return { stop: s, dist };
+    }).sort((a, b) => a.dist - b.dist);
+
+    if (stopsWithDist.length === 0) return [];
+
+    let candidates = stopsWithDist.filter(item => item.dist <= maxDistanceKm);
+    if (candidates.length === 0) candidates = stopsWithDist.slice(0, 3); 
+
+    const seenGroupKeys = new Set();
+    const result = [];
+    candidates.forEach(item => {
+        item.stop.routes.forEach(rk => {
+            if (!seenGroupKeys.has(rk)) {
+                seenGroupKeys.add(rk);
+                const g = ALL_ROUTES.find(r => r.key === rk);
+                if (g && (targetNetwork === 'ALL' || g.network === targetNetwork)) {
+                    result.push({ ...g, nearestDistKm: item.dist, nearestStopName: item.stop.stopName_e });
+                }
+            }
+        });
+    });
+    return result.sort((a, b) => a.nearestDistKm - b.nearestDistKm);
+}
+
+
+// ==========================================
+// ZONE 6: DOM MANIPULATION & UI RENDERING
+// ==========================================
+function switchTab(tabId) {
+    if (tabId === 'main') {
+        mainExpandedGroupKey = null; 
+        if (!lastKnownPos) document.getElementById('mainLocationText').innerHTML = '<span style="font-size: 1.4rem;">📍</span> Locating...';
+        locateNearestStopPromise();
+    }
+    currentView = tabId;
+    detailRouteGroup = null; 
+    detailOpenToken++; 
+    
+    document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(`view-${tabId}`).classList.add('active');
+    document.getElementById(`tab-${tabId}`).classList.add('active');
+    document.getElementById('backBtn').style.display = 'none';
+    document.getElementById('headerTitle').innerText = 'Pulse HK';
+    
+    if (tabId === 'search') renderSearchResults();
+    if (tabId === 'fav') renderFavList();
+    if (tabId === 'map') {
+        closeMapSheet();
+        if (!globalMapInstance) {
+            initGlobalMap();
+        } else {
+            globalMapInstance.invalidateSize();
+            renderGlobalMapStops();
+        }
+    }
+}
+
+async function autoSelectNearestStop(token) {
+    const stops = routeStopsCache[detailRouteGroup.key] || [];
+    if (stops.length === 0) return;
+
+    let pos = lastKnownPos;
+    if (!pos) pos = await refreshGPS(2000);
+    if (token !== detailOpenToken) return;
+
+    let bestIdx = 0; 
+    if (pos) {
+        let foundIdx = findNearestStopIdx(stops, pos);
+        if (foundIdx !== -1) bestIdx = foundIdx;
+    }
+    const nameEl = document.querySelector(`#stop-item-${bestIdx} .stop-name`);
+    if (nameEl && pos) {
+         nameEl.insertAdjacentHTML('beforeend', `<span class="nearest-tag">Nearest GPS</span>`);
+    }
+    await expandStop(bestIdx, true);
+}
+
+function openRouteDetail(groupKey) {
+    const group = ALL_ROUTES.find(g => g.key === groupKey);
+    if (!group) return;
+    
+    previousView = currentView;
+    detailRouteGroup = group;
+    detailExpandedStopIdx = -1;
+    currentView = 'detail';
+    const token = ++detailOpenToken;
+    
+    document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-detail').classList.add('active');
+    document.getElementById('backBtn').style.display = 'flex';
+    document.getElementById('headerTitle').innerText = group.dest_e;
+    
+    const updateEl = document.getElementById('detailLastUpdated');
+    if (updateEl) updateEl.innerText = 'Locating you...';
+
+    setTimeout(async () => {
+        if (token !== detailOpenToken) return;
+        if(mapInstance) mapInstance.invalidateSize();
+        drawRouteOnMap(group);
+        renderStopList();
+        
+        await autoSelectNearestStop(token);
+    }, 250); 
+}
+
+function navigateBack() { switchTab(previousView); }
+
+function openMapSheet(stopObj) {
+    document.getElementById('map-bottom-sheet').classList.add('active');
+    document.getElementById('sheet-title').innerText = stopObj.stopName_e;
+    
+    let relevantGroups = [];
+    stopObj.routes.forEach(groupKey => {
+        const group = ALL_ROUTES.find(g => g.key === groupKey);
+        if (group) relevantGroups.push(group); 
+    });
+    
+    const listEl = document.getElementById('sheet-route-list');
+    listEl.innerHTML = '<div class="text-center">Loading timetables...</div>';
+    
+    Promise.all(relevantGroups.map(async g => {
+        const arrs = await fetchFerryEtaRaw(g, stopObj.stopKey);
+        let firstEtaMins = Infinity;
+        if (arrs.length > 0) firstEtaMins = arrs[0].mins;
+        return { group: g, arrs, firstEtaMins };
+    })).then(groupsWithEtas => {
+        groupsWithEtas.sort((a, b) => a.firstEtaMins - b.firstEtaMins);
+        let html = '';
+        groupsWithEtas.forEach(item => {
+            const g = item.group;
+            const arrs = item.arrs;
+            const mins = item.firstEtaMins;
+            let summaryHtml = '';
+            let itemClass = '';
+            
+            if (mins !== Infinity) {
+                let timeHtml = mins <= 0 ? 'Due' : `${mins}<span style="font-size:1rem; margin-left:2px;">m</span>`;
+                summaryHtml = `<div class="eta-time">${timeHtml}</div>`;
+            } else {
+                summaryHtml = `<div class="eta-time" style="color:var(--text-sub)">--</div>`;
+                itemClass = 'inactive-route';
+            }
+
+            html += `
+              <div class="route-list-item ${itemClass}" onclick="toggleSheetEta('${g.key}', '${stopObj.stopKey}')" id="sheet-item-${g.key}">
+                  <div class="route-no-col" style="background-color: ${g.colorHex}; font-size:0.9rem; line-height:1.2;">
+                      <div>${g.network.substring(0,3).toUpperCase()}</div>
+                  </div>
+                  <div class="route-info-col">
+                      <div class="route-dest">${g.dest_e}</div>
+                      <div class="route-sub">${g.company}</div>
+                  </div>
+                  <div class="route-eta-col" id="sheet-eta-summary-${g.key}">${summaryHtml}</div>
+              </div>
+              <div class="eta-expanded-container" id="sheet-eta-expanded-${g.key}"></div>
+            `;
+        });
+        listEl.innerHTML = html || '<div class="text-center">No service active at this pier</div>';
+    });
+}
+
+function closeMapSheet() {
+    document.getElementById('map-bottom-sheet').classList.remove('active');
+    sheetExpandedGroupKey = null;
+}
+
+async function toggleSheetEta(groupKey, stopKey) {
+    const expandContainer = document.getElementById(`sheet-eta-expanded-${groupKey}`);
+    if (!expandContainer) return;
+    
+    if (sheetExpandedGroupKey === groupKey) {
+        expandContainer.classList.remove('active');
+        sheetExpandedGroupKey = null;
+    } else {
+        if (sheetExpandedGroupKey) {
+            const prev = document.getElementById(`sheet-eta-expanded-${sheetExpandedGroupKey}`);
+            if (prev) prev.classList.remove('active');
+        }
+        sheetExpandedGroupKey = groupKey;
+        expandContainer.classList.add('active');
+        expandContainer.innerHTML = '<div style="color:var(--text-sub); padding: 20px; text-align:center;">Loading times...</div>';
+        
+        const group = ALL_ROUTES.find(g => g.key === groupKey);
+        if(group) {
+            const arrs = await fetchFerryEtaRaw(group, stopKey);
+            expandContainer.innerHTML = generateExpandedETAsHtml(arrs, groupKey);
+        }
+    }
+}
+
+async function renderMainNearby(isSilentRefresh = false) {
+    const listEl = document.getElementById('mainRouteList');
+    if (!currentNearestStopKey) {
+        if (!isSilentRefresh) {
+            listEl.innerHTML = '<div class="text-center" style="padding-top:40px;">Try searching via the Routes tab.</div>';
+        }
+        return;
+    }
+    const stopObj = ALL_PIERS.find(s => s.stopKey === currentNearestStopKey);
+    if (!stopObj) return;
+
+    let relevantGroups = [];
+    stopObj.routes.forEach(groupKey => {
+        const group = ALL_ROUTES.find(g => g.key === groupKey);
+        if (group) relevantGroups.push(group); 
+    });
+
+    if (!isSilentRefresh) {
+        listEl.innerHTML = '<div class="init-loader"><div style="font-size:1.2rem; color:var(--text-main); font-weight:700;">Fetching timetables...</div></div>';
+    }
+
+    let groupsWithEtas = await Promise.all(relevantGroups.map(async g => {
+        const arrs = await fetchFerryEtaRaw(g, currentNearestStopKey);
+        let firstEtaMins = arrs.length > 0 ? arrs[0].mins : Infinity;
+        return { group: g, arrs, firstEtaMins };
+    }));
+
+    groupsWithEtas.sort((a, b) => a.firstEtaMins - b.firstEtaMins);
+    let html = '';
+    groupsWithEtas.forEach(item => {
+        const g = item.group;
+        const arrs = item.arrs;
+        const mins = item.firstEtaMins;
+        let summaryHtml = '';
+        let itemClass = '';
+        
+        if (mins !== Infinity) {
+            let timeHtml = mins <= 0 ? 'Due' : `${mins}<span style="font-size:1rem; margin-left:2px;">m</span>`;
+            summaryHtml = `<div class="eta-time">${timeHtml}</div>`;
+        } else {
+            summaryHtml = `<div class="eta-time" style="color:var(--text-sub)">--</div>`;
+            itemClass = 'inactive-route';
         }
 
-        function renderSchedule() {
-            const scheduleContainer = document.getElementById('scheduleContainer');
-            if (!scheduleContainer) return;
+        const isExpanded = (mainExpandedGroupKey === g.key);
+        const expandClass = isExpanded ? 'active' : '';
 
-            // TYPHOON KILL SWITCH
-            if (isTyphoonSuspended) {
-                scheduleContainer.innerHTML = `
-                    <div class="bg-red-900/40 border-2 border-red-500 rounded-2xl p-8 text-center fade-in shadow-2xl relative overflow-hidden">
-                        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPHBhdGggZD0iTTAgMEw4IDhaTTAgOEw4IDBaIiBzdHJva2U9IiNmZmYiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPgo8L3N2Zz4=')] opacity-30"></div>
-                        <svg class="w-16 h-16 mx-auto mb-4 text-red-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        <h2 class="text-xl sm:text-2xl font-black text-red-400 uppercase tracking-widest mb-2">${t('TYPHOON SUSPENSION')} (${typhoonSignalName})</h2>
-                        <p class="text-sm text-red-200/90 max-w-md mx-auto relative z-10">${t('All ferry services are currently suspended due to Tropical Cyclone Warning Signal. Please check official operator websites for resumption announcements.')}</p>
-                    </div>`;
-                return;
-            }
+        html += `
+          <div class="route-list-item ${itemClass}" onclick="toggleMainEta('${g.key}')" id="main-item-${g.key}">
+              <div class="route-no-col" style="background-color: ${g.colorHex}; font-size:0.9rem; line-height:1.2;">
+                  <div>${g.network.substring(0,3).toUpperCase()}</div>
+              </div>
+              <div class="route-info-col">
+                  <div class="route-dest">${g.dest_e}</div>
+                  <div class="route-sub">${g.company}</div>
+              </div>
+              <div class="route-eta-col" id="main-eta-summary-${g.key}">${summaryHtml}</div>
+          </div>
+          <div class="eta-expanded-container ${expandClass}" id="main-eta-expanded-${g.key}">
+        `;
+        if (isExpanded) html += generateExpandedETAsHtml(arrs, g.key);
+        html += `</div>`;
+    });
+    listEl.innerHTML = html || '<div class="text-center">No service found for this pier.</div>';
+}
 
-            const routeSelect = document.getElementById('routeSelect');
-            const pierSelect = document.getElementById('pierSelect');
-            if(!routeSelect || !pierSelect) return;
+async function toggleMainEta(groupKey) {
+    if (mainExpandedGroupKey === groupKey) {
+        document.getElementById(`main-eta-expanded-${groupKey}`).classList.remove('active');
+        mainExpandedGroupKey = null;
+    } else {
+        if (mainExpandedGroupKey) {
+            const prev = document.getElementById(`main-eta-expanded-${mainExpandedGroupKey}`);
+            if (prev) prev.classList.remove('active');
+        }
+        mainExpandedGroupKey = groupKey;
+        const expandContainer = document.getElementById(`main-eta-expanded-${groupKey}`);
+        expandContainer.classList.add('active');
+        expandContainer.innerHTML = '<div style="color:var(--text-sub); padding: 20px; text-align:center;">Loading times...</div>';
+        
+        const group = ALL_ROUTES.find(g => g.key === groupKey);
+        if(group && currentNearestStopKey) {
+            const arrs = await fetchFerryEtaRaw(group, currentNearestStopKey);
+            expandContainer.innerHTML = generateExpandedETAsHtml(arrs, groupKey);
+        }
+    }
+}
 
-            const routeKey = routeSelect.value;
-            const pierKey = pierSelect.value;
+function generateExpandedETAsHtml(arrs, groupKey) {
+    if (isTyphoonSuspended) {
+        return `
+        <div style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3); border-radius:12px; margin: 16px; padding: 20px; text-align:center;">
+            <div style="font-size:2rem; margin-bottom:8px;">🌪️</div>
+            <h4 style="color:var(--accent-red); margin:0 0 8px 0;">TYPHOON SUSPENSION</h4>
+            <p style="color:var(--text-main); font-size:0.85rem; margin:0;">All ferry services are suspended due to ${typhoonSignalName}.</p>
+        </div>`;
+    }
 
-            if (routeKey !== 'GPS_MODE' && (!routeKey || !scheduleData[routeKey])) {
-                scheduleContainer.innerHTML = `<div class="bg-[#1e293b] rounded-2xl p-8 text-center text-gray-500">${t('Please choose a route or adjust your category search filter above.')}</div>`;
-                return;
-            }
+    if (arrs.length === 0) return '<div style="color:var(--text-sub); text-align:center; padding: 20px;">No more departures today.</div>';
+    
+    let html = '';
+    for(let i = 0; i < Math.min(4, arrs.length); i++) {
+        const arr = arrs[i];
+        
+        let vesselBadge = '';
+        if (arr.hasMixedVessels) {
+            if (arr.vesselType === 'fast') vesselBadge = `<span class="occ-pill" style="background:rgba(14, 165, 233, 0.15); color:var(--accent-blue); border:1px solid rgba(14, 165, 233, 0.3);">⚡ Fast</span>`;
+            else vesselBadge = `<span class="occ-pill" style="background:rgba(245, 158, 11, 0.15); color:var(--accent-orange); border:1px solid rgba(245, 158, 11, 0.3);">⛴️ Ordinary</span>`;
+        } else if (arr.cargo) {
+            vesselBadge = `<span class="occ-pill occ-neutral">📦 Cargo OK</span>`;
+        }
 
-            const now = new Date();
-            const isWeekend = now.getDay() === 0 || now.getDay() === 6;
-            let departures = [];
+        // Add Seats and Queue logic
+        const hour = arr.departureDate.getHours();
+        const isWeekend = arr.departureDate.getDay() === 0 || arr.departureDate.getDay() === 6;
+        const isPeak = (!isWeekend && ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19))) || (isWeekend && (hour >= 14 && hour <= 18));
+        const isMid = hour >= 10 && hour <= 16;
+        const seatText = isPeak ? '15% Seats' : (isMid ? '45% Seats' : '85% Seats');
+        const queueText = isPeak ? '5m Q' : (isMid ? '2m Q' : '1m Q');
+        let crowdHtml = `<span class="occ-pill occ-neutral">💺 ${seatText}</span> <span class="occ-pill occ-neutral">🚶 ${queueText}</span>`;
 
-            if (routeKey === 'GPS_MODE' && currentGpsPierName) {
-                for (const [rKey, r] of Object.entries(scheduleData)) {
-                    let matchingPierKey = null;
-                    if(r.piers) {
-                        for (const [k, v] of Object.entries(r.piers)) {
-                            if (v === currentGpsPierName) { matchingPierKey = k; break; }
-                        }
+        let seaComfortHtml = '';
+        if (i < 2) {
+            let routeFactor = 1.0;
+            if (groupKey.includes('harbour') || groupKey.includes('kaito')) routeFactor = 0.3;
+            else if (groupKey.includes('islands') || groupKey.includes('macau') || groupKey.includes('lamma')) routeFactor = 1.25;
+
+            const effectiveWindGusts = currentWindGustsKmh * routeFactor;
+            const choppinessPercent = Math.min(100, Math.round((effectiveWindGusts / 70) * 100));
+
+            if (choppinessPercent >= 60) seaComfortHtml = `<span class="occ-pill" style="background:rgba(239, 68, 68, 0.15); color:var(--accent-red); border:1px solid rgba(239, 68, 68, 0.3);">🤢 Rough</span>`;
+            else if (choppinessPercent >= 30) seaComfortHtml = `<span class="occ-pill" style="background:rgba(245, 158, 11, 0.15); color:var(--accent-orange); border:1px solid rgba(245, 158, 11, 0.3);">🌊 Choppy</span>`;
+            else seaComfortHtml = `<span class="occ-pill" style="background:rgba(16, 185, 129, 0.15); color:var(--accent-green); border:1px solid rgba(16, 185, 129, 0.3);">😌 Calm</span>`;
+        }
+
+        let displayFare = '';
+        if (arr.fares) {
+            let activeFare = isHolidayPricingToday ? arr.fares.adultHoliday : arr.fares.adultWeekday;
+            if (activeFare) {
+                let currency = arr.fares.currency === 'HKD' ? 'HK$' : (arr.fares.currency || 'HK$');
+                if (typeof activeFare === 'string') {
+                    if (activeFare.includes('/')) {
+                        const parts = activeFare.split('/');
+                        let matched = arr.vesselType === 'fast' ? (parts.find(p => p.toLowerCase().includes('fast')) || activeFare) : (parts.find(p => p.toLowerCase().includes('ord') || p.toLowerCase().includes('slow')) || parts[0]);
+                        displayFare = matched.replace(/\(fast\)|\(ord\)|\(ordinary\)/ig, '').trim();
+                    } else {
+                        displayFare = activeFare.replace(/\(fast\)|\(ord\)|\(ordinary\)/ig, '').trim();
                     }
-                    if (matchingPierKey) {
-                        r.id = rKey;
-                        departures.push(...extractDeparturesForRoute(r, matchingPierKey, now, isWeekend));
-                    }
-                }
-            } else if (scheduleData[routeKey]) {
-                scheduleData[routeKey].id = routeKey;
-                departures = extractDeparturesForRoute(scheduleData[routeKey], pierKey, now, isWeekend);
-            }
-
-            departures.forEach(dep => {
-                dep.countdownMins = Math.floor((dep.departureDate.getTime() - now.getTime()) / 60000);
-            });
-
-            departures.sort((a, b) => a.departureDate - b.departureDate);
-            
-            if (departures.length === 0) {
-                scheduleContainer.innerHTML = `<div class="bg-[#1e293b] rounded-2xl p-8 text-center text-gray-400 font-medium">${t('No more scheduled departures from this pier today.')}</div>`;
-                return;
-            }
-
-            let newContentHtml = '';
-
-            departures.forEach((dep, index) => {
-                let countdownDisplay = '';
-                let countdownStyle = '';
-
-                if (dep.countdownMins < 0) {
-                    countdownDisplay = t('Departed');
-                    countdownStyle = 'bg-gray-800 text-gray-500 border-gray-700';
-                } else if (dep.countdownMins === 0) {
-                    countdownDisplay = t('Boarding Now');
-                    countdownStyle = 'bg-red-500/20 text-red-400 border-red-500/30 animate-pulse font-bold';
+                    if (/^[\d.]+$/.test(displayFare)) displayFare = currency + displayFare;
                 } else {
-                    const hrs = Math.floor(dep.countdownMins / 60);
-                    const mins = dep.countdownMins % 60;
-                    countdownDisplay = hrs > 0 ? `${t('In')} ${hrs}${t('h')} ${mins}${t('m')}` : `${t('In')} ${mins} ${t('mins')}`;
-                    countdownStyle = dep.countdownMins <= 15 ? 'bg-amber-500/20 text-amber-300 border-amber-500/30 font-bold animate-pulse' : 'bg-[#2dd4bf]/15 text-[#2dd4bf] border-[#2dd4bf]/30 font-semibold';
+                    displayFare = `${currency}${Number(activeFare).toFixed(1)}`;
                 }
+            }
+        }
+        if(displayFare) displayFare = `<span class="occ-pill occ-neutral">${displayFare}</span>`;
 
-                const hour = dep.departureDate.getHours();
-                const isPeak = (!isWeekend && ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19))) || (isWeekend && (hour >= 14 && hour <= 18));
-                const isMid = hour >= 10 && hour <= 16;
-                
-                const seatText = isPeak ? '15% Seats available' : (isMid ? '45% Seats available' : '85% Seats available');
-                const seatEmoji = '💺';
-                const queueText = isPeak ? '5 min unload queue' : (isMid ? '2 min unload queue' : '1 min unload queue');
-                const queueEmoji = '🚶‍♂️';
+        let color = arr.mins <= 0 ? 'var(--accent-orange)' : 'var(--accent-green)';
+        let timeLabel = arr.mins <= 0 ? arr.mainTimeText : (arr.mins <= 15 ? `<span style="animation: pulse 2s infinite">${arr.mainTimeText}</span>` : arr.mainTimeText);
+        
+        html += `
+            <div class="eta-row">
+                <div class="eta-row-left">
+                    <span>To ${arr.destName}</span>
+                    <div class="eta-row-sub">
+                        <span>${arr.platText}</span>
+                        ${vesselBadge}
+                        ${displayFare}
+                        ${crowdHtml}
+                        ${seaComfortHtml}
+                    </div>
+                </div>
+                <div class="eta-row-time" style="display:flex; flex-direction:column; align-items:flex-end; line-height:1.1;">
+                    <div style="color:${color}; font-size:1.5rem;">${timeLabel}</div>
+                    <div style="font-size:0.75rem; font-weight:700; color:var(--text-sub); margin-top:4px;">Arr. ${arr.etaDestTime}</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    html += `
+        <div style="text-align:center; padding:12px; border-top:1px dashed var(--border-color);">
+            <a href="mailto:mtrtimehk@gmail.com?subject=Ferry%20Timetable%20Update%20Needed" style="color:var(--text-sub); font-size:0.75rem; text-decoration:none;">📝 Report wrong timetable</a>
+        </div>
+    `;
+    
+    return html;
+}
 
-                let seaComfortHtml = '';
+function setRegionFilter(region) {
+    activeRegionFilter = region;
+    document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`filter-${region}`).classList.add('active');
+    renderSearchResults();
+}
 
-                // Only show weather impact for the immediate next 2 upcoming departures to prevent inaccurate all-day forecast assumptions
-                if (index < 2) {
-                    // GEOGRAPHIC EXPOSURE MODIFIER FOR CHOPPINESS %
-                    let routeFactor = 1.0;
-                    let rId = dep.routeId || routeKey || '';
-                    if (rId.includes('harbour') || rId.includes('kaito')) {
-                        routeFactor = 0.3; // Harbor routes are highly shielded
-                    } else if (rId.includes('islands') || rId.includes('macau') || rId.includes('lamma')) {
-                        routeFactor = 1.25; // Open water routes face heavy swell
-                    }
-
-                    const effectiveWindGusts = currentWindGustsKmh * routeFactor;
-                    const choppinessPercent = Math.min(100, Math.round((effectiveWindGusts / 70) * 100));
-
-                    if (choppinessPercent >= 60) {
-                        seaComfortHtml = `
-                        <div class="flex-1 w-full bg-red-500/10 border border-red-500/30 rounded-lg p-2.5 flex items-center space-x-2.5 shadow-inner">
-                            <span class="text-xl leading-none">🤢</span>
-                            <span class="text-xs font-bold text-red-400">${choppinessPercent}% ${t('Rough Seas')}</span>
-                        </div>`;
-                    } else if (choppinessPercent >= 30) {
-                        seaComfortHtml = `
-                        <div class="flex-1 w-full bg-amber-500/10 border border-amber-500/30 rounded-lg p-2.5 flex items-center space-x-2.5 shadow-inner">
-                            <span class="text-xl leading-none">🌊</span>
-                            <span class="text-xs font-semibold text-amber-300">${choppinessPercent}% ${t('Choppy Ride')}</span>
-                        </div>`;
-                    } else {
-                        seaComfortHtml = `
-                        <div class="flex-1 w-full bg-blue-500/10 border border-blue-500/30 rounded-lg p-2.5 flex items-center space-x-2.5 shadow-inner">
-                            <span class="text-xl leading-none">😌</span>
-                            <span class="text-xs font-semibold text-blue-300">${choppinessPercent}% ${t('Choppiness')}</span>
-                        </div>`;
-                    }
-                }
-
-                let nextStopHtml = '';
-                if (dep.nextStop !== dep.destination) {
-                    nextStopHtml = `<span class="text-[10px] text-gray-400 ml-1">${t('Next Stop:')} <strong class="text-gray-200 font-semibold">${t(dep.nextStop)} (${dep.nextStopTime})</strong></span>`;
-                }
-
-                let vesselBadge = '';
-                if (dep.hasMixedVessels || routeKey === 'GPS_MODE') {
-                    if (dep.vesselType === 'fast') {
-                        vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border-sky-500/30 border">⚡ ${t('Fast Ferry')}</span>`;
-                    } else {
-                        vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border-amber-500/30 border">⛴️ ${t('Ordinary Ferry')}${dep.cargo ? ' 📦' : ''}</span>`;
-                    }
-                } else if (dep.cargo) {
-                    vesselBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-500/20 text-gray-300 border-gray-500/30 border">📦 ${t('Cargo OK')}</span>`;
-                }
-
-                let displayFare = '';
-                if (dep.routeFares) {
-                    let activeFare = isHolidayPricingToday ? dep.routeFares.adultHoliday : dep.routeFares.adultWeekday;
-                    if (activeFare !== undefined && activeFare !== null) {
-                        let currency = dep.routeFares.currency === 'HKD' ? 'HK$' : (dep.routeFares.currency || 'HK$');
-                        
-                        if (typeof activeFare === 'string') {
-                            if (activeFare.includes('/')) {
-                                const parts = activeFare.split('/');
-                                let matched = activeFare;
-                                if (dep.vesselType === 'fast') {
-                                    matched = parts.find(p => p.toLowerCase().includes('fast')) || activeFare;
-                                } else {
-                                    matched = parts.find(p => p.toLowerCase().includes('ord') || p.toLowerCase().includes('slow')) || parts[0];
-                                }
-                                displayFare = matched.replace(/\(fast\)|\(ord\)|\(ordinary\)/ig, '').trim();
-                            } else {
-                                displayFare = activeFare.replace(/\(fast\)|\(ord\)|\(ordinary\)/ig, '').trim();
-                            }
-                            if (/^[\d.]+$/.test(displayFare)) displayFare = currency + displayFare;
-                        } else {
-                            displayFare = `${currency}${Number(activeFare).toFixed(1)}`;
-                        }
-                    }
-                }
-
-                newContentHtml += `
-                    <div class="bg-[#1e293b] rounded-2xl p-4 sm:p-5 shadow-xl border border-white/10 fade-in" style="animation-delay: ${Math.min(index * 0.03, 0.25)}s">
-                        <div class="flex justify-between items-start mb-1 gap-2">
-                            <div>
-                                <div class="flex items-baseline space-x-2 flex-wrap">
-                                    <h2 class="text-4xl font-extrabold text-[#2dd4bf] tracking-tight font-mono">${dep.departureTime}</h2>
-                                    <span class="text-lg text-white font-bold">${t('to')} ${t(dep.destination)}</span>
-                                </div>
-                                <div class="mt-1 flex items-center space-x-2 flex-wrap gap-y-1">
-                                    ${vesselBadge}
-                                    ${nextStopHtml}
-                                </div>
-                            </div>
-                            <div class="flex flex-col items-end shrink-0">
-                                <div class="flex items-center space-x-2 mb-1.5">
-                                    ${displayFare ? `<span class="text-base font-extrabold text-white bg-white/5 px-2.5 py-1 rounded-lg border border-white/10 shadow-inner font-mono">${displayFare}</span>` : ''}
-                                    <div class="px-3 py-1 rounded-xl border text-sm shadow-sm ${countdownStyle}">${countdownDisplay}</div>
-                                </div>
-                                <div class="text-[11px] text-gray-400 font-medium flex items-center space-x-1">
-                                    <span>${t('Arrive')} ${t(dep.destination)}:</span>
-                                    <span class="text-gray-100 font-bold font-mono text-sm">${dep.etaDestination}</span>
-                                    <span class="text-[#2dd4bf]/70 font-semibold font-mono">(${dep.travelDurationMins}${t('m')})</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-3.5 flex flex-col sm:flex-row items-center gap-2 border-t border-white/5 pt-3">
-                            <div class="flex-1 w-full bg-white/5 border border-white/10 rounded-lg p-2.5 flex items-center space-x-2.5">
-                                <span class="text-xl leading-none">${seatEmoji}</span>
-                                <span class="text-xs font-semibold text-gray-200">${t(seatText)}</span>
-                            </div>
-                            <div class="flex-1 w-full bg-white/5 border border-white/10 rounded-lg p-2.5 flex items-center space-x-2.5">
-                                <span class="text-xl leading-none">${queueEmoji}</span>
-                                <span class="text-xs font-semibold text-gray-200">${t(queueText)}</span>
-                            </div>
-                            ${seaComfortHtml}
-                        </div>
+function renderSearchResults() {
+    const query = document.getElementById('searchInput').value.trim().toLowerCase();
+    const listEl = document.getElementById('searchResults');
+    
+    if (!query) {
+        if (activeRegionFilter === 'ALL') {
+            let nearby = getNearbyRoutes(3.5, 'ALL');
+            
+            if (!lastKnownPos && nearby.length === 0) {
+                let matches = ALL_ROUTES;
+                let html = `
+                    <div style="padding: 12px 16px; font-size: 0.85rem; font-weight: 800; color: var(--text-sub); text-transform: uppercase; background: var(--bg-white); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 5;">
+                        <span>⛴️ ALL ROUTES</span>
+                        <span style="color: var(--accent-blue); font-size: 0.8rem; flex-shrink: 0;">${matches.length} ROUTES</span>
                     </div>
                 `;
-            });
-
-            // Generate the explicitly formatted Gmail Web Link to bypass OS handlers
-            let rName = routeKey;
-            let pName = pierKey;
-            if (routeKey === 'GPS_MODE') {
-                rName = 'GPS Search';
-                pName = currentGpsPierName ? t(currentGpsPierName) : 'Nearest Pier';
-            } else if (scheduleData[routeKey]) {
-                rName = t(scheduleData[routeKey].name);
-                pName = scheduleData[routeKey].piers ? t(scheduleData[routeKey].piers[pierKey]) : pierKey;
+                matches.forEach(g => {
+                    html += `
+                      <div class="route-list-item" onclick="openRouteDetail('${g.key}')">
+                          <div class="route-no-col" style="background-color:${g.colorHex}; font-size:0.9rem; line-height:1.2;"><div>${g.network.substring(0,3).toUpperCase()}</div></div>
+                          <div class="route-info-col"><div class="route-dest">${g.dest_e}</div><div class="route-sub">${g.company}</div></div>
+                      </div>
+                    `;
+                });
+                listEl.innerHTML = html;
+                return;
             }
 
-            const mailSubject = encodeURIComponent(`Ferry Timetable Update Needed: ${rName}`);
-            const mailBody = encodeURIComponent(`Hi developer,\n\nI am at the pier and noticed an inaccurate timetable for the following route:\n\nRoute: ${rName}\nDeparting From: ${pName}\n\n(Please type the correct time or attach a photo of the pier schedule here)\n\nThanks!`);
-            
-            // This URL forces a web browser to open Gmail directly into the "Compose" window
-            const gmailWebLink = `https://mail.google.com/mail/?view=cm&fs=1&to=mtrtimehk@gmail.com&su=${mailSubject}&body=${mailBody}`;
+            const firstValid = nearby.find(g => g.nearestDistKm !== undefined && !isNaN(g.nearestDistKm));
+            const headerLabel = firstValid ? `${firstValid.nearestStopName} (${firstValid.nearestDistKm.toFixed(1)}km)` : 'Nearby Routes';
 
-            // Add the Report Inaccuracy Button at the bottom of the list
-            newContentHtml += `
-                <div class="mt-6 flex justify-center fade-in" style="animation-delay: 0.5s">
-                    <a href="${gmailWebLink}" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2 text-gray-500 hover:text-gray-300 transition text-[10px] sm:text-xs font-medium px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-full border border-white/5 shadow-inner cursor-pointer">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                        <span data-i18n="See a wrong time? Report timetable change">${t('See a wrong time? Report timetable change')}</span>
-                    </a>
+            let html = `
+                <div style="padding: 12px 16px; font-size: 0.85rem; font-weight: 800; color: var(--text-sub); text-transform: uppercase; background: var(--bg-white); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 5;">
+                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75%;">📍 Nearest (${headerLabel})</span>
+                    <span style="color: var(--accent-blue); font-size: 0.8rem; flex-shrink: 0;">${nearby.length} ROUTES</span>
                 </div>
             `;
-
-            scheduleContainer.innerHTML = newContentHtml;
+            nearby.forEach(g => {
+                html += `
+                  <div class="route-list-item" onclick="openRouteDetail('${g.key}')">
+                      <div class="route-no-col" style="background-color:${g.colorHex}; font-size:0.9rem; line-height:1.2;"><div>${g.network.substring(0,3).toUpperCase()}</div></div>
+                      <div class="route-info-col"><div class="route-dest">${g.dest_e}</div><div class="route-sub">${g.company}</div></div>
+                  </div>
+                `;
+            });
+            listEl.innerHTML = html;
+        } else {
+            let matches = ALL_ROUTES.filter(g => g.network === activeRegionFilter);
+            let html = `
+                <div style="padding: 12px 16px; font-size: 0.85rem; font-weight: 800; color: var(--text-sub); text-transform: uppercase; background: var(--bg-white); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 5;">
+                    <span>⛴️ ${activeRegionFilter.toUpperCase()}</span>
+                    <span style="color: var(--accent-blue); font-size: 0.8rem; flex-shrink: 0;">${matches.length} ROUTES</span>
+                </div>
+            `;
+            matches.forEach(g => {
+                html += `
+                  <div class="route-list-item" onclick="openRouteDetail('${g.key}')">
+                      <div class="route-no-col" style="background-color:${g.colorHex}; font-size:0.9rem; line-height:1.2;"><div>${g.network.substring(0,3).toUpperCase()}</div></div>
+                      <div class="route-info-col"><div class="route-dest">${g.dest_e}</div><div class="route-sub">${g.company}</div></div>
+                  </div>
+                `;
+            });
+            listEl.innerHTML = html;
         }
+        return;
+    }
 
-        window.addEventListener('DOMContentLoaded', initApp);
-    </script>
+    let matches = ALL_ROUTES;
+    if (activeRegionFilter !== 'ALL') matches = matches.filter(g => g.network === activeRegionFilter);
+    matches = matches.filter(g => g.routeNo.toLowerCase().includes(query) || (g.company && g.company.toLowerCase().includes(query)));
+    
+    if(matches.length === 0) {
+        listEl.innerHTML = '<div class="text-center" style="padding-top:60px; font-size:4rem; opacity:0.2;">⛴️</div><div class="text-center">No routes found</div>';
+        return;
+    }
+    
+    let html = '';
+    matches.forEach(g => {
+        html += `
+          <div class="route-list-item" onclick="openRouteDetail('${g.key}')">
+              <div class="route-no-col" style="background-color:${g.colorHex}; font-size:0.9rem; line-height:1.2;"><div>${g.network.substring(0,3).toUpperCase()}</div></div>
+              <div class="route-info-col"><div class="route-dest">${g.dest_e}</div><div class="route-sub">${g.company}</div></div>
+          </div>
+        `;
+    });
+    listEl.innerHTML = html;
+}
+
+function renderFavList() {
+    const listEl = document.getElementById('favList');
+    let html = `<div class="add-fav-btn" onclick="openFavModal()">+ Add New Favorite Route</div>`;
+    if(favRoutes.length === 0) { listEl.innerHTML = html + '<div class="text-center">No saved routes yet.</div>'; return; }
+    
+    favRoutes.forEach(k => {
+        const g = ALL_ROUTES.find(r => r.key === k);
+        if(g) {
+            html += `
+              <div class="route-list-item" onclick="openRouteDetail('${g.key}')">
+                  <div class="route-no-col" style="background-color:${g.colorHex}; font-size:0.9rem; line-height:1.2;"><div>${g.network.substring(0,3).toUpperCase()}</div></div>
+                  <div class="route-info-col"><div class="route-dest">${g.dest_e}</div><div class="route-sub">${g.company}</div></div>
+                  <button class="del-fav-btn" onclick="event.stopPropagation(); removeFavRoute('${g.key}');">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+              </div>
+            `;
+        }
+    });
+    listEl.innerHTML = html;
+}
+
+function removeFavRoute(key) {
+    favRoutes = favRoutes.filter(k => k !== key);
+    localStorage.setItem('ferry_fav_routes_v1', JSON.stringify(favRoutes));
+    renderFavList();
+}
+function openFavModal() { document.getElementById('fav-modal').style.display = 'flex'; document.getElementById('favSearchInput').value = ''; renderFavSearch(); }
+function closeFavModal() { document.getElementById('fav-modal').style.display = 'none'; }
+
+function renderFavSearch() {
+    const query = document.getElementById('favSearchInput').value.trim().toLowerCase();
+    const listEl = document.getElementById('favSearchResults');
+    if(!query) { listEl.innerHTML = '<div class="text-center" style="padding-top:40px; font-size:3rem; opacity:0.2;">🔍</div><div class="text-center">Type route name</div>'; return; }
+
+    const matches = ALL_ROUTES.filter(g => g.routeNo.toLowerCase().includes(query) || (g.company && g.company.toLowerCase().includes(query)));
+    if(matches.length === 0) { listEl.innerHTML = '<div class="text-center" style="padding-top:40px; font-size:3rem; opacity:0.2;">⛴️</div><div class="text-center">No routes found</div>'; return; }
+    
+    let html = '';
+    matches.forEach(g => {
+        const isSaved = favRoutes.includes(g.key);
+        html += `
+          <div class="route-list-item" style="opacity: ${isSaved ? '0.5' : '1'}; pointer-events: ${isSaved ? 'none' : 'auto'};" onclick="addFavFromModal('${g.key}')">
+              <div class="route-no-col" style="background-color:${g.colorHex}; font-size:0.9rem; line-height:1.2;"><div>${g.network.substring(0,3).toUpperCase()}</div></div>
+              <div class="route-info-col"><div class="route-dest">${g.dest_e}</div><div class="route-sub">${g.company} ${isSaved ? '(Saved)' : ''}</div></div>
+          </div>
+        `;
+    });
+    listEl.innerHTML = html;
+}
+
+function addFavFromModal(key) {
+    if(!favRoutes.includes(key)) { favRoutes.push(key); localStorage.setItem('ferry_fav_routes_v1', JSON.stringify(favRoutes)); }
+    closeFavModal(); renderFavList();
+}
+
+function renderStopList() {
+    const listEl = document.getElementById('stop-list-container');
+    const stops = routeStopsCache[detailRouteGroup.key] || [];
+    let html = '';
+    stops.forEach((s, idx) => {
+        html += `
+            <div class="stop-item" id="stop-item-${idx}" onclick="expandStop(${idx})">
+                <div class="stop-line" style="background-color: ${detailRouteGroup.colorHex};"></div>
+                <div class="stop-dot" id="stop-dot-${idx}"></div>
+                <div class="stop-name">${idx + 1}. ${s.stopName_e}</div>
+                <div class="eta-expanded-container" id="detail-eta-expanded-${idx}" style="margin-top: 20px; border-radius:12px;"></div>
+            </div>
+        `;
+    });
+    listEl.innerHTML = html;
+}
+
+async function expandStop(idx, forceOpen = false) {
+    if (detailExpandedStopIdx === idx && !forceOpen) {
+        document.getElementById(`detail-eta-expanded-${idx}`).classList.remove('active');
+        document.getElementById(`stop-item-${idx}`).classList.remove('active-stop');
+        const normalIcon = L.divIcon({ className: 'custom-stop-icon', html: '<div style="width:14px;height:14px;background:white;border:3px solid #333;border-radius:50%;"></div>', iconSize: [14, 14] });
+        if (mapMarkers[idx]) mapMarkers[idx].setIcon(normalIcon);
+        detailExpandedStopIdx = -1;
+        return;
+    }
+    
+    if(detailExpandedStopIdx !== -1) {
+        const prevExp = document.getElementById(`detail-eta-expanded-${detailExpandedStopIdx}`);
+        const prevItem = document.getElementById(`stop-item-${detailExpandedStopIdx}`);
+        if (prevExp) prevExp.classList.remove('active');
+        if (prevItem) prevItem.classList.remove('active-stop');
+        if(mapMarkers[detailExpandedStopIdx]) mapMarkers[detailExpandedStopIdx].setIcon(L.divIcon({ className: 'custom-stop-icon', html: '<div style="width:14px;height:14px;background:white;border:3px solid #333;border-radius:50%;"></div>', iconSize: [14, 14] }));
+    }
+    
+    detailExpandedStopIdx = idx;
+    const item = document.getElementById(`stop-item-${idx}`);
+    const expandContainer = document.getElementById(`detail-eta-expanded-${idx}`);
+    if (!item || !expandContainer) return;
+    
+    item.classList.add('active-stop');
+    expandContainer.classList.add('active');
+    expandContainer.innerHTML = '<div style="color:var(--text-sub); padding:20px; text-align:center;">Loading times...</div>';
+    
+    const activeIcon = L.divIcon({ className: 'custom-active-stop-icon', html: `<div style="width:20px;height:20px;background:white;border:6px solid ${detailRouteGroup.colorHex};border-radius:50%;"></div>`, iconSize: [20, 20] });
+    if(mapMarkers[idx]) mapMarkers[idx].setIcon(activeIcon);
+    
+    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (mapInstance && mapMarkers[idx]) {
+        mapInstance.setView(mapMarkers[idx].getLatLng(), 15, { animate: true });
+    }
+    
+    const stops = routeStopsCache[detailRouteGroup.key] || [];
+    const targetStop = stops[idx];
+    
+    try {
+        const arrs = await fetchFerryEtaRaw(detailRouteGroup, targetStop.stopKey);
+        if (detailExpandedStopIdx !== idx) return; 
+        expandContainer.innerHTML = generateExpandedETAsHtml(arrs, detailRouteGroup.key);
+        updateDetailTimestamp();
+    } catch (e) {
+        expandContainer.innerHTML = '<div style="color:#ef4444; text-align:center; padding: 20px;">Network Failed</div>';
+    }
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  countdown = REFRESH_INTERVAL;
+  document.getElementById('refreshTimerMain').innerText = `${countdown}s`;
+  
+  timerInterval = setInterval(() => {
+    if (isSyncing) return;
+    countdown--;
+    if (countdown <= 0) {
+      isSyncing = true;
+      countdown = REFRESH_INTERVAL;
+      document.getElementById('refreshTimerMain').innerText = '...';
+      
+      if (currentView === 'main') {
+          renderMainNearby(true).then(() => { isSyncing = false; });
+      } else if (currentView === 'detail' && detailExpandedStopIdx !== -1) {
+          const stops = routeStopsCache[detailRouteGroup.key] || [];
+          const targetStop = stops[detailExpandedStopIdx];
+          fetchFerryEtaRaw(detailRouteGroup, targetStop.stopKey).then(arrs => {
+              const expandContainer = document.getElementById(`detail-eta-expanded-${detailExpandedStopIdx}`);
+              if(expandContainer) expandContainer.innerHTML = generateExpandedETAsHtml(arrs, detailRouteGroup.key);
+              updateDetailTimestamp();
+              isSyncing = false;
+          }).catch(() => { isSyncing = false; });
+      } else if (currentView === 'map' && sheetExpandedGroupKey) {
+          const group = ALL_ROUTES.find(g => g.key === sheetExpandedGroupKey);
+          const stopObj = ALL_PIERS.find(s => s.stopName_e === document.getElementById('sheet-title').innerText);
+          if(group && stopObj) {
+              fetchFerryEtaRaw(group, stopObj.stopKey).then(arrs => {
+                 const expandContainer = document.getElementById(`sheet-eta-expanded-${sheetExpandedGroupKey}`);
+                 if (expandContainer) expandContainer.innerHTML = generateExpandedETAsHtml(arrs, sheetExpandedGroupKey);
+                 isSyncing = false;
+              }).catch(() => { isSyncing = false; });
+          } else { isSyncing = false; }
+      } else { isSyncing = false; }
+    } else {
+      document.getElementById('refreshTimerMain').innerText = `${countdown}s`;
+    }
+  }, 1000);
+}
+
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        clearInterval(timerInterval);
+        if (gpsWatcherId) { navigator.geolocation.clearWatch(gpsWatcherId); gpsWatcherId = null; }
+    } else if (ALL_ROUTES.length > 0) {
+        startTimer();
+        startGPSTracking();
+    }
+});
+
+window.onload = initApp;
+</script>
 </body>
 </html>
