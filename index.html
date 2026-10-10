@@ -473,8 +473,8 @@ function buildInternalData() {
         let seq = 1;
         if (data.piers) {
             for (const [pKey, pName] of Object.entries(data.piers)) {
-                // Ensure pierCoordinates exists in routes.js
-                const coords = window.pierCoordinates[pName] || {lat: 22.28, lng: 114.16}; 
+                // FIXED: Removed 'window.' prefix here
+                const coords = pierCoordinates[pName] || {lat: 22.28, lng: 114.16}; 
                 
                 stops.push({
                     stopKey: pName,
@@ -540,7 +540,10 @@ async function fetchWeatherAndTyphoonStatus() {
 function checkHolidayAndSundayStatus() {
     const now = new Date();
     const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const holidayName = window.HK_PUBLIC_HOLIDAYS[dateStr];
+    
+    // FIXED: Removed 'window.' prefix here
+    const holidayName = HK_PUBLIC_HOLIDAYS[dateStr];
+    
     isHolidayPricingToday = (now.getDay() === 0 || !!holidayName); // 0 corresponds to Sunday
 
     const w = document.getElementById('wxrTelemetry');
