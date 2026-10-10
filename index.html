@@ -448,6 +448,11 @@ function buildInternalData() {
     const uniquePiers = new Map();
     routeStopsCache = {};
     
+    // SAFEGUARD: Explicitly check if routes.js loaded correctly
+    if (!window.PulseFerry || !window.PulseFerry.scheduleData) {
+        throw new Error("Could not find routes.js data. Ensure routes.js is uploaded to GitHub and linked properly.");
+    }
+    
     for (const [key, data] of Object.entries(window.PulseFerry.scheduleData || {})) {
         const cat = data.category || 'harbour';
         let colorHex = '#0d9488'; // teal
@@ -473,8 +478,8 @@ function buildInternalData() {
         let seq = 1;
         if (data.piers) {
             for (const [pKey, pName] of Object.entries(data.piers)) {
-                // FIXED: Removed 'window.' prefix here
-                const coords = pierCoordinates[pName] || {lat: 22.28, lng: 114.16}; 
+                // FIXED: Explicitly calling window.pierCoordinates so strict mode doesn't crash it
+                const coords = (window.pierCoordinates && window.pierCoordinates[pName]) || {lat: 22.28, lng: 114.16}; 
                 
                 stops.push({
                     stopKey: pName,
@@ -541,8 +546,8 @@ function checkHolidayAndSundayStatus() {
     const now = new Date();
     const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
-    // FIXED: Removed 'window.' prefix here
-    const holidayName = HK_PUBLIC_HOLIDAYS[dateStr];
+    // FIXED: Explicitly access via window to prevent reference errors
+    const holidayName = window.HK_PUBLIC_HOLIDAYS ? window.HK_PUBLIC_HOLIDAYS[dateStr] : null;
     
     isHolidayPricingToday = (now.getDay() === 0 || !!holidayName); // 0 corresponds to Sunday
 
@@ -919,7 +924,8 @@ async function initApp() {
     await locateNearestStopPromise();
     startTimer();
   } catch (err) {
-    document.getElementById('mainRouteList').innerHTML = '<div class="text-center" style="color:#ef4444;">Error building network.</div>';
+    // FIXED: Render the exact error message so you can debug missing files.
+    document.getElementById('mainRouteList').innerHTML = `<div class="text-center" style="color:#ef4444; padding:20px;"><b>Error building network.</b><br><br><span style="font-size:0.85rem; color:var(--text-sub);">${err.message}</span></div>`;
     console.error(err);
   }
 }
