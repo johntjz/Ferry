@@ -155,7 +155,7 @@
   .route-dest { font-size: 1.1rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); display:flex; justify-content:space-between; align-items:center; }
   .route-sub { font-size: 0.8rem; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
   .route-eta-col { text-align: right; min-width: 80px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; }
-  .eta-time { font-size: 1.6rem; font-weight: 900; color: var(--accent-green); font-variant-numeric: tabular-nums; line-height: 1; }
+  .eta-time { font-size: 1.6rem; font-weight: 900; color: var(--accent-green); font-variant-numeric: tabular-nums; line-height: 1; white-space: nowrap; }
   
   .eta-expanded-container { display: none; flex-direction: column; gap: 0; background: var(--bg-white); border-bottom: 1px solid var(--border-color); }
   .eta-expanded-container.active { display: flex; }
@@ -163,7 +163,7 @@
   .eta-row:last-child { border-bottom: none; }
   .eta-row-left { display: flex; flex-direction: column; gap: 6px; font-size: 1rem; color: var(--text-main); font-weight: 700; }
   .eta-row-sub { font-size: 0.85rem; color: var(--text-sub); font-weight: 600; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-  .eta-row-time { font-size: 1.8rem; font-weight: 900; font-variant-numeric: tabular-nums; text-align: right; }
+  .eta-row-time { font-size: 1.8rem; font-weight: 900; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
 
   /* ==========================================
      CSS ZONE 4: SEARCH, MAPS & UTILS
@@ -478,7 +478,6 @@ function buildInternalData() {
         let seq = 1;
         if (data.piers) {
             for (const [pKey, pName] of Object.entries(data.piers)) {
-                // FIXED: Explicitly calling window.pierCoordinates so strict mode doesn't crash it
                 const coords = (window.pierCoordinates && window.pierCoordinates[pName]) || {lat: 22.28, lng: 114.16}; 
                 
                 stops.push({
@@ -546,7 +545,6 @@ function checkHolidayAndSundayStatus() {
     const now = new Date();
     const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
-    // Explicitly access via window to prevent reference errors
     const holidayName = window.HK_PUBLIC_HOLIDAYS ? window.HK_PUBLIC_HOLIDAYS[dateStr] : null;
     
     isHolidayPricingToday = (now.getDay() === 0 || !!holidayName); // 0 corresponds to Sunday
