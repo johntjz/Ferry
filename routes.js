@@ -2,7 +2,7 @@
 // ZONE 1: STATIC DATA & ROUTE ENGINE
 // ==========================================
 
-const pierCoordinates = {
+window.pierCoordinates = {
     'Central Pier 2': {lat: 22.28738, lng: 114.15767}, 'Central Pier 3': {lat: 22.28723, lng: 114.15831},
     'Central Pier 4': {lat: 22.28704, lng: 114.15897}, 'Central Pier 5': {lat: 22.28682, lng: 114.15975},
     'Central Pier 6': {lat: 22.28666, lng: 114.16053}, 'Central Pier 7': {lat: 22.28646, lng: 114.16130},
@@ -35,12 +35,13 @@ const pierCoordinates = {
     "Tung Lung Chau Pier": {lat: 22.2475, lng: 114.2915}
 };
 
-const HK_PUBLIC_HOLIDAYS = {
+window.HK_PUBLIC_HOLIDAYS = {
     "2026-10-01": "National Day", "2026-10-18": "Chung Yeung Festival", "2026-12-25": "Christmas Day", "2026-12-26": "Boxing Day",
     "2027-01-01": "New Year's Day", "2027-02-06": "Lunar New Year's Day"
 };
 
 window.PulseFerry = {
+// ... rest of the file stays the same
     scheduleData: {},
     timeToMins: function(tm) {
         if (!tm || typeof tm !== 'string') return 0;
