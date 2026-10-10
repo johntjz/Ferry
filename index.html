@@ -152,7 +152,7 @@
     display: flex; align-items: center; justify-content: center; flex-direction: column;
   }
   .route-info-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; justify-content: center; }
-  .route-dest { font-size: 1.1rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
+  .route-dest { font-size: 1.1rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); display:flex; justify-content:space-between; align-items:center; }
   .route-sub { font-size: 0.8rem; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
   .route-eta-col { text-align: right; min-width: 80px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; }
   .eta-time { font-size: 1.6rem; font-weight: 900; color: var(--accent-green); font-variant-numeric: tabular-nums; line-height: 1; }
@@ -319,7 +319,10 @@
   <div id="map-container"></div>
   <div class="detail-live-bar" id="detailLiveBar">
     <span class="live-dot-pulse">● TIMETABLE</span>
-    <span id="detailLastUpdated">Loading timetables...</span>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <a href="#" id="detailReportBtn" style="color:var(--text-sub); font-size:0.75rem; text-decoration:none; display:flex; align-items:center; gap:4px;">📝 Report Error</a>
+      <span id="detailLastUpdated">Loading timetables...</span>
+    </div>
   </div>
   <div id="stop-list-container"></div>
 </main>
@@ -393,7 +396,7 @@ let isSyncing = false;
 let gpsWatcherId = null;
 const requestCache = new Map();
 
-// --- ADDED TEXT RESIZE FUNCTION ---
+// --- TEXT RESIZE FUNCTION ---
 function toggleTextSize() {
     let textSizeState = parseInt(localStorage.getItem('ferry_hk_text_size_state') || '0');
     textSizeState = (textSizeState + 1) % 3;
@@ -409,7 +412,6 @@ function toggleTextSize() {
     if (savedState === 1) document.documentElement.classList.add('text-sm');
     if (savedState === 2) document.documentElement.classList.add('text-xs');
 })();
-// -----------------------------------
 
 function calculateDistanceKm(lat1, lon1, lat2, lon2) {
   if (lat1 === 0 || lat2 === 0) return Infinity;
@@ -471,7 +473,8 @@ function buildInternalData() {
         let seq = 1;
         if (data.piers) {
             for (const [pKey, pName] of Object.entries(data.piers)) {
-                const coords = pierCoordinates[pName] || {lat: 22.28, lng: 114.16}; 
+                // Ensure pierCoordinates exists in routes.js
+                const coords = window.pierCoordinates[pName] || {lat: 22.28, lng: 114.16}; 
                 
                 stops.push({
                     stopKey: pName,
@@ -537,12 +540,12 @@ async function fetchWeatherAndTyphoonStatus() {
 function checkHolidayAndSundayStatus() {
     const now = new Date();
     const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const holidayName = HK_PUBLIC_HOLIDAYS[dateStr];
-    isHolidayPricingToday = (now.getDay() === 0 || !!holidayName);
+    const holidayName = window.HK_PUBLIC_HOLIDAYS[dateStr];
+    isHolidayPricingToday = (now.getDay() === 0 || !!holidayName); // 0 corresponds to Sunday
 
     const w = document.getElementById('wxrTelemetry');
     if (isHolidayPricingToday && w) {
-        w.innerHTML += ` <span style="font-size:0.8rem; color:var(--accent-orange); padding:4px 8px; border:1px solid var(--border-color); border-radius:12px; margin-left:6px;">${holidayName ? 'Public Holiday' : 'Sunday'} Fare</span>`;
+        w.innerHTML += ` <span style="font-size:0.8rem; color:var(--accent-orange); padding:4px 8px; border:1px solid var(--border-color); border-radius:12px; margin-left:6px;">${holidayName ? 'Public Holiday' : 'Sunday'} Fare Active</span>`;
     }
 }
 
@@ -580,13 +583,19 @@ async function fetchFerryEtaRaw(group, stopKey) {
                 const depMins = window.PulseFerry.timeToMins(currentStop.t);
                 const arrMins = window.PulseFerry.timeToMins(finalStop.t);
                 
+                // Format > 60 mins into "Xh Ym"
+                let mainTimeText = diffMinutes <= 0 ? (diffMinutes < 0 ? 'Departed' : 'Boarding') : diffMinutes + 'm';
+                if (diffMinutes >= 60) {
+                    mainTimeText = `${Math.floor(diffMinutes / 60)}h ${diffMinutes % 60}m`;
+                }
+
                 deps.push({
                     departureDate: departureDate,
                     destName: group.piers[finalStop.p] || finalStop.p,
                     etaDestTime: finalStop.t,
                     mins: diffMinutes,
                     sortTimeMs: diffMinutes * 60000,
-                    mainTimeText: diffMinutes <= 0 ? (diffMinutes < 0 ? 'Departed' : 'Boarding') : `${diffMinutes}m`,
+                    mainTimeText: mainTimeText,
                     apiStr: currentStop.t,
                     platText: group.company,
                     vesselType: trip.vesselType || 'ordinary',
@@ -839,6 +848,26 @@ function renderGlobalMapStops() {
     });
 }
 
+// Generate curved paths for much better visual representation on the map
+function getCurvedPath(latlngs) {
+    if (latlngs.length < 2) return latlngs;
+    let path = [];
+    for (let i = 0; i < latlngs.length - 1; i++) {
+        let p1 = latlngs[i], p2 = latlngs[i + 1];
+        let m = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+        let dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+        let factor = 0.18; // Adjust curvature percentage
+        let c = [m[0] - dy * factor, m[1] + dx * factor];
+        
+        for (let t = 0; t <= 1; t += 0.05) {
+            let lat = (1 - t) * (1 - t) * p1[0] + 2 * (1 - t) * t * c[0] + t * t * p2[0];
+            let lng = (1 - t) * (1 - t) * p1[1] + 2 * (1 - t) * t * c[1] + t * t * p2[1];
+            path.push([lat, lng]);
+        }
+    }
+    return path;
+}
+
 function drawRouteOnMap(group) {
     if(!mapInstance) return;
     if(mapRouteLayer) mapInstance.removeLayer(mapRouteLayer);
@@ -849,7 +878,9 @@ function drawRouteOnMap(group) {
     if(stops.length === 0) return;
     
     const latlngs = stops.map(s => [parseFloat(s.latitude), parseFloat(s.longitude)]);
-    mapRouteLayer = L.polyline(latlngs, {color: group.colorHex, weight: 6, opacity: 0.9}).addTo(mapInstance);
+    const curvedLatLngs = getCurvedPath(latlngs); // Use Curved lines
+    
+    mapRouteLayer = L.polyline(curvedLatLngs, {color: group.colorHex, weight: 6, opacity: 0.9}).addTo(mapInstance);
     const stopIcon = L.divIcon({ className: 'custom-stop-icon', html: '<div style="width:14px;height:14px;background:white;border:3px solid #333;border-radius:50%;"></div>', iconSize: [14, 14] });
     
     stops.forEach((s, idx) => {
@@ -992,6 +1023,14 @@ function openRouteDetail(groupKey) {
     
     const updateEl = document.getElementById('detailLastUpdated');
     if (updateEl) updateEl.innerText = 'Locating you...';
+    
+    // Inject Email Metadata natively dynamically to the "Report Error" button
+    const reportBtn = document.getElementById('detailReportBtn');
+    if (reportBtn) {
+        const subject = encodeURIComponent(`Ferry Timetable Update Needed: ${group.routeNo}`);
+        const body = encodeURIComponent(`Hello,\n\nI found an error on the timetable for:\n\nRoute: ${group.routeNo}\nOperator: ${group.company}\n\nDetails of the error:\n`);
+        reportBtn.href = `mailto:mtrtimehk@gmail.com?subject=${subject}&body=${body}`;
+    }
 
     setTimeout(async () => {
         if (token !== detailOpenToken) return;
@@ -1034,7 +1073,11 @@ function openMapSheet(stopObj) {
             let itemClass = '';
             
             if (mins !== Infinity) {
-                let timeHtml = mins <= 0 ? 'Due' : `${mins}<span style="font-size:1rem; margin-left:2px;">m</span>`;
+                let timeHtml = '';
+                if (mins <= 0) timeHtml = 'Due';
+                else if (mins < 60) timeHtml = `${mins}<span style="font-size:1rem; margin-left:2px;">m</span>`;
+                else timeHtml = `${Math.floor(mins/60)}<span style="font-size:0.8rem; margin:0 2px;">h</span>${mins%60}<span style="font-size:0.8rem; margin-left:2px;">m</span>`;
+                
                 summaryHtml = `<div class="eta-time">${timeHtml}</div>`;
             } else {
                 summaryHtml = `<div class="eta-time" style="color:var(--text-sub)">--</div>`;
@@ -1125,7 +1168,11 @@ async function renderMainNearby(isSilentRefresh = false) {
         let itemClass = '';
         
         if (mins !== Infinity) {
-            let timeHtml = mins <= 0 ? 'Due' : `${mins}<span style="font-size:1rem; margin-left:2px;">m</span>`;
+            let timeHtml = '';
+            if (mins <= 0) timeHtml = 'Due';
+            else if (mins < 60) timeHtml = `${mins}<span style="font-size:1rem; margin-left:2px;">m</span>`;
+            else timeHtml = `${Math.floor(mins/60)}<span style="font-size:0.8rem; margin:0 2px;">h</span>${mins%60}<span style="font-size:0.8rem; margin-left:2px;">m</span>`;
+            
             summaryHtml = `<div class="eta-time">${timeHtml}</div>`;
         } else {
             summaryHtml = `<div class="eta-time" style="color:var(--text-sub)">--</div>`;
@@ -1205,7 +1252,7 @@ function generateExpandedETAsHtml(arrs, groupKey) {
         const isPeak = (!isWeekend && ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19))) || (isWeekend && (hour >= 14 && hour <= 18));
         const isMid = hour >= 10 && hour <= 16;
         const seatText = isPeak ? '15% Seats' : (isMid ? '45% Seats' : '85% Seats');
-        const queueText = isPeak ? '5m Q' : (isMid ? '2m Q' : '1m Q');
+        const queueText = isPeak ? '5m Exit' : (isMid ? '2m Exit' : '1m Exit'); // Replaced "Q" with "Exit" for more intuitive UX
         let crowdHtml = `<span class="occ-pill occ-neutral">💺 ${seatText}</span> <span class="occ-pill occ-neutral">🚶 ${queueText}</span>`;
 
         let seaComfortHtml = '';
@@ -1224,7 +1271,7 @@ function generateExpandedETAsHtml(arrs, groupKey) {
 
         let displayFare = '';
         if (arr.fares) {
-            let activeFare = isHolidayPricingToday ? arr.fares.adultHoliday : arr.fares.adultWeekday;
+            let activeFare = isHolidayPricingToday ? arr.fares.adultHoliday : arr.fares.adultWeekday; // Holiday check respects Sundays
             if (activeFare) {
                 let currency = arr.fares.currency === 'HKD' ? 'HK$' : (arr.fares.currency || 'HK$');
                 if (typeof activeFare === 'string') {
@@ -1259,19 +1306,13 @@ function generateExpandedETAsHtml(arrs, groupKey) {
                     </div>
                 </div>
                 <div class="eta-row-time" style="display:flex; flex-direction:column; align-items:flex-end; line-height:1.1;">
-                    <div style="color:${color}; font-size:1.5rem;">${timeLabel}</div>
+                    <div style="color:${color}; font-size:1.5rem; text-align:right;">${timeLabel}</div>
                     <div style="font-size:0.8rem; font-weight:800; color:var(--text-main); margin-top:4px;">Dep. ${arr.apiStr}</div>
                     <div style="font-size:0.75rem; font-weight:700; color:var(--text-sub); margin-top:2px;">Arr. ${arr.etaDestTime}</div>
                 </div>
             </div>
         `;
     }
-    
-    html += `
-        <div style="text-align:center; padding:12px; border-top:1px dashed var(--border-color);">
-            <a href="mailto:mtrtimehk@gmail.com?subject=Ferry%20Timetable%20Update%20Needed" style="color:var(--text-sub); font-size:0.75rem; text-decoration:none;">📝 Report wrong timetable</a>
-        </div>
-    `;
     
     return html;
 }
@@ -1289,46 +1330,48 @@ function renderSearchResults() {
     
     if (!query) {
         if (activeRegionFilter === 'ALL') {
-            let nearby = getNearbyRoutes(3.5, 'ALL');
             
-            if (!lastKnownPos && nearby.length === 0) {
-                let matches = ALL_ROUTES;
-                let html = `
-                    <div style="padding: 12px 16px; font-size: 0.85rem; font-weight: 800; color: var(--text-sub); text-transform: uppercase; background: var(--bg-white); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 5;">
-                        <span>⛴️ ALL ROUTES</span>
-                        <span style="color: var(--accent-blue); font-size: 0.8rem; flex-shrink: 0;">${matches.length} ROUTES</span>
-                    </div>
-                `;
-                matches.forEach(g => {
-                    html += `
-                      <div class="route-list-item" onclick="openRouteDetail('${g.key}')">
-                          <div class="route-no-col" style="background-color:${g.colorHex}; font-size:0.9rem; line-height:1.2;"><div>${g.network.substring(0,3).toUpperCase()}</div></div>
-                          <div class="route-info-col"><div class="route-dest">${g.dest_e}</div><div class="route-sub">${g.company}</div></div>
-                      </div>
-                    `;
+            // Generate full sorted array based on GPS
+            let sortedRoutes = [...ALL_ROUTES];
+            
+            if (lastKnownPos) {
+                sortedRoutes.forEach(g => {
+                    const stops = routeStopsCache[g.key] || [];
+                    let minDist = Infinity;
+                    stops.forEach(s => {
+                        let d = calculateDistanceKm(lastKnownPos.lat, lastKnownPos.lon, parseFloat(s.latitude), parseFloat(s.longitude));
+                        if (d < minDist) minDist = d;
+                    });
+                    g._tempDist = minDist;
                 });
-                listEl.innerHTML = html;
-                return;
+                sortedRoutes.sort((a, b) => a._tempDist - b._tempDist);
             }
-
-            const firstValid = nearby.find(g => g.nearestDistKm !== undefined && !isNaN(g.nearestDistKm));
-            const headerLabel = firstValid ? `${firstValid.nearestStopName} (${firstValid.nearestDistKm.toFixed(1)}km)` : 'Nearby Routes';
-
+            
             let html = `
                 <div style="padding: 12px 16px; font-size: 0.85rem; font-weight: 800; color: var(--text-sub); text-transform: uppercase; background: var(--bg-white); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 5;">
-                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75%;">📍 Nearest (${headerLabel})</span>
-                    <span style="color: var(--accent-blue); font-size: 0.8rem; flex-shrink: 0;">${nearby.length} ROUTES</span>
+                    <span>⛴️ ALL ROUTES ${lastKnownPos ? ' (NEAREST)' : ''}</span>
+                    <span style="color: var(--accent-blue); font-size: 0.8rem; flex-shrink: 0;">${sortedRoutes.length} ROUTES</span>
                 </div>
             `;
-            nearby.forEach(g => {
+            
+            sortedRoutes.forEach(g => {
+                let distLabel = g._tempDist !== undefined && g._tempDist !== Infinity ? `<span style="font-size:0.75rem; color:var(--text-sub); padding-left:8px;">${g._tempDist.toFixed(1)}km</span>` : '';
                 html += `
                   <div class="route-list-item" onclick="openRouteDetail('${g.key}')">
                       <div class="route-no-col" style="background-color:${g.colorHex}; font-size:0.9rem; line-height:1.2;"><div>${g.network.substring(0,3).toUpperCase()}</div></div>
-                      <div class="route-info-col"><div class="route-dest">${g.dest_e}</div><div class="route-sub">${g.company}</div></div>
+                      <div class="route-info-col">
+                          <div class="route-dest">
+                              <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display:block;">${g.dest_e}</span>
+                          </div>
+                          <div class="route-sub" style="display:flex; justify-content:space-between; align-items:center;">
+                             <span>${g.company}</span> ${distLabel}
+                          </div>
+                      </div>
                   </div>
                 `;
             });
             listEl.innerHTML = html;
+
         } else {
             let matches = ALL_ROUTES.filter(g => g.network === activeRegionFilter);
             let html = `
@@ -1404,12 +1447,26 @@ function closeFavModal() { document.getElementById('fav-modal').style.display = 
 function renderFavSearch() {
     const query = document.getElementById('favSearchInput').value.trim().toLowerCase();
     const listEl = document.getElementById('favSearchResults');
-    if(!query) { listEl.innerHTML = '<div class="text-center" style="padding-top:40px; font-size:3rem; opacity:0.2;">🔍</div><div class="text-center">Type route name</div>'; return; }
-
-    const matches = ALL_ROUTES.filter(g => g.routeNo.toLowerCase().includes(query) || (g.company && g.company.toLowerCase().includes(query)));
+    
+    let matches = [];
+    let isDefaultGPS = false;
+    
+    if(!query) { 
+        let nearby = getNearbyRoutes(5, 'ALL');
+        if (nearby.length > 0) {
+            matches = nearby; 
+            isDefaultGPS = true;
+        } else {
+            listEl.innerHTML = '<div class="text-center" style="padding-top:40px; font-size:3rem; opacity:0.2;">🔍</div><div class="text-center">Type route name</div>'; 
+            return; 
+        }
+    } else {
+        matches = ALL_ROUTES.filter(g => g.routeNo.toLowerCase().includes(query) || (g.company && g.company.toLowerCase().includes(query)));
+    }
+    
     if(matches.length === 0) { listEl.innerHTML = '<div class="text-center" style="padding-top:40px; font-size:3rem; opacity:0.2;">⛴️</div><div class="text-center">No routes found</div>'; return; }
     
-    let html = '';
+    let html = isDefaultGPS ? `<div style="padding: 12px 16px; font-size: 0.8rem; font-weight: 800; color: var(--text-sub); background: var(--bg-white); border-bottom: 1px solid var(--border-color);">SUGGESTED NEARBY</div>` : '';
     matches.forEach(g => {
         const isSaved = favRoutes.includes(g.key);
         html += `
